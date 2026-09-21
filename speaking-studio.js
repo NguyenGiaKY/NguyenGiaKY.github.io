@@ -373,41 +373,48 @@
   }
 
   function localScores() {
-    var text = st.transcript || "";
-    var ws = wordList(text);
-    var duration = Math.max(1, (Date.now() - st.startedAt) / 1000);
-    var wpm = ws.length / Math.max(.1, duration / 60);
-    var fillers = (text.match(/\b(um|uh|erm|like|you know)\b/gi) || []).length;
-    var unique = {};
-    ws.forEach(function(w){ var k=w.toLowerCase().replace(/[^a-z']/g,""); if(k)unique[k]=1; });
-    var lexicalRatio = ws.length ? Object.keys(unique).length/ws.length : 0;
-    var connectors = countConnectors(text);
-    var used = text.toLowerCase().indexOf(current().word.toLowerCase()) >= 0;
-    var corrections = localCorrections(text);
-    var targetWords = current().part===1 ? 28 : (current().part===2 ? 85 : 55);
-    var lengthFactor = Math.min(1, ws.length/targetWords);
+    var text=st.transcript||"";
+    var ws=wordList(text);
+    var duration=Math.max(1,(Date.now()-st.startedAt)/1000);
+    var wpm=ws.length/Math.max(.1,duration/60);
+    var fillers=(text.match(/\b(um|uh|erm|like|you know)\b/gi)||[]).length;
+    var unique={};
+    ws.forEach(function(w){var k=w.toLowerCase().replace(/[^a-z']/g,"");if(k)unique[k]=1;});
+    var lexicalRatio=ws.length?Object.keys(unique).length/ws.length:0;
+    var connectors=countConnectors(text);
+    var used=text.toLowerCase().indexOf(current().word.toLowerCase())>=0;
+    var corrections=localCorrections(text);
+    var relevance=questionCoverage(text,current());
+    var targetWords=current().part===1?28:(current().part===2?85:55);
+    var lengthFactor=Math.min(1,ws.length/targetWords);
 
-    var grammar = 48 + Math.min(28,ws.length*.35) + Math.min(10,connectors*2) - corrections.length*7;
-    grammar = clamp(Math.round(grammar),38,91);
+    var grammar=46+Math.min(26,ws.length*.33)+Math.min(10,connectors*2)-corrections.length*7;
+    grammar=clamp(Math.round(grammar),35,88);
 
-    var vocab = 43 + Math.min(34,lexicalRatio*50) + Math.min(8,connectors*1.5) + (used?8:0);
-    vocab = clamp(Math.round(vocab),38,93);
+    var vocab=42+Math.min(31,lexicalRatio*48)+Math.min(8,connectors*1.5)+(used?7:0);
+    vocab=clamp(Math.round(vocab),35,90);
 
-    var pacePenalty = Math.abs(125-wpm)*.20;
-    var coherence = 48 + lengthFactor*30 + Math.min(12,connectors*2) - pacePenalty - fillers*4;
-    coherence = clamp(Math.round(coherence),35,94);
+    var pacePenalty=Math.abs(125-wpm)*.20;
+    var coherence=42+lengthFactor*23+Math.min(10,connectors*2)+(relevance*18)-pacePenalty-fillers*4;
+    coherence=clamp(Math.round(coherence),30,91);
 
-    var conf = Number(st.confidence)||0;
-    var pronunciation = 45 + conf*42 + Math.min(7,lengthFactor*7);
-    pronunciation = clamp(Math.round(pronunciation),38,96);
+    var conf=Number(st.confidence)||0;
+    var pronunciation=42+conf*42+Math.min(7,lengthFactor*7);
+    pronunciation=clamp(Math.round(pronunciation),35,92);
+
+    if(relevance<.12){coherence=Math.min(coherence,48);vocab=Math.min(vocab,58);}
+    if(ws.length<8){grammar=Math.min(grammar,55);vocab=Math.min(vocab,55);coherence=Math.min(coherence,50);}
 
     var gb=scoreToBand(grammar),vb=scoreToBand(vocab),cb=scoreToBand(coherence),pb=scoreToBand(pronunciation);
-    var band=clamp(Math.round(((gb+vb+cb+pb)/4)*2)/2,4,9);
+    var band=clamp(Math.round(((gb+vb+cb+pb)/4)*2)/2,3.5,8.5);
+    if(relevance<.12)band=Math.min(band,5.0);
+    if(ws.length<5)band=Math.min(band,4.5);
 
     return {
       grammar:grammar,vocab:vocab,coherence:coherence,pronunciation:pronunciation,
       grammarBand:gb,vocabBand:vb,coherenceBand:cb,pronunciationBand:pb,band:band,
-      words:ws.length,wpm:Math.round(wpm),fillers:fillers,connectors:connectors,corrections:corrections
+      words:ws.length,wpm:Math.round(wpm),fillers:fillers,connectors:connectors,relevance:relevance,
+      corrections:corrections
     };
   }
 
@@ -450,7 +457,7 @@
           '<span class="spkMetricChip"><b>Mạch lạc</b> <strong id="spkCoherenceBand">' + s.coherenceBand.toFixed(1) + '</strong><small id="spkCoherencePct">' + s.coherence + '%</small></span>' +
           '<span class="spkMetricChip"><b>Phát âm</b> <strong id="spkPronBand">' + s.pronunciationBand.toFixed(1) + '</strong><small id="spkPronPct">' + s.pronunciation + '%</small></span>' +
         '</div>' +
-        '<div class="spkCoachBox"><div><span>Gợi ý</span><b id="spkBandBadge">' + s.band.toFixed(1) + '/9.0</b></div><p id="spkFeedbackText">Bạn nói khoảng ' + s.words + ' từ, ' + s.wpm + ' từ/phút. Hãy phát triển một ý rõ hơn, dùng từ ' + esc(q.word) + ' tự nhiên và sửa các lỗi được đánh dấu.</p><div id="spkAIState" class="spkAIState">' + (useAI?'AI đang kiểm tra audio để tinh chỉnh điểm…':'Điểm trên là ước lượng luyện tập từ transcript.') + '</div></div>' +
+        '<div class="spkCoachBox"><div><span>Gợi ý</span><b id="spkBandBadge">' + s.band.toFixed(1) + '/9.0</b></div><p id="spkFeedbackText">Website đã chấm transcript của chính bạn: ' + s.words + ' từ, khoảng ' + s.wpm + ' từ/phút, mức bám câu hỏi khoảng ' + Math.round(s.relevance*100) + '%. Hãy trả lời trực tiếp hơn, phát triển một lý do/ví dụ và sửa các lỗi được đánh dấu.</p><div id="spkAIState" class="spkAIState">' + (useAI?'Đang thử AI để chấm sâu hơn từ audio/transcript thật…':'Điểm trên là ước lượng luyện tập từ transcript thật.') + '</div></div>' +
         '<div class="spkHighBand"><b>Câu trả lời band cao</b><p id="spkHighText">' + esc(sampleAnswer(q)) + '</p><button id="spkReadHigh" class="spkLinkBtn">🔊 Nghe câu mẫu</button></div>' +
         (st.url ? '<audio controls class="spkReplay" src="' + esc(st.url) + '"></audio>' : '') +
         '<div class="spkResultActions"><button id="spkRetry" class="btn">↻ Trả lời lại</button><button id="spkNext" class="btn primary">Câu tiếp theo →</button></div>' +
@@ -478,57 +485,85 @@
     renderQuestion();
   }
 
+  function extractAIJSON(raw){
+    var text=String(raw||"").trim(),first=text.indexOf("{"),last=text.lastIndexOf("}");
+    if(first>=0&&last>first)text=text.slice(first,last+1);
+    return JSON.parse(text);
+  }
+
+  function applyAIResult(d,transcript,local,label){
+    function setText(id,val){var e=document.getElementById(id);if(e&&val!==undefined&&val!==null)e.textContent=val;}
+    var gb=Number(d.grammar_band),vb=Number(d.vocab_band),cb=Number(d.coherence_band),pb=Number(d.pronunciation_band),ob=Number(d.overall_band);
+    if(!isFinite(gb))gb=local.grammarBand;if(!isFinite(vb))vb=local.vocabBand;if(!isFinite(cb))cb=local.coherenceBand;if(!isFinite(pb))pb=local.pronunciationBand;
+    if(!isFinite(ob))ob=Math.round(((gb+vb+cb+pb)/4)*2)/2;
+    gb=clamp(Math.round(gb*2)/2,0,9);vb=clamp(Math.round(vb*2)/2,0,9);cb=clamp(Math.round(cb*2)/2,0,9);pb=clamp(Math.round(pb*2)/2,0,9);ob=clamp(Math.round(ob*2)/2,0,9);
+
+    setText("spkGrammarBand",gb.toFixed(1));
+    setText("spkVocabBand",vb.toFixed(1));
+    setText("spkCoherenceBand",cb.toFixed(1));
+    setText("spkPronBand",pb.toFixed(1));
+    setText("spkOverallBand","Band luyện tập "+ob.toFixed(1));
+    setText("spkBandBadge",ob.toFixed(1)+"/9.0");
+    if(d.corrected)setText("spkCorrected",d.corrected);
+    if(d.feedback_vi)setText("spkFeedbackText",d.feedback_vi);
+    if(d.high_band)setText("spkHighText",d.high_band);
+
+    var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,8):[];
+    if(corrections.length){
+      var holder=document.getElementById("spkCorrections");
+      if(holder)holder.innerHTML='<ul class="spkCorrectionList">'+corrections.map(function(x){return '<li><del>'+esc(x.wrong||"")+'</del> → <b>'+esc(x.better||"")+'</b>'+(x.reason?'<small>'+esc(x.reason)+'</small>':'')+'</li>';}).join("")+'</ul>';
+      var tr=document.getElementById("spkTranscriptMarked");
+      if(tr)tr.innerHTML=markWrong(transcript,corrections);
+    }
+    var stateEl=document.getElementById("spkAIState");
+    if(stateEl)stateEl.textContent=label;
+  }
+
   async function runAIEnhancement(q, transcript, local) {
     var stateEl=document.getElementById("spkAIState");
-    if (!window.LanguageModel || !st.blob){
-      if(stateEl)stateEl.textContent="AI audio không khả dụng trên Chrome này; điểm hiện tại là ước lượng luyện tập.";
+    if(!window.LanguageModel){
+      if(stateEl)stateEl.textContent="Chrome AI không khả dụng. Điểm hiện tại vẫn được tính từ transcript thật + tốc độ nói + độ tin cậy nhận giọng; không phải điểm IELTS chính thức.";
       return;
     }
-    try {
-      var opts = {expectedInputs:[{type:"text",languages:["en"]},{type:"audio"}],expectedOutputs:[{type:"text",languages:["en"]}]};
-      var av = await window.LanguageModel.availability(opts);
-      if (av === "unavailable"){
-        if(stateEl)stateEl.textContent="AI audio không khả dụng trên thiết bị này; điểm hiện tại là ước lượng luyện tập.";
+
+    var prompt=
+      "You are an IELTS Speaking practice examiner. Grade ONLY the learner answer below against the exact question. Use Fluency and Coherence, Lexical Resource, Grammatical Range and Accuracy, and Pronunciation. Be strict about relevance. Do not reward answer length by itself. Question: "+q.q+
+      ". Browser transcript: "+transcript+
+      '. Return VALID JSON ONLY: {"overall_band":6.0,"grammar_band":6.0,"vocab_band":6.0,"coherence_band":6.0,"pronunciation_band":6.0,"corrected":"minimal corrected version preserving learner meaning","feedback_vi":"specific Vietnamese feedback referring to what the learner actually said","high_band":"a stronger natural answer to the same question","corrections":[{"wrong":"exact learner wording","better":"correction","reason":"short Vietnamese reason"}]}. Use 0.5 band steps.';
+
+    try{
+      if(st.blob){
+        var audioOpts={expectedInputs:[{type:"text",languages:["en"]},{type:"audio"}],expectedOutputs:[{type:"text",languages:["en"]}]};
+        var av=await window.LanguageModel.availability(audioOpts);
+        if(av!=="unavailable"){
+          if(stateEl)stateEl.textContent="AI đang nghe chính audio của bạn…";
+          var session=await window.LanguageModel.create(audioOpts);
+          var C=window.AudioContext||window.webkitAudioContext,ctx=new C(),ab=await st.blob.arrayBuffer(),audio=await ctx.decodeAudioData(ab.slice(0));
+          var raw=await session.prompt([{role:"user",content:[{type:"text",value:prompt},{type:"audio",value:audio}]}]);
+          var d=extractAIJSON(raw);
+          applyAIResult(d,transcript,local,"AI đã chấm từ audio + transcript của chính bạn.");
+          if(session.destroy)session.destroy();try{ctx.close();}catch(e){}
+          return;
+        }
+      }
+    }catch(e){}
+
+    try{
+      var textOpts={expectedInputs:[{type:"text",languages:["en"]}],expectedOutputs:[{type:"text",languages:["en"]}]};
+      var tav=await window.LanguageModel.availability(textOpts);
+      if(tav!=="unavailable"){
+        if(stateEl)stateEl.textContent="AI audio không khả dụng; đang chấm transcript thật của bạn…";
+        var ts=await window.LanguageModel.create(textOpts);
+        var textPrompt=prompt+" You do not have audio. Keep pronunciation_band at "+local.pronunciationBand.toFixed(1)+" and grade the other criteria from the transcript.";
+        var traw=await ts.prompt(textPrompt),td=extractAIJSON(traw);
+        td.pronunciation_band=local.pronunciationBand;
+        applyAIResult(td,transcript,local,"AI đã chấm transcript thật; phát âm vẫn là ước lượng từ nhận dạng giọng nói.");
+        if(ts.destroy)ts.destroy();
         return;
       }
+    }catch(e){}
 
-      var session = await window.LanguageModel.create(opts);
-      var C = window.AudioContext || window.webkitAudioContext;
-      var ctx = new C();
-      var ab = await st.blob.arrayBuffer();
-      var audio = await ctx.decodeAudioData(ab.slice(0));
-
-      var prompt = "You are an IELTS Speaking practice examiner. Evaluate this learner answer against the exact question. Return JSON only with: overall_band, grammar_band, vocab_band, coherence_band, pronunciation_band (all 0-9 in 0.5 steps), corrected, feedback_vi, high_band, corrections. corrections is an array of {wrong,better}. Use audio evidence for pronunciation and fluency. Do not reward answer length by itself. Question: " + q.q + ". Browser transcript may contain recognition errors: " + transcript + ".";
-      var raw = await session.prompt([{role:"user",content:[{type:"text",value:prompt},{type:"audio",value:audio}]}]);
-      var text = String(raw || "").trim();
-      var first = text.indexOf("{"), last = text.lastIndexOf("}");
-      if (first >= 0 && last > first) text = text.slice(first,last+1);
-      var d = JSON.parse(text);
-
-      function setText(id,val){var e=document.getElementById(id);if(e&&val!==undefined&&val!==null)e.textContent=val;}
-      var gb=Number(d.grammar_band),vb=Number(d.vocab_band),cb=Number(d.coherence_band),pb=Number(d.pronunciation_band),ob=Number(d.overall_band);
-      if(!isFinite(gb))gb=local.grammarBand;if(!isFinite(vb))vb=local.vocabBand;if(!isFinite(cb))cb=local.coherenceBand;if(!isFinite(pb))pb=local.pronunciationBand;if(!isFinite(ob))ob=Math.round(((gb+vb+cb+pb)/4)*2)/2;
-      gb=clamp(Math.round(gb*2)/2,0,9);vb=clamp(Math.round(vb*2)/2,0,9);cb=clamp(Math.round(cb*2)/2,0,9);pb=clamp(Math.round(pb*2)/2,0,9);ob=clamp(Math.round(ob*2)/2,0,9);
-
-      setText("spkGrammarBand",gb.toFixed(1));setText("spkVocabBand",vb.toFixed(1));setText("spkCoherenceBand",cb.toFixed(1));setText("spkPronBand",pb.toFixed(1));
-      setText("spkOverallBand","Band luyện tập "+ob.toFixed(1));setText("spkBandBadge",ob.toFixed(1)+"/9.0");
-      if (d.corrected) setText("spkCorrected",d.corrected);
-      if (d.feedback_vi) setText("spkFeedbackText",d.feedback_vi);
-      if (d.high_band) setText("spkHighText",d.high_band);
-
-      var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,6):[];
-      if(corrections.length){
-        var holder=document.getElementById("spkCorrections");
-        if(holder)holder.innerHTML='<ul class="spkCorrectionList">'+corrections.map(function(x){return '<li><del>'+esc(x.wrong||"")+'</del> → <b>'+esc(x.better||"")+'</b></li>';}).join("")+'</ul>';
-        var tr=document.getElementById("spkTranscriptMarked");
-        if(tr)tr.innerHTML=markWrong(transcript,corrections);
-      }
-      if(stateEl)stateEl.textContent="AI đã nghe audio và tinh chỉnh điểm theo 4 tiêu chí IELTS.";
-      if (session.destroy) session.destroy();
-      try { ctx.close(); } catch (e) {}
-    } catch (e) {
-      if(stateEl)stateEl.textContent="AI audio chưa chạy được; giữ điểm ước lượng luyện tập hiện tại.";
-    }
+    if(stateEl)stateEl.textContent="AI tích hợp không khả dụng. Website vẫn chấm chính bài bạn vừa nói từ transcript thật, tốc độ nói và độ tin cậy nhận giọng; không dùng bài mẫu để tạo điểm.";
   }
 
   function initStudio() {
