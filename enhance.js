@@ -248,16 +248,159 @@ async function runAI(){
   }catch(e){if(status)status.textContent='AI chưa chạy được trên thiết bị này. Đang dùng phân tích cục bộ.';renderAI(localFeedback())}
   finally{btn.disabled=false}
 }
+
+/* ---------- Pronunciation Flashcards ---------- */
+var pronunciationDeck=[
+ {w:'environment',ipa:'/ɪnˈvaɪrənmənt/',vi:'môi trường'},
+ {w:'education',ipa:'/ˌedʒuˈkeɪʃən/',vi:'giáo dục'},
+ {w:'technology',ipa:'/tekˈnɒlədʒi/',vi:'công nghệ'},
+ {w:'sustainable',ipa:'/səˈsteɪnəbəl/',vi:'bền vững'},
+ {w:'significant',ipa:'/sɪɡˈnɪfɪkənt/',vi:'đáng kể, quan trọng'},
+ {w:'communication',ipa:'/kəˌmjuːnɪˈkeɪʃən/',vi:'giao tiếp'},
+ {w:'opportunity',ipa:'/ˌɒpəˈtjuːnəti/',vi:'cơ hội'},
+ {w:'challenge',ipa:'/ˈtʃælɪndʒ/',vi:'thử thách'},
+ {w:'improve',ipa:'/ɪmˈpruːv/',vi:'cải thiện'},
+ {w:'develop',ipa:'/dɪˈveləp/',vi:'phát triển'},
+ {w:'government',ipa:'/ˈɡʌvənmənt/',vi:'chính phủ'},
+ {w:'society',ipa:'/səˈsaɪəti/',vi:'xã hội'},
+ {w:'available',ipa:'/əˈveɪləbəl/',vi:'có sẵn'},
+ {w:'experience',ipa:'/ɪkˈspɪəriəns/',vi:'kinh nghiệm, trải nghiệm'},
+ {w:'comfortable',ipa:'/ˈkʌmftəbəl/',vi:'thoải mái'},
+ {w:'responsibility',ipa:'/rɪˌspɒnsəˈbɪləti/',vi:'trách nhiệm'},
+ {w:'advantage',ipa:'/ədˈvɑːntɪdʒ/',vi:'lợi thế'},
+ {w:'disadvantage',ipa:'/ˌdɪsədˈvɑːntɪdʒ/',vi:'bất lợi'},
+ {w:'although',ipa:'/ɔːlˈðəʊ/',vi:'mặc dù'},
+ {w:'particularly',ipa:'/pəˈtɪkjələli/',vi:'đặc biệt là'},
+ {w:'employer',ipa:'/ɪmˈplɔɪə/',vi:'chủ lao động'},
+ {w:'employee',ipa:'/ɪmˈplɔɪiː/',vi:'nhân viên'}
+];
+var pronState={index:0,stream:null,recorder:null,chunks:[],url:null,recognition:null,recognized:'',confidence:0,speechStart:0,speechEnd:0,recordStart:0,recording:false};
+
+function normSpeech(s){return String(s||'').toLowerCase().replace(/[^a-z0-9' ]/g,'').replace(/\s+/g,' ').trim()}
+function levDist(a,b){
+ a=normSpeech(a);b=normSpeech(b);var m=a.length,n=b.length,dp=[];
+ for(var i=0;i<=m;i++){dp[i]=[i];for(var j=1;j<=n;j++)dp[i][j]=i?0:j}
+ for(i=1;i<=m;i++)for(j=1;j<=n;j++)dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+ return dp[m][n];
+}
+function speechSimilarity(a,b){a=normSpeech(a);b=normSpeech(b);var max=Math.max(1,a.length,b.length);return Math.max(0,1-levDist(a,b)/max)}
+function scorePronunciation(target,heard,confidence,duration){
+ var sim=speechSimilarity(target,heard),conf=Math.max(0,Math.min(1,Number(confidence)||0));
+ var accuracy=Math.round(Math.min(100,(sim*72)+(conf*28)));
+ var completion=Math.round(Math.min(100,sim*100));
+ var idealMin=.35,idealMax=1.9,fluency=100;
+ if(duration<idealMin)fluency=Math.max(45,Math.round(100-(idealMin-duration)*90));
+ if(duration>idealMax)fluency=Math.max(45,Math.round(100-(duration-idealMax)*24));
+ if(!heard){accuracy=0;completion=0;fluency=Math.min(fluency,60)}
+ var overall=Math.round(accuracy*.55+fluency*.2+completion*.25);
+ return {overall:overall,accuracy:accuracy,fluency:fluency,completion:completion};
+}
+function currentPronItem(){return pronunciationDeck[pronState.index%pronunciationDeck.length]}
+function renderPronCard(){
+ var host=document.getElementById('pronunciationLab');if(!host)return;
+ var x=currentPronItem(),pct=Math.round(((pronState.index+1)/pronunciationDeck.length)*100);
+ host.innerHTML=
+ '<div class="pronTop"><div><span class="phase">SPEAKING • PRONUNCIATION</span><h3>Flashcard & Phát âm</h3></div><b>'+(pronState.index+1)+' / '+pronunciationDeck.length+'</b></div>'+
+ '<div class="pronProgress"><i style="width:'+pct+'%"></i></div>'+
+ '<div class="pronCard">'+
+   '<div class="pronInstruction">Hãy nói từ sau</div>'+
+   '<div class="pronWord">'+esc(x.w)+'</div>'+
+   '<div class="pronIPA">'+esc(x.ipa)+'</div>'+
+   '<div class="pronMeaning">'+esc(x.vi)+'</div>'+
+   '<div id="pronResult"></div>'+
+   '<div class="pronActions" id="pronActions">'+
+     '<button id="pronRecord" class="btn primary">🎙️ Nói từ này</button>'+
+     '<button id="pronModel" class="btn">🔊 AI phát âm</button>'+
+   '</div>'+
+ '</div>';
+ document.getElementById('pronRecord').onclick=togglePronRecording;
+ document.getElementById('pronModel').onclick=playPronModel;
+}
+function playPronModel(){
+ var x=currentPronItem(),u=new SpeechSynthesisUtterance(x.w),v=chooseVoice('auto-uk','F');
+ u.lang='en-GB';u.rate=.82;u.pitch=1;if(v)u.voice=v;
+ try{speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
+}
+function startPronRecognition(){
+ var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
+ try{
+  var r=new SR();pronState.recognition=r;r.lang='en-GB';r.interimResults=false;r.continuous=false;r.maxAlternatives=3;
+  r.onspeechstart=function(){pronState.speechStart=performance.now()};
+  r.onspeechend=function(){pronState.speechEnd=performance.now()};
+  r.onresult=function(e){
+    var best=e.results&&e.results[0]&&e.results[0][0];if(best){pronState.recognized=best.transcript||'';pronState.confidence=best.confidence||0}
+  };
+  r.onerror=function(){};r.start();
+ }catch(e){}
+}
+async function startPronRecording(){
+ var status=document.getElementById('pronRecord');
+ try{
+  pronState.stream=await navigator.mediaDevices.getUserMedia({audio:true});pronState.chunks=[];pronState.recognized='';pronState.confidence=0;pronState.speechStart=0;pronState.speechEnd=0;pronState.recordStart=performance.now();
+  var opt={};if(window.MediaRecorder&&MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))opt.mimeType='audio/webm;codecs=opus';
+  var rec=new MediaRecorder(pronState.stream,opt);pronState.recorder=rec;pronState.recording=true;
+  rec.ondataavailable=function(e){if(e.data&&e.data.size)pronState.chunks.push(e.data)};
+  rec.onstop=function(){
+    var blob=new Blob(pronState.chunks,{type:rec.mimeType||'audio/webm'});if(pronState.url)URL.revokeObjectURL(pronState.url);pronState.url=URL.createObjectURL(blob);
+    if(pronState.stream)pronState.stream.getTracks().forEach(function(t){t.stop()});pronState.stream=null;
+    setTimeout(finishPronScore,220);
+  };
+  rec.start(150);startPronRecognition();
+  if(status){status.textContent='⏹ Dừng & chấm';status.classList.add('recording')}
+  setTimeout(function(){if(pronState.recording)stopPronRecording()},4500);
+ }catch(e){
+  var res=document.getElementById('pronResult');if(res)res.innerHTML='<div class="notice">Không mở được microphone. Hãy cho phép Microphone trong Chrome.</div>';
+ }
+}
+function stopPronRecording(){
+ if(!pronState.recording)return;pronState.recording=false;
+ try{if(pronState.recorder&&pronState.recorder.state!=='inactive')pronState.recorder.stop()}catch(e){}
+ try{if(pronState.recognition)pronState.recognition.stop()}catch(e){}
+ var b=document.getElementById('pronRecord');if(b){b.textContent='🎙️ Nói từ này';b.classList.remove('recording')}
+}
+function togglePronRecording(){if(pronState.recording)stopPronRecording();else startPronRecording()}
+function finishPronScore(){
+ var x=currentPronItem();
+ var end=pronState.speechEnd||performance.now(),start=pronState.speechStart||pronState.recordStart,dur=Math.max(.15,(end-start)/1000);
+ var sc=scorePronunciation(x.w,pronState.recognized,pronState.confidence,dur);
+ var res=document.getElementById('pronResult');if(!res)return;
+ res.innerHTML=
+ '<div class="pronScorePanel">'+
+   '<div class="pronScoreMain"><span>✓</span><strong>'+sc.overall+'%</strong></div>'+
+   '<div class="pronVoiceRow"><button id="pronMine" class="pronVoiceBtn">🎙️ Bạn nói</button><button id="pronModel2" class="pronVoiceBtn">🔊 AI phát âm</button></div>'+
+   '<div class="pronMetrics">'+
+     metricHTML('Độ chính xác',sc.accuracy)+metricHTML('Độ lưu loát',sc.fluency)+metricHTML('Độ hoàn thiện',sc.completion)+
+   '</div>'+
+ '</div>'+
+ '<div class="pronAnalysis"><b>Phân tích từ:</b><div class="pronToken">▼ '+esc(x.w)+' <strong>'+sc.accuracy+'</strong></div>'+
+ '<div class="pronHeard">Bạn nói: <b>'+esc(pronState.recognized||'Không nhận được rõ')+'</b> · '+esc(x.ipa)+'</div></div>'+
+ '<div class="pronBottom"><button id="pronRetry" class="btn">↻ Thử lại</button><button id="pronNext" class="btn primary">Tiếp tục →</button></div>';
+ document.getElementById('pronMine').onclick=function(){if(pronState.url){var a=new Audio(pronState.url);a.play()}};
+ document.getElementById('pronModel2').onclick=playPronModel;
+ document.getElementById('pronRetry').onclick=function(){renderPronCard()};
+ document.getElementById('pronNext').onclick=function(){pronState.index=(pronState.index+1)%pronunciationDeck.length;renderPronCard()};
+}
+function metricHTML(label,val){return '<div class="pronMetric"><div><span>'+label+'</span><b>'+val+'</b></div><div class="pronMetricBar"><i style="width:'+val+'%"></i></div></div>'}
+
 function initSpeakingEnhancement(){
-  var body=document.getElementById('lessonBody');if(!body||document.getElementById('speakingCoach'))return;
+  var body=document.getElementById('lessonBody');if(!body)return;
+  var actions=body.querySelector('.lessonActions');
+  if(!document.getElementById('pronunciationLab')){
+    var lab=document.createElement('div');lab.id='pronunciationLab';lab.className='pronunciationLab';
+    if(actions)body.insertBefore(lab,actions);else body.appendChild(lab);
+    renderPronCard();
+  }
+  if(document.getElementById('speakingCoach'))return;
   var box=document.createElement('div');box.id='speakingCoach';box.className='speakingCoach';
-  box.innerHTML='<h3>🤖 Speaking AI Coach</h3><div class="speakingCoachTop"><label><b>Phần luyện</b> <select id="speakingPart"><option value="1">Part 1</option><option value="2">Part 2</option><option value="3">Part 3</option></select></label><strong id="speakingTimer">0:00</strong></div>'+
+  box.innerHTML='<div class="coachHeader"><div><span class="phase">IELTS ANSWER PRACTICE</span><h3>🤖 Speaking AI Coach</h3></div><small>Phần này chấm câu trả lời dài, khác với flashcard phát âm ở trên.</small></div>'+
+  '<div class="speakingCoachTop"><label><b>Phần luyện</b> <select id="speakingPart"><option value="1">Part 1</option><option value="2">Part 2</option><option value="3">Part 3</option></select></label><strong id="speakingTimer">0:00</strong></div>'+
   '<div class="checkRow"><button id="speakingRecord" class="btn primary">🎙️ Bắt đầu ghi</button><button id="speakingStop" class="btn" disabled>⏹ Dừng</button><button id="speakingAI" class="btn" disabled>🤖 AI chấm & sửa</button></div>'+
   '<audio id="speakingPlayback" controls class="hidden"></audio><div class="production"><b>Transcript</b><textarea id="speakingTranscript" placeholder="Transcript sẽ hiện ở đây; bạn có thể sửa nếu nhận giọng sai."></textarea></div>'+
   '<div id="speakingAIStatus" class="muted">AI chạy trực tiếp trên Chrome nếu Gemini Nano khả dụng. Điểm là ước lượng luyện tập, không phải điểm IELTS chính thức.</div><div id="speakingAIResult"></div>';
-  var actions=body.querySelector('.lessonActions');if(actions)body.insertBefore(box,actions);else body.appendChild(box);
+  if(actions)body.insertBefore(box,actions);else body.appendChild(box);
   document.getElementById('speakingRecord').onclick=startRecording;document.getElementById('speakingStop').onclick=stopRecording;document.getElementById('speakingAI').onclick=runAI;
 }
+
 
 window.openLesson=function(d,i){
   baseOpenLesson(d,i);
@@ -272,5 +415,6 @@ var close=document.getElementById('lessonClose');
 if(close)close.addEventListener('click',function(){
   stopListening(true);
   try{if(speakingState.recorder&&speakingState.recorder.state!=='inactive')speakingState.recorder.stop();if(speakingState.stream)speakingState.stream.getTracks().forEach(function(t){t.stop()});if(speakingState.recognition)speakingState.recognition.stop()}catch(e){}
+  try{if(pronState.recorder&&pronState.recorder.state!=='inactive')pronState.recorder.stop();if(pronState.stream)pronState.stream.getTracks().forEach(function(t){t.stop()});if(pronState.recognition)pronState.recognition.stop()}catch(e){}
 });
 })();
