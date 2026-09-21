@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#3157d5">
+<title>IELTS 100-Day Study Hub</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="hero">
+    <div>
+      <span class="badge">IELTS Academic • 100 Days</span>
+      <h1>IELTS 6.5+ Study Hub</h1>
+      <p>Học theo lịch 100 ngày. Bấm một khung giờ để học ngay: Learn → Practice → Check → Fix → Review 1–3–7.</p>
+    </div>
+    <div class="progressCard">
+      <div class="mutedLight">Tiến độ</div>
+      <strong><span id="pct">0</span>%</strong>
+      <div class="bar"><i id="bar"></i></div>
+      <small id="progressText">0 nhiệm vụ hoàn thành</small>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar card">
+      <input id="search" class="search" placeholder="Tìm Day, Unit, grammar...">
+      <nav>
+        <button class="nav active" data-view="today">🏠 Hôm nay</button>
+        <button class="nav" data-view="roadmap">🗓️ 100 ngày</button>
+        <button class="nav" data-view="review">🔁 Ôn 1–3–7</button>
+        <button class="nav" data-view="grammar">🧠 Grammar Library</button>
+        <button class="nav" data-view="vocab">🗂️ Vocabulary</button>
+        <button class="nav" data-view="errors">🧾 Error Log</button>
+        <button class="nav" data-view="resources">🌐 Nguồn học</button>
+      </nav>
+      <div class="sideTitle">DAY 1 → 100</div>
+      <div id="dayGrid" class="dayGrid"></div>
+    </aside>
+
+    <main>
+      <section id="view-today" class="view active"><div id="todayCard" class="card panel"></div></section>
+      <section id="view-roadmap" class="view"><div class="card panel"><h2>Lộ trình 100 ngày</h2><div id="roadmapList"></div></div></section>
+      <section id="view-review" class="view"><div class="card panel"><h2>Ôn lỗi 1–3–7</h2><p class="muted">Câu bạn làm sai sẽ tự quay lại sau 1, 3 và 7 ngày.</p><div id="reviewList"></div></div></section>
+      <section id="view-grammar" class="view"><div class="card panel"><h2>Grammar Library</h2><div id="grammarList" class="grid2"></div></div></section>
+      <section id="view-vocab" class="view"><div class="card panel"><h2>Vocabulary & Saved Words</h2><div id="savedWords"></div></div></section>
+      <section id="view-errors" class="view"><div class="card panel"><h2>Error Log</h2><div class="grid2">
+        <textarea class="note error" data-key="grammar" placeholder="Grammar errors..."></textarea>
+        <textarea class="note error" data-key="reading" placeholder="Reading errors..."></textarea>
+        <textarea class="note error" data-key="listening" placeholder="Listening errors..."></textarea>
+        <textarea class="note error" data-key="writing" placeholder="Writing/Speaking errors..."></textarea>
+      </div></div></section>
+      <section id="view-resources" class="view"><div class="card panel"><h2>Nguồn học</h2>
+        <div class="resourceGrid">
+          <a href="https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test" target="_blank">IELTS Official Samples ↗</a>
+          <a href="https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests/academic" target="_blank">British Council Practice ↗</a>
+          <a href="https://youpass.vn/" target="_blank">YouPass ↗</a>
+          <a href="https://luyennguphap.com/" target="_blank">LuyenNguPhap ↗</a>
+        </div>
+        <p class="muted">3 sách Improve Your Skills vẫn là giáo trình nền. Website tổ chức bài học theo Unit nhưng không public nguyên PDF lên GitHub.</p>
+      </div></section>
+    </main>
+  </div>
+</div>
+
+<button id="dictButton" class="dictButton">📖 Tra từ</button>
+<div id="dictionary" class="dictionary">
+  <div id="dictHandle" class="dictHead">
+    <b>Quick Dictionary</b>
+    <div>
+      <button id="dictMin">−</button>
+      <button id="dictMax">□</button>
+      <button id="dictClose">×</button>
+    </div>
+  </div>
+  <div class="dictBody">
+    <div class="dictSearch"><input id="dictInput" placeholder="Nhập từ..."><button id="dictGo">Tra</button></div>
+    <small>Double-click bất kỳ từ tiếng Anh nào trong bài để xem nghĩa trong câu + loại từ hiện tại + các loại từ khác.</small>
+    <div id="dictResult"></div>
+  </div>
+</div>
+
+<div id="lessonOverlay" class="overlay">
+  <div class="lesson">
+    <div class="lessonTop"><div id="lessonTitle"></div><button id="lessonClose">×</button></div>
+    <div id="lessonBody" class="lessonBody"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
