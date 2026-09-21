@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#3157d5">
-<title>IELTS 100-Day Study Hub</title>
+<title>IELTS Flexible Skill Builder</title>
 <link rel="stylesheet" href="styles.css?v=20260921-14">
 </head>
 <body>
 <div id="app">
   <header class="hero">
     <div>
-      <span class="badge">IELTS Academic • 100 Days</span>
-      <h1>IELTS 6.5+ Study Hub</h1>
-      <p>Học theo lịch 100 ngày. Bấm một khung giờ để học ngay: Learn → Practice → Check → Fix → Review 1–3–7.</p>
+      <span class="badge">IELTS Academic • Flexible Skill System</span>
+      <h1>IELTS Skill Builder</h1>
+      <p>Không ép theo ngày hay giờ cố định. Học theo từng kỹ năng, hoàn thành tới đâu tiếp tục tới đó: Learn → Practice → Check → Fix → Review.</p>
     </div>
     <div class="progressCard">
-      <div class="mutedLight">Tiến độ</div>
+      <div class="mutedLight">Tiến độ kỹ năng</div>
       <strong><span id="pct">0</span>%</strong>
       <div class="bar"><i id="bar"></i></div>
       <small id="progressText">0 nhiệm vụ hoàn thành</small>
@@ -25,25 +25,32 @@
 
   <div class="layout">
     <aside class="sidebar card">
-      <input id="search" class="search" placeholder="Tìm Day, Unit, grammar...">
+      <input id="search" class="search" placeholder="Tìm kỹ năng, module, bài học...">
       <nav>
-        <button class="nav active" data-view="today">🏠 Hôm nay</button>
-        <button class="nav" data-view="roadmap">🗓️ 100 ngày</button>
-        <button class="nav" data-view="review">🔁 Ôn 1–3–7</button>
-        <button class="nav" data-view="grammar">🧠 Grammar Library</button>
-        <button class="nav" data-view="vocab">🗂️ Vocabulary</button>
-        <button class="nav" data-view="dictionary">📖 Từ điển & Gợi ý</button>
+        <button class="nav active" data-view="today">🧭 Study Queue</button>
+        <button class="nav" data-view="listening">🎧 Listening 8+</button>
+        <button class="nav" data-view="reading">📖 Reading 8+</button>
+        <button class="nav" data-view="writing">✍️ Writing 6.5+</button>
+        <button class="nav" data-view="speaking">🎙️ Speaking 6.5+</button>
+        <button class="nav" data-view="support">🧠 Grammar & Vocabulary</button>
+        <button class="nav" data-view="review">🔁 Review & Carry-over</button>
+        <button class="nav" data-view="vocab">🗂️ Saved Vocabulary</button>
+        <button class="nav" data-view="dictionary">📖 Từ điển</button>
         <button class="nav" data-view="errors">🧾 Error Log</button>
-        <button class="nav" data-view="books">📚 3 PDF Books</button>
+        <button class="nav" data-view="books">📚 Study Library</button>
         <button class="nav" data-view="resources">🌐 Nguồn học</button>
       </nav>
-      <div class="sideTitle">DAY 1 → 100</div>
-      <div id="dayGrid" class="dayGrid"></div>
+      <div id="dayGrid" class="dayGrid" style="display:none"></div>
     </aside>
 
     <main>
       <section id="view-today" class="view active"><div id="todayCard" class="card panel"></div></section>
-      <section id="view-roadmap" class="view"><div class="card panel"><h2>Lộ trình 100 ngày</h2><div id="roadmapList"></div></div></section>
+      <section id="view-listening" class="view"><div id="listeningModules" class="card panel"></div></section>
+      <section id="view-reading" class="view"><div id="readingModules" class="card panel"></div></section>
+      <section id="view-writing" class="view"><div id="writingModules" class="card panel"></div></section>
+      <section id="view-speaking" class="view"><div id="speakingModules" class="card panel"></div></section>
+      <section id="view-support" class="view"><div id="supportModules" class="card panel"></div></section>
+      <section id="view-roadmap" class="view" style="display:none!important"><div class="card panel"><h2>Lộ trình 100 ngày</h2><div id="roadmapList"></div></div></section>
       <section id="view-review" class="view"><div class="card panel"><h2>Ôn lỗi 1–3–7</h2><p class="muted">Câu bạn làm sai sẽ tự quay lại sau 1, 3 và 7 ngày.</p><div id="reviewList"></div></div></section>
       <section id="view-grammar" class="view"><div class="card panel"><h2>Grammar Library</h2><div id="grammarList" class="grid2"></div></div></section>
       <section id="view-vocab" class="view"><div class="card panel"><h2>Vocabulary & Saved Words</h2><div id="savedWords"></div></div></section>
@@ -52,11 +59,11 @@
 <div class="dictSearch" style="max-width:700px"><input id="dictPageInput" class="search" placeholder="Ví dụ: in, another, read, routine..."><button class="btn primary" id="dictPageGo">Tra từ</button></div>
 <div id="dictPageResult" style="margin-top:12px"></div>
 </div></section>
-<section id="view-books" class="view"><div class="card panel"><h2>3 Improve Your Skills Books</h2>
-<p class="muted">Website dùng 3 cuốn sách làm khung giáo trình. Bản online không public nguyên PDF; nội dung học chính đã được đưa trực tiếp vào từng khung giờ để bạn không cần tự tìm trang.</p>
-<div class="grid2"><div class="grammarCard"><h3>Reading 6.0–7.5</h3><p>10 Units. Roadmap liên kết Unit 1 → Unit 10 với Reading skill và practice trong từng ngày.</p></div>
-<div class="grammarCard"><h3>Writing 6.0–7.5</h3><p>Task 1 + Task 2, outline, timed writing, self-check và rewrite.</p></div>
-<div class="grammarCard"><h3>Listening & Speaking 6.0–7.5</h3><p>Listening Sections + Speaking Part 1–3, transcript, replay và repair.</p></div></div>
+<section id="view-books" class="view"><div class="card panel"><h2>Study Library</h2>
+<p class="muted">Các sách được dùng theo đúng mục đích: học kỹ năng trước, authentic practice sau. Không còn ép Unit theo ngày.</p>
+<div class="grid2"><div class="grammarCard"><h3>Reading 6.0–7.5</h3><p>Dùng để xây Reading skills theo module: skimming, scanning, TFNG, headings, matching và paraphrase.</p></div>
+<div class="grammarCard"><h3>Writing 6.0–7.5</h3><p>Dùng cho Task 1 + Task 2: question analysis, outline, writing, self-check và rewrite.</p></div>
+<div class="grammarCard"><h3>Listening & Speaking 6.0–7.5</h3><p>Dùng để xây Listening và Speaking trước khi chuyển sang full mock/authentic tests.</p></div></div>
 </div></section>
       <section id="view-errors" class="view"><div class="card panel"><h2>Error Log</h2><div class="grid2">
         <textarea class="note error" data-key="grammar" placeholder="Grammar errors..."></textarea>
@@ -102,5 +109,6 @@
 </div>
 
 <script src="app.js?v=20260921-19"></script>
+<script src="flex.js?v=20260921-1"></script>
 </body>
 </html>
