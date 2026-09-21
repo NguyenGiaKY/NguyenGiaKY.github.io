@@ -108,23 +108,42 @@
   function renderRaw(id,text){
     var out=document.getElementById('ai-out-'+id); if(out) out.innerHTML='<div class="aiRaw">'+esc(text)+'</div>';
   }
+  
+  async function ensureAIAuth(){
+    if(!window.puter || !puter.auth) throw new Error('Puter AI chưa tải xong. Hãy refresh trang.');
+    if(puter.auth.isSignedIn && puter.auth.isSignedIn()) return true;
+    try{
+      await puter.auth.signIn({attempt_temp_user_creation:true});
+      return true;
+    }catch(e){
+      var code=(e && (e.error || e.code)) || '';
+      var msg=(e && (e.msg || e.message)) || String(e || '');
+      if(code==='popup_blocked' || /popup/i.test(msg)) throw new Error('Chrome đã chặn cửa sổ đăng nhập AI. Hãy cho phép pop-up cho nguyengiaky.github.io rồi bấm lại.');
+      if(code==='auth_window_closed') throw new Error('Bạn đã đóng cửa sổ đăng nhập AI trước khi hoàn tất.');
+      throw new Error('Chưa đăng nhập được dịch vụ AI: '+msg);
+    }
+  }
   async function startAI(id){
     var st=STATES[id],btn=document.getElementById('ai-start-'+id),status=document.getElementById('ai-status-'+id);
     if(!st || !btn) return;
-    btn.disabled=true; btn.textContent='✨ AI đang phân tích…';
-    if(status) status.textContent='Lần đầu có thể xuất hiện cửa sổ đăng nhập/cho phép của dịch vụ AI.';
+    btn.disabled=true; btn.textContent='✨ Đang kết nối AI…';
+    if(status) status.textContent='Nếu đây là lần đầu, Chrome có thể mở cửa sổ đăng nhập/cho phép AI.';
     try{
+      await ensureAIAuth();
+      btn.textContent='✨ AI đang phân tích…';
+      if(status) status.textContent='Đã kết nối. AI đang đọc từ + câu hiện tại + dữ liệu từ điển…';
       var messages=[{role:'system',content:systemPrompt()},{role:'user',content:analysisPrompt(st)}];
       var resp=await callAI(messages),text=getTextContent(resp);
       st.messages=messages.concat([{role:'assistant',content:text}]);
       try{ renderJSON(id,JSON.parse(stripFence(text))); }catch(e){ renderRaw(id,text); }
       var follow=document.getElementById('ai-follow-'+id); if(follow) follow.style.display='block';
-      if(status) status.textContent='AI đã dùng từ + câu hiện tại + dữ liệu từ điển để giải thích.';
+      if(status) status.textContent='✓ AI Tutor đã hoạt động.';
     }catch(e){
-      renderRaw(id,'AI chưa chạy được: '+(e && e.message ? e.message : e));
-      if(status) status.textContent='Từ điển thường vẫn dùng được bình thường.';
+      var msg=(e && e.message ? e.message : String(e));
+      renderRaw(id,'AI chưa chạy được: '+msg);
+      if(status) status.textContent=msg;
     }finally{
-      btn.disabled=false; btn.textContent='✨ Phân tích lại bằng AI';
+      btn.disabled=false; btn.textContent='✨ Phân tích bằng AI';
     }
   }
   async function followAI(id,q){
@@ -134,6 +153,7 @@
     if(btn){btn.disabled=true;btn.textContent='...';}
     if(out) out.innerHTML='<div class="muted">AI đang trả lời…</div>';
     try{
+      await ensureAIAuth();
       var messages=st.messages && st.messages.length ? st.messages.slice(-6) : [{role:'system',content:systemPrompt()},{role:'user',content:analysisPrompt(st)}];
       messages=messages.concat([{role:'user',content:'Câu hỏi tiếp theo về từ "'+st.word+'": '+q+'\nTrả lời bằng tiếng Việt, ngắn gọn, có ví dụ tiếng Anh nếu hữu ích.'}]);
       var resp=await callAI(messages),text=getTextContent(resp);
