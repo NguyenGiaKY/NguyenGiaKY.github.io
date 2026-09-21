@@ -18,8 +18,10 @@
 
   var st = {
     index:0, stream:null, recorder:null, chunks:[], blob:null, url:null,
-    recognition:null, transcript:"", confidence:0, startedAt:0, timer:null,
-    audioCtx:null, analyser:null, source:null, raf:null, finishHandler:null, recording:false
+    recognition:null, transcript:"", finalTranscript:"", interimTranscript:"", confidence:0,
+    recognitionEnded:true, recognitionWaiters:[], recognitionError:"",
+    startedAt:0, timer:null, audioCtx:null, analyser:null, source:null, raf:null,
+    finishHandler:null, recording:false
   };
 
   function esc(s) {
@@ -109,6 +111,7 @@
         '<button id="spkModalClose" class="spkModalX">×</button>' +
         '<div class="spkModalQuestion"><span class="spkPart">IELTS Part ' + q.part + '</span><h2>' + esc(q.q) + '</h2><p>Thử dùng <b>' + esc(q.word) + '</b> · ' + esc(q.ipa) + '</p></div>' +
         '<div class="spkWaveBox"><canvas id="spkWave" width="900" height="120"></canvas><div class="spkWaveMeta"><span>Tối đa 3:00</span><b id="spkTime">0:00</b></div></div>' +
+        '<div class="spkLiveBox"><b>Hệ thống đang nghe:</b><p id="spkLiveTranscript">Đang nghe…</p></div>' +
         '<div class="spkModalActions"><button id="spkCancel" class="spkCancelBtn">Huỷ</button><button id="spkSend" class="spkSendBtn">↑ Gửi</button></div>' +
       '</div>';
 
@@ -151,31 +154,69 @@
     }
   }
 
+  function resolveRecognitionWaiters(){
+    var list=st.recognitionWaiters.splice(0);
+    list.forEach(function(fn){try{fn();}catch(e){}});
+  }
+
+  function waitForRecognitionFinal(timeoutMs){
+    if(st.recognitionEnded)return Promise.resolve();
+    return new Promise(function(resolve){
+      var done=false;
+      function finish(){if(done)return;done=true;resolve();}
+      st.recognitionWaiters.push(finish);
+      setTimeout(finish,timeoutMs||1400);
+    });
+  }
+
   function startRecognition() {
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-    try {
-      var r = new SR();
-      st.recognition = r;
-      r.lang = "en-NZ";
-      r.continuous = true;
-      r.interimResults = true;
-      r.maxAlternatives = 3;
-      r.onresult = function (ev) {
-        var finalText = "", interimText = "", conf = [];
-        for (var i = 0; i < ev.results.length; i++) {
-          var best = ev.results[i][0];
-          var t = best ? best.transcript : "";
-          if (best && typeof best.confidence === "number") conf.push(best.confidence);
-          if (ev.results[i].isFinal) finalText += t + " ";
-          else interimText += t + " ";
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    st.finalTranscript="";
+    st.interimTranscript="";
+    st.transcript="";
+    st.confidence=0;
+    st.recognitionError="";
+    st.recognitionEnded=!SR;
+    if(!SR)return;
+
+    try{
+      var r=new SR();
+      st.recognition=r;
+      st.recognitionEnded=false;
+      r.lang="en-NZ";
+      r.continuous=true;
+      r.interimResults=true;
+      r.maxAlternatives=3;
+
+      r.onresult=function(ev){
+        var finals=[],interims=[],conf=[];
+        for(var i=0;i<ev.results.length;i++){
+          var best=ev.results[i][0];
+          var t=best?String(best.transcript||"").trim():"";
+          if(!t)continue;
+          if(best&&typeof best.confidence==="number"&&best.confidence>0)conf.push(best.confidence);
+          if(ev.results[i].isFinal)finals.push(t); else interims.push(t);
         }
-        st.transcript = (finalText + " " + interimText).trim();
-        if (conf.length) st.confidence = conf.reduce(function(a,b){return a+b;},0) / conf.length;
+        st.finalTranscript=finals.join(" ").trim();
+        st.interimTranscript=interims.join(" ").trim();
+        st.transcript=(st.finalTranscript+" "+st.interimTranscript).trim();
+        if(conf.length)st.confidence=conf.reduce(function(x,y){return x+y;},0)/conf.length;
+        var live=document.getElementById("spkLiveTranscript");
+        if(live)live.textContent=st.transcript||"Đang nghe…";
       };
-      r.onerror = function () {};
+
+      r.onerror=function(ev){st.recognitionError=ev&&ev.error?String(ev.error):"recognition-error";};
+      r.onend=function(){
+        st.recognitionEnded=true;
+        st.transcript=(st.finalTranscript||st.transcript||"").trim();
+        resolveRecognitionWaiters();
+      };
       r.start();
-    } catch (e) {}
+    }catch(e){
+      st.recognitionEnded=true;
+      st.recognitionError=String(e);
+      resolveRecognitionWaiters();
+    }
   }
 
   function startWave() {
@@ -235,24 +276,100 @@
     cleanup(true);
   }
 
-  function sendRecorder() {
-    if (!st.recording) return;
-    var rec = st.recorder;
-    st.recording = false;
+  async function sendRecorder() {
+    if(!st.recording)return;
+    st.recording=false;
 
-    if (rec && rec.state !== "inactive") {
-      rec.onstop = function () {
-        st.blob = new Blob(st.chunks, {type:rec.mimeType || "audio/webm"});
-        if (st.url) URL.revokeObjectURL(st.url);
-        st.url = URL.createObjectURL(st.blob);
-        cleanup(true);
-        showResult(true);
-      };
-      try { rec.stop(); } catch (e) { cleanup(true); showResult(true); }
-    } else {
-      cleanup(true);
+    var sendBtn=document.getElementById("spkSend");
+    if(sendBtn){sendBtn.disabled=true;sendBtn.textContent="Đang nhận bài nói…";}
+
+    try{
+      if(st.recognition&&!st.recognitionEnded){
+        try{st.recognition.stop();}catch(e){}
+      }
+      await waitForRecognitionFinal(1500);
+    }catch(e){}
+
+    var rec=st.recorder;
+    function finishRecording(){
+      if(st.stream)st.stream.getTracks().forEach(function(t){try{t.stop();}catch(e){}});
+      if(st.raf)cancelAnimationFrame(st.raf);
+      if(st.audioCtx){try{st.audioCtx.close();}catch(e){}}
+      st.stream=null;st.raf=null;st.audioCtx=null;
+      var m=document.getElementById("spkRecordModal");if(m)m.remove();
+
+      st.transcript=(st.finalTranscript||st.transcript||"").trim();
+      if(wordList(st.transcript).length<2){showRecognitionFailure();return;}
       showResult(true);
     }
+
+    if(rec&&rec.state!=="inactive"){
+      rec.onstop=function(){
+        st.blob=new Blob(st.chunks,{type:rec.mimeType||"audio/webm"});
+        if(st.url)URL.revokeObjectURL(st.url);
+        st.url=URL.createObjectURL(st.blob);
+        finishRecording();
+      };
+      try{rec.stop();}catch(e){finishRecording();}
+    }else finishRecording();
+  }
+
+  function showRecognitionFailure(){
+    var body=document.getElementById("lessonBody");if(!body)return;
+    var reason=(st.recognitionError==="not-allowed"||st.recognitionError==="service-not-allowed")
+      ?"Chrome chưa được phép dùng nhận dạng giọng nói."
+      :"Website chưa nhận được đủ lời nói để chấm chính xác.";
+    body.innerHTML='<div class="spkApp"><div class="spkRecognitionError"><div class="spkErrorIcon">🎙️</div><h2>Chưa nhận được bài nói</h2><p>'+esc(reason)+'</p><p>Mình không cho website tạo band giả khi chưa nhận đủ câu trả lời.</p><div class="spkResultActions"><button id="spkRecRetry" class="btn primary">🎙️ Ghi lại</button><button id="spkRecBack" class="btn">← Quay lại câu hỏi</button></div></div></div>';
+    document.getElementById("spkRecRetry").onclick=openRecorder;
+    document.getElementById("spkRecBack").onclick=renderQuestion;
+  }
+
+  function scoreToBand(p){
+    var b=4+(Number(p)-45)/13;
+    return clamp(Math.round(b*2)/2,3.5,9);
+  }
+
+  function countConnectors(text){
+    var m=String(text||"").match(/\b(because|however|although|therefore|for example|for instance|while|whereas|so|but|also|firstly|secondly|personally|in my opinion)\b/gi);
+    return m?m.length:0;
+  }
+
+  function localCorrections(text){
+    var out=[],t=String(text||"");
+    var rules=[
+      [/\bi am agree\b/i,"I agree","agree không dùng với am"],
+      [/\bpeople is\b/i,"people are","people là danh từ số nhiều"],
+      [/\bthere have\b/i,"there is / there are","dùng there is/are để nói có"],
+      [/\bmore better\b/i,"better","better đã là dạng so sánh hơn"],
+      [/\bdiscuss about\b/i,"discuss","discuss không cần about"],
+      [/\bdepend of\b/i,"depend on","collocation đúng là depend on"],
+      [/\binformations\b/i,"information","information là danh từ không đếm được"],
+      [/\badvices\b/i,"advice","advice là danh từ không đếm được"],
+      [/\bchildrens\b/i,"children","children đã là số nhiều"]
+    ];
+    rules.forEach(function(r){var m=t.match(r[0]);if(m)out.push({wrong:m[0],better:r[1],reason:r[2]});});
+    return out.slice(0,6);
+  }
+
+  function questionKeywords(q){
+    var map={
+      "What do you usually do after school?":["school","study","home","relax","game","family","homework","usually","after"],
+      "Do you prefer studying alone or with other people?":["study","alone","people","prefer","focus","concentrate","friend","group"],
+      "How often do you read in English?":["read","english","often","every","week","article","book","website"],
+      "Describe a skill you would like to improve.":["skill","improve","practice","learn","better","progress","speaking","writing"],
+      "Describe a place where you like to study.":["place","study","library","room","home","quiet","focus","productive"],
+      "To what extent do you think family members tend to have similar personality traits?":["family","member","personality","trait","similar","genetic","experience","resemblance"],
+      "Why do some people struggle to study consistently?":["study","consistently","struggle","discipline","routine","motivation","distraction","stress"],
+      "How has technology changed the way people learn?":["technology","learn","online","information","course","internet","ai","access"]
+    };
+    return map[q.q]||[];
+  }
+
+  function questionCoverage(text,q){
+    var low=String(text||"").toLowerCase(),keys=questionKeywords(q),hit=0;
+    if(!keys.length)return .5;
+    keys.forEach(function(k){if(low.indexOf(k)>=0)hit++;});
+    return hit/keys.length;
   }
 
   function localScores() {
