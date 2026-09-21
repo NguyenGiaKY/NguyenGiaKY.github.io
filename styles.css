@@ -110,3 +110,52 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
 #pronRecord.recording{background:#b42318;color:#fff}
 .coachHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.coachHeader h3{margin:4px 0}.coachHeader small{color:var(--muted);max-width:340px;line-height:1.4}
 @media(max-width:700px){.pronMetrics{grid-template-columns:1fr}.pronMetric:last-child{grid-column:auto}.pronVoiceRow,.pronActions,.pronBottom{grid-template-columns:1fr}.coachHeader{flex-direction:column}}
+
+/* Speaking studio v2 */
+.spkApp{max-width:920px;margin:0 auto}
+.spkTopbar,.spkResultTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.spkCount{margin-left:auto;color:var(--muted);font-size:13px}
+.spkPart{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;background:#eef0f4;font-weight:800;font-size:12px}
+.spkGhost{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer}
+.spkQuestionCard{border:1px solid var(--line);border-radius:18px;background:#fff;padding:26px;box-shadow:0 8px 30px rgba(23,32,51,.05)}
+.spkQuestionCard h2{font-size:32px;line-height:1.18;max-width:850px;margin:0 0 28px}
+.spkTarget{font-size:16px;color:#4b5563;margin:0 0 24px}.spkTarget b{color:#111827}.spkTarget span{color:#6b7280}
+.spkMiniActions{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;margin:22px 0}
+.spkLinkBtn{border:0;background:transparent;font-weight:800;color:#465166;cursor:pointer;padding:8px}
+.spkHelpBox{max-width:680px;margin:0 auto 18px;background:#f7f9fc;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:#475569}
+.spkLanguage{text-align:center;color:#64748b;margin:18px 0}
+.spkStartRow{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.spkStartBtn,.spkTypeBtn{border-radius:12px;padding:16px 18px;font-size:18px;font-weight:900;cursor:pointer}
+.spkStartBtn{background:#1f2937;color:white;border:1px solid #1f2937}.spkTypeBtn{background:#fff;border:1px solid var(--line);color:#1f2937}
+.spkTypedWrap{margin-top:14px}.spkTypedWrap textarea{width:100%;min-height:130px;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.spkModal{position:fixed;inset:0;z-index:99999;display:grid;place-items:center}
+.spkModalBackdrop{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(2px)}
+.spkModalCard{position:relative;z-index:1;width:min(620px,92vw);max-height:88vh;overflow:auto;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.35);padding:26px}
+.spkModalX{position:absolute;right:16px;top:12px;border:0;background:transparent;font-size:28px;cursor:pointer;color:#64748b}
+.spkModalQuestion h2{font-size:29px;line-height:1.25;margin:14px 0 10px}.spkModalQuestion p{color:#64748b}
+.spkWaveBox{margin-top:24px;background:#f3f6fb;border-radius:16px;padding:12px}
+#spkWave{width:100%;height:120px;display:block}
+.spkWaveMeta{display:flex;justify-content:space-between;color:#64748b;font-variant-numeric:tabular-nums;padding:2px 6px 0}
+.spkModalActions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.spkCancelBtn,.spkSendBtn{min-height:52px;border-radius:12px;font-size:18px;font-weight:900;cursor:pointer}
+.spkCancelBtn{background:#fff;border:1px solid var(--line)}.spkSendBtn{background:#000;color:#fff;border:1px solid #000}
+.spkMicError{padding:28px;text-align:center;color:#b42318;font-weight:800}
+.spkFeedbackCard{border-radius:16px;padding:18px;border:1px solid #b9ecc8;background:#f0fff4;margin-bottom:14px}
+.spkDoneLine{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#16763a}.spkDoneLine b{background:#ddf7e5;border-radius:8px;padding:6px 10px}
+.spkFeedbackCard h3{margin:18px 0 6px}.spkTranscript,.spkCorrected{font-size:17px;line-height:1.65;margin:0}
+.spkCorrected{color:#176f36}
+.spkScoreRow{display:flex;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:14px;padding:10px;margin:14px 0;background:#fafbfc}
+.spkMetricChip{border:1px solid #d7dce5;border-radius:999px;padding:7px 11px;background:#fff}
+.spkCoachBox{border:1px solid #f0cf74;background:#fff9e8;border-radius:16px;padding:16px;margin-top:14px}
+.spkCoachBox>div{display:flex;justify-content:space-between;gap:12px}.spkCoachBox>div span{font-weight:900}.spkCoachBox>div b{background:#e8f0ff;padding:4px 8px;border-radius:7px}
+.spkCoachBox p{line-height:1.65;margin:10px 0 0}
+.spkHighBand{border:1px solid #b9d6ff;background:#eef5ff;border-radius:16px;padding:16px;margin-top:14px}
+.spkHighBand p{font-size:17px;line-height:1.65;color:#176f36}
+.spkReplay{width:100%;margin-top:14px}
+.spkResultActions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.spkProcessing{text-align:center;padding:60px 20px}.spkSpinner{width:38px;height:38px;border-radius:50%;border:4px solid #dfe6f4;border-top-color:#3157d5;margin:0 auto 16px;animation:spkspin .8s linear infinite}
+@keyframes spkspin{to{transform:rotate(360deg)}}
+@media(max-width:700px){
+ .spkQuestionCard{padding:18px}.spkQuestionCard h2{font-size:25px}.spkStartRow,.spkModalActions,.spkResultActions{grid-template-columns:1fr}
+ .spkMiniActions{gap:8px}.spkModalCard{padding:20px}.spkModalQuestion h2{font-size:24px}.spkCount{width:100%;margin-left:0}
+}
