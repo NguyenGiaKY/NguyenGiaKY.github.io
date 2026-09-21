@@ -202,7 +202,21 @@ function lessonText(type,d){
   return '<div class="timePlan"><div><b>0–8 phút</b>Strategy</div><div><b>8–28 phút</b>Read</div><div><b>28–43 phút</b>12 câu</div><div><b>43–52 phút</b>Evidence</div><div><b>52–55 phút</b>Error Log</div></div><div class="notice"><b>Strategy:</b> skim main idea → locate evidence → identify paraphrase → answer.</div><div class="passage"><h3>'+r.title+'</h3><p>'+r.text+'</p></div><h3>Questions • 12 câu thật</h3>'+r.q.map((q,i)=>qHTML(q,i,'r')).join('')+'<div class="checkRow"><button id="checkReading" class="btn primary">Check Reading + evidence</button><span id="r-score"></span></div>';
  }
  if(type==='listening'){
-  let l=listeningPack(d),h='<div class="timePlan"><div><b>0–5 phút</b>Predict</div><div><b>5–12 phút</b>Listen 1</div><div><b>12–25 phút</b>10 câu</div><div><b>25–37 phút</b>Transcript</div><div><b>37–45 phút</b>Listen again</div></div><div class="notice"><b>Prediction:</b> trước khi nghe, đoán loại đáp án: date, time, place, number, noun...</div><div class="checkRow"><button id="playAudio" class="btn primary">▶ Play audio</button><button id="showScript" class="btn">Transcript</button></div><div id="script" class="passage hidden">'+l.script+'</div><h3>Questions • 10 câu thật</h3>';
+  let l=listeningPack(d),h='<div class="timePlan"><div><b>0–5 phút</b>Predict</div><div><b>5–12 phút</b>Listen 1</div><div><b>12–25 phút</b>10 câu</div><div><b>25–37 phút</b>Transcript</div><div><b>37–45 phút</b>Listen again</div></div><div class="notice"><b>Prediction:</b> trước khi nghe, đoán loại đáp án: date, time, place, number, noun...</div>'+
+  '<div class="listenPlayer">'+
+    '<div class="listenPlayerMain">'+
+      '<button id="playAudio" class="btn primary">▶ Phát</button>'+
+      '<button id="pauseAudio" class="btn">⏸ Tạm dừng</button>'+
+      '<button id="stopAudio" class="btn">⏹ Dừng</button>'+
+      '<button id="showScript" class="btn">Transcript</button>'+
+    '</div>'+
+    '<div class="listenSettings">'+
+      '<label><span>Tốc độ</span><input id="listenRate" type="range" min="0.65" max="1.25" step="0.05" value="0.90"><b id="listenRateLabel">0.90×</b></label>'+
+      '<label><span>Giọng</span><select id="listenVoice"><option value="auto-uk">Tự nhiên • UK</option><option value="auto-us">Tự nhiên • US</option></select></label>'+
+    '</div>'+
+    '<div class="listenStatus"><span id="listenStatusText">Sẵn sàng</span><span id="listenProgress"></span></div>'+
+  '</div>'+
+  '<div id="script" class="passage hidden">'+l.script+'</div><h3>Questions • 10 câu thật</h3>';
   l.q.forEach((q,i)=>h+='<div class="q"><b>'+(i+1)+'. '+q[0]+'</b><input class="search lanswer" data-i="'+i+'" placeholder="Your answer"><div class="feedback hidden" id="l-fb-'+i+'"></div></div>');
   return h+'<div class="checkRow"><button id="checkListening" class="btn primary">Check Listening</button></div>';
  }
@@ -222,6 +236,124 @@ function checkChoice(prefix,qs,d,type){
  });
  let s=document.getElementById(prefix+'-score');if(s)s.textContent=correct+'/'+qs.length;
 }
+
+const listeningTTSState={playing:false,paused:false,stopped:true,chunks:[],index:0,script:'',rate:.9,voiceMode:'auto-uk',utterance:null};
+
+function listeningVoices(){
+ try{return speechSynthesis.getVoices()||[]}catch(e){return[]}
+}
+function voiceQualityScore(v,accent){
+ let n=(v.name||'').toLowerCase(),lang=(v.lang||'').toLowerCase(),score=0;
+ let want=accent==='US'?'en-us':'en-gb';
+ if(lang===want)score+=30;
+ else if(lang.startsWith('en'))score+=10;
+ if(/google/.test(n))score+=18;
+ if(/premium|enhanced|natural|neural/.test(n))score+=20;
+ if(/daniel|samantha|serena|oliver|aaron|jamie|ava|allison|tom|karen|moira|tessa/.test(n))score+=8;
+ if(/compact|novelty|whisper|zarvox|bells|boing/.test(n))score-=30;
+ return score;
+}
+function chooseListeningVoice(mode){
+ let vs=listeningVoices();
+ if(!vs.length)return null;
+ if(mode&&mode.startsWith('voice:')){
+   let name=decodeURIComponent(mode.slice(6));return vs.find(v=>v.name===name)||null;
+ }
+ let accent=mode==='auto-us'?'US':'UK';
+ return vs.slice().sort((a,b)=>voiceQualityScore(b,accent)-voiceQualityScore(a,accent))[0]||null;
+}
+function populateListeningVoices(){
+ let sel=document.getElementById('listenVoice');if(!sel)return;
+ let current=sel.value||'auto-uk',vs=listeningVoices().filter(v=>/^en[-_]/i.test(v.lang||'')||/^English/i.test(v.name||''));
+ let seen=new Set(),html='<option value="auto-uk">Tự nhiên • UK</option><option value="auto-us">Tự nhiên • US</option>';
+ vs.sort((a,b)=>voiceQualityScore(b,'UK')-voiceQualityScore(a,'UK')).forEach(v=>{
+   if(seen.has(v.name))return;seen.add(v.name);
+   html+='<option value="voice:'+encodeURIComponent(v.name)+'">'+descape(v.name)+' • '+descape(v.lang||'English')+'</option>';
+ });
+ sel.innerHTML=html;
+ if([...sel.options].some(o=>o.value===current))sel.value=current;
+}
+function splitListeningScript(text){
+ let parts=String(text||'').match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[text];
+ let out=[];
+ parts.forEach(s=>{
+   s=s.trim();if(!s)return;
+   if(s.length<=220){out.push(s);return}
+   let clauses=s.match(/[^,;:]+[,;:]?|[^,;:]+$/g)||[s],buf='';
+   clauses.forEach(x=>{
+     if((buf+' '+x).trim().length>180&&buf){out.push(buf.trim());buf=x}
+     else buf=(buf+' '+x).trim();
+   });
+   if(buf)out.push(buf.trim());
+ });
+ return out;
+}
+function setListeningStatus(text){
+ let el=document.getElementById('listenStatusText');if(el)el.textContent=text;
+ let p=document.getElementById('listenProgress');
+ if(p)p.textContent=listeningTTSState.chunks.length&&listeningTTSState.playing?'Câu '+Math.min(listeningTTSState.index+1,listeningTTSState.chunks.length)+' / '+listeningTTSState.chunks.length:'';
+}
+function stopListeningAudio(reset=true){
+ try{speechSynthesis.cancel()}catch(e){}
+ listeningTTSState.playing=false;listeningTTSState.paused=false;listeningTTSState.stopped=true;listeningTTSState.utterance=null;
+ if(reset)listeningTTSState.index=0;
+ setListeningStatus('Đã dừng');
+}
+function speakListeningChunk(){
+ let s=listeningTTSState;
+ if(s.stopped||s.index>=s.chunks.length){
+   s.playing=false;s.paused=false;s.stopped=true;s.index=0;setListeningStatus('Đã phát xong');return;
+ }
+ let u=new SpeechSynthesisUtterance(s.chunks[s.index]);
+ let mode=s.voiceMode||'auto-uk',voice=chooseListeningVoice(mode);
+ u.lang=mode==='auto-us'?'en-US':'en-GB';
+ if(voice){u.voice=voice;u.lang=voice.lang||u.lang}
+ u.rate=s.rate||.9;
+ u.pitch=1;
+ u.volume=1;
+ u.onstart=()=>{s.playing=true;s.paused=false;setListeningStatus('Đang phát')};
+ u.onend=()=>{if(s.stopped)return;s.index++;setTimeout(speakListeningChunk,80)};
+ u.onerror=()=>{if(s.stopped)return;s.index++;setTimeout(speakListeningChunk,80)};
+ s.utterance=u;
+ try{speechSynthesis.speak(u)}catch(e){setListeningStatus('Không thể phát audio')}
+}
+function startListeningAudio(script){
+ let s=listeningTTSState;
+ try{speechSynthesis.cancel()}catch(e){}
+ s.script=script;s.chunks=splitListeningScript(script);s.index=0;s.stopped=false;s.paused=false;s.playing=true;
+ let rate=document.getElementById('listenRate');if(rate)s.rate=parseFloat(rate.value)||.9;
+ let voice=document.getElementById('listenVoice');if(voice)s.voiceMode=voice.value||'auto-uk';
+ speakListeningChunk();
+}
+function pauseResumeListening(){
+ let s=listeningTTSState;if(!s.playing&&!s.paused)return;
+ try{
+   if(s.paused){speechSynthesis.resume();s.paused=false;setListeningStatus('Đang phát');let b=document.getElementById('pauseAudio');if(b)b.textContent='⏸ Tạm dừng'}
+   else{speechSynthesis.pause();s.paused=true;setListeningStatus('Đã tạm dừng');let b=document.getElementById('pauseAudio');if(b)b.textContent='▶ Tiếp tục'}
+ }catch(e){}
+}
+function restartListeningAtRate(){
+ let s=listeningTTSState;if(!s.playing||s.stopped)return;
+ let rate=document.getElementById('listenRate');if(rate)s.rate=parseFloat(rate.value)||.9;
+ let voice=document.getElementById('listenVoice');if(voice)s.voiceMode=voice.value||'auto-uk';
+ try{speechSynthesis.cancel()}catch(e){}
+ s.stopped=false;s.paused=false;
+ setTimeout(speakListeningChunk,80);
+}
+function initListeningPlayer(script){
+ let rate=document.getElementById('listenRate'),rateLabel=document.getElementById('listenRateLabel'),voice=document.getElementById('listenVoice');
+ populateListeningVoices();
+ if(typeof speechSynthesis!=='undefined')speechSynthesis.onvoiceschanged=()=>populateListeningVoices();
+ if(rate){
+   rate.oninput=()=>{if(rateLabel)rateLabel.textContent=Number(rate.value).toFixed(2)+'×'};
+   rate.onchange=()=>restartListeningAtRate();
+ }
+ if(voice)voice.onchange=()=>restartListeningAtRate();
+ document.getElementById('playAudio').onclick=()=>startListeningAudio(script);
+ document.getElementById('pauseAudio').onclick=()=>pauseResumeListening();
+ document.getElementById('stopAudio').onclick=()=>stopListeningAudio(true);
+ setListeningStatus('Sẵn sàng');
+}
 function openLesson(d,i){
  let s=slots(d)[i],type=s[1];
  document.getElementById('lessonOverlay').classList.add('open');document.body.style.overflow='hidden';
@@ -236,13 +368,13 @@ function openLesson(d,i){
  if(type==='reading'){let qs=readingPack(d).q;document.getElementById('checkReading').onclick=()=>checkChoice('r',qs,d,'reading');}
  if(type==='listening'){
   let l=listeningPack(d);
-  document.getElementById('playAudio').onclick=()=>{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(l.script);u.lang='en-GB';u.rate=.9;speechSynthesis.speak(u);};
+  initListeningPlayer(l.script);
   document.getElementById('showScript').onclick=()=>document.getElementById('script').classList.toggle('hidden');
   document.getElementById('checkListening').onclick=()=>document.querySelectorAll('.lanswer').forEach(inp=>{let j=+inp.dataset.i,q=l.q[j],ok=inp.value.trim().toLowerCase()===q[1].toLowerCase(),fb=document.getElementById('l-fb-'+j);fb.classList.remove('hidden');fb.className='feedback '+(ok?'good':'bad');fb.innerHTML=ok?'✓ Correct':'✗ Correct: <b>'+q[1]+'</b><br>'+q[2];if(!ok&&typeof mistake==='function')mistake(d,'listening',q[0],q[1],q[2]);});
  }
  document.getElementById('finish').onclick=()=>{st.done[key(d,i)]=true;save();progress();renderDays();document.getElementById('finish').textContent='✓ Đã hoàn thành';};
 }
-document.getElementById('lessonClose').onclick=()=>{document.getElementById('lessonOverlay').classList.remove('open');document.body.style.overflow='';renderToday();};
+document.getElementById('lessonClose').onclick=()=>{stopListeningAudio(true);document.getElementById('lessonOverlay').classList.remove('open');document.body.style.overflow='';renderToday();};
 
 
 /* Universal contextual dictionary: online-first, every word, all POS */
