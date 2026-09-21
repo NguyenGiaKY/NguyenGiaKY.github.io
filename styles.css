@@ -69,3 +69,22 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
 .listenSeek::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:#dfe6f4}
 .listenSeek::-webkit-slider-thumb{margin-top:-5px}
 .listenSeek:active{cursor:grabbing}
+
+/* Listening + Speaking enhancement */
+.hidden{display:none!important}
+.listenSeekRow{display:grid;grid-template-columns:44px 1fr 44px;gap:10px;align-items:center;margin-bottom:12px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.listenSeek{width:100%;cursor:pointer;accent-color:#3157d5}
+.listenSeek::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:#dfe6f4}
+.listenSeek::-webkit-slider-thumb{margin-top:-5px}
+.listenPlayerMain{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.listenStatus{margin-top:8px;color:var(--muted);font-size:13px}
+.speakingCoach{margin-top:18px;border:1px solid var(--line);border-radius:16px;padding:16px;background:#fbfcff}
+.speakingCoachTop{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.speakingCoachTop select{margin-left:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+#speakingTimer{font-variant-numeric:tabular-nums;font-size:20px}
+#speakingPlayback{width:100%;margin:10px 0}
+.aiSpeakingResult{margin-top:14px}
+.aiBand{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid #d7e0f5;border-radius:14px;padding:12px;background:#f7f9ff;margin-bottom:12px}
+.aiBand span,.aiBand small{color:var(--muted)}
+.aiBand strong{font-size:28px;color:#3157d5}
+@media(max-width:700px){.listenSeekRow{grid-template-columns:38px 1fr 38px}.speakingCoachTop{align-items:flex-start;flex-direction:column}}
