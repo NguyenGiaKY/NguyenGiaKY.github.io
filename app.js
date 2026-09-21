@@ -230,13 +230,173 @@ function openLesson(d,i){
 }
 document.getElementById('lessonClose').onclick=()=>{document.getElementById('lessonOverlay').classList.remove('open');document.body.style.overflow='';renderToday();};
 
-const dict=document.getElementById('dictionary');document.getElementById('dictButton').onclick=()=>dict.classList.add('open');document.getElementById('dictClose').onclick=()=>dict.classList.remove('open');document.getElementById('dictMin').onclick=()=>dict.classList.toggle('min');document.getElementById('dictMax').onclick=()=>dict.classList.toggle('max');
-let dg=false,dx=0,dy=0,hd=document.getElementById('dictHandle');hd.onpointerdown=e=>{if(e.target.closest('button'))return;let r=dict.getBoundingClientRect();dg=true;dx=e.clientX-r.left;dy=e.clientY-r.top};hd.onpointermove=e=>{if(!dg)return;dict.style.left=Math.max(0,e.clientX-dx)+'px';dict.style.top=Math.max(0,e.clientY-dy)+'px';dict.style.right='auto';dict.style.bottom='auto'};hd.onpointerup=()=>dg=false;
-const clean=w=>(w||'').trim().toLowerCase().replace(/^[^a-z]+|[^a-z'-]+$/g,'');
-async function tr(t){try{let r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t)+'&langpair=en%7Cvi'),j=await r.json();return j.responseData.translatedText||''}catch(e){return''}}
-async function lookup(w,s=''){w=clean(w);if(!w)return;dict.classList.add('open');document.getElementById('dictInput').value=w;let o=document.getElementById('dictResult');o.innerHTML='<div class="dictWord">'+w+'</div><p>Đang tra online…</p>';try{let r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w)),j=await r.json(),e=j[0],cards='';for(let m of e.meanings){let d=m.definitions[0],v=await tr(d.definition);cards+='<div class="posCard"><b>'+m.partOfSpeech+'</b><div class="definition"><div class="vi">'+v+'</div><div class="en">'+d.definition+'</div></div></div>'}let cur=e.meanings[0]?.partOfSpeech||'unknown',meaning=await tr(e.meanings[0]?.definitions[0]?.definition||w),audio=(e.phonetics||[]).find(x=>x.audio)?.audio||'';o.innerHTML='<div class="dictWord">'+w+'</div><div class="contextCard"><b>Trong câu này</b>'+(s?'<div class="contextSentence">'+s+'</div>':'')+'<div class="usage"><b>Nghĩa phù hợp</b><span>'+meaning+'</span><b>Loại từ</b><span>'+cur+'</span></div></div><h3>Tất cả loại từ / nghĩa phổ biến</h3>'+cards+'<div class="dictActions"><button id="pw">🔊 Phát âm</button><button class="save" id="sw">⭐ Lưu ôn</button></div>';document.getElementById('pw').onclick=()=>audio?new Audio(audio).play():(()=>{let u=new SpeechSynthesisUtterance(w);u.lang='en-GB';speechSynthesis.speak(u)})();document.getElementById('sw').onclick=()=>{st.saved[w]={w,m:meaning};save();renderSaved()}}catch(e){o.innerHTML='<div class="dictWord">'+w+'</div><p>Không lấy được dữ liệu lúc này.</p>'}}
-function sentence(){let s=getSelection();if(!s||!s.rangeCount)return'';let n=s.getRangeAt(0).commonAncestorContainer;if(n.nodeType===3)n=n.parentElement;return(n.closest?.('p,li,.q,.example,.learnBox')||n).innerText?.slice(0,500)||''}
-document.getElementById('dictGo').onclick=()=>lookup(document.getElementById('dictInput').value);document.addEventListener('dblclick',()=>{let w=getSelection().toString().trim();if(w&&/[A-Za-z]/.test(w))lookup(w,sentence())});
 
+/* Universal contextual dictionary: online-first, every word, all POS */
+const dict=document.getElementById('dictionary'),hd=document.getElementById('dictHandle');
+const DCACHE_KEY='ielts_dict_v11_cache',TCACHE_KEY='ielts_dict_v11_translate',DPOS_KEY='ielts_dict_v11_window';
+let dcache={},tcache={};
+try{dcache=JSON.parse(localStorage.getItem(DCACHE_KEY)||'{}')}catch(e){}
+try{tcache=JSON.parse(localStorage.getItem(TCACHE_KEY)||'{}')}catch(e){}
+const POSVI={noun:'danh từ',verb:'động từ',adjective:'tính từ',adverb:'trạng từ',preposition:'giới từ',conjunction:'liên từ',pronoun:'đại từ',determiner:'từ hạn định',article:'mạo từ',interjection:'thán từ',auxiliary:'trợ động từ',modal:'động từ khuyết thiếu',particle:'tiểu từ'};
+const CORE={
+ in:{s:[['preposition','trong; ở; vào','inside or within a place, time or situation','She is in the classroom.'],['adverb','vào trong; ở trong','towards or at the inside','Come in.'],['adjective','đang thịnh hành; hợp thời','fashionable or popular','That style is in.'],['noun','người có quan hệ/ảnh hưởng; lợi thế nội bộ','an influential connection or advantage','He has an in with the organisers.']]},
+ another:{s:[['determiner','một ... khác; thêm một','one more or a different one before a noun','Can I have another example?'],['pronoun','một người/vật khác','a different person or thing','One answer is correct; another is not.']]},
+ read:{s:[['verb','đọc; xem và hiểu chữ viết','to look at and understand written words','I read English articles every day.'],['noun','một bài/lần đọc; thứ đáng đọc','an act of reading or something worth reading','This article is a useful read.'],['adjective','đọc nhiều; có kiến thức qua đọc (thường trong well-read)','knowledgeable through reading','She is a well-read student.']]},
+ take:{s:[['verb','lấy; mang; thực hiện; tham gia/học','to carry, receive, perform, or participate in something','Students take online courses.'],['noun','lần quay/cảnh quay; quan điểm/cách nhìn','a recorded attempt or a particular view','What is your take on this issue?']]},
+ have:{s:[['verb','có; sở hữu; ăn/uống; trải qua','to possess, experience, eat or drink','I have breakfast at 7 a.m.'],['auxiliary','trợ động từ tạo thì hoàn thành','used to form perfect tenses','I have finished.']]},
+ do:{s:[['verb','làm; thực hiện','to perform an action or task','I do my homework after dinner.'],['auxiliary','trợ động từ trong câu hỏi/phủ định/nhấn mạnh','used for questions, negatives and emphasis','Do you study every day?']]},
+ be:{s:[['verb','là; thì; ở; tồn tại','to exist or link a subject with information','She is a student.'],['auxiliary','trợ động từ cho tiếp diễn và bị động','used in continuous and passive forms','She is studying.']]},
+ the:{s:[['article','mạo từ xác định: cái/người/sự vật cụ thể','definite article for something specific or known','the book on the table']]},
+ a:{s:[['article','một; đối tượng chưa xác định','indefinite article before a singular countable noun','a student']]},
+ an:{s:[['article','một; dùng trước âm nguyên âm','indefinite article before a vowel sound','an example']]},
+ of:{s:[['preposition','của; về; thuộc','shows belonging, connection, amount or composition','the number of students']]},
+ to:{s:[['preposition','đến; tới; hướng tới','towards a place, person, limit or result','go to school'],['particle','dấu hiệu infinitive','infinitive marker before a base verb','to study']]},
+ for:{s:[['preposition','cho; dành cho; trong khoảng; vì','shows purpose, recipient, duration or reason','study for two hours']]},
+ by:{s:[['preposition','bởi; bằng; cạnh; trước; theo mức','shows agent, method, position, deadline or amount of change','The figure rose by 10%.'],['adverb','đi ngang qua','past a point','A bus went by.']]},
+ on:{s:[['preposition','trên; vào; về','shows position, date or topic','on Monday'],['adverb','đang bật; tiếp tục','operating or continuing','The light is on.'],['adjective','đang diễn ra/đã bật','operating or happening','The event is on.']]},
+ at:{s:[['preposition','tại; lúc; ở mức','shows a point in place, time or value','at 9 a.m.']]},
+ can:{s:[['modal','có thể','expresses ability or possibility','Students can improve.'],['noun','lon/hộp kim loại','a metal container','a can of soup'],['verb','đóng hộp','to preserve food in a can','They can fruit in summer.']]},
+ may:{s:[['modal','có thể','expresses possibility or permission','This may help.'],['noun','tháng Năm','the fifth month of the year','in May']]},
+ will:{s:[['modal','sẽ','expresses future, willingness or prediction','It will increase.'],['noun','ý chí; di chúc','determination or a legal document','a strong will']]},
+ should:{s:[['modal','nên; cần','expresses advice or expectation','Students should revise.']]},
+ course:{s:[['noun','khóa học; hướng đi; quá trình','a series of lessons or a direction/process','I am taking an English course.'],['verb','chảy/di chuyển nhanh (hiếm)','to move rapidly or flow','Blood coursed through the veins.']]},
+ breakfast:{s:[['noun','bữa sáng','the first meal of the day','I have breakfast at 7 a.m.'],['verb','ăn sáng (ít dùng)','to eat breakfast','We breakfasted early.']]},
+ study:{s:[['verb','học; nghiên cứu','to learn about a subject','I study English every morning.'],['noun','việc học; nghiên cứu; phòng học','the activity or result of studying','The study examined learning habits.']]},
+ school:{s:[['noun','trường học; trường phái','an educational institution or group of thought','My school starts at 9 a.m.'],['verb','dạy dỗ; huấn luyện','to educate or train','She was schooled at home.']]},
+ routine:{s:[['noun','thói quen; lịch trình thường lệ','a regular way of doing things','My daily routine starts at 6 a.m.'],['adjective','thường lệ; thông thường','done as part of a regular procedure','a routine check']]},
+ class:{s:[['noun','lớp học; hạng; tầng lớp','a group of students or a category','Our class starts at nine.'],['verb','xếp loại','to classify','The species is classed as endangered.'],['adjective','cao cấp/phong cách (informal compounds)','showing high quality or style','a class act']]},
+ online:{s:[['adjective','trực tuyến','connected to or available through the internet','online courses'],['adverb','trực tuyến','through the internet','I study online.']]}
+};
+const IRR={am:'be',is:'be',are:'be',was:'be',were:'be',been:'be',being:'be',has:'have',had:'have',having:'have',does:'do',did:'do',done:'do',doing:'do',reads:'read',reading:'read',took:'take',taken:'take',takes:'take',taking:'take',chose:'choose',chosen:'choose',chooses:'choose',choosing:'choose',went:'go',gone:'go',goes:'go',studies:'study',studied:'study',studying:'study',children:'child',people:'person',men:'man',women:'woman',better:'good',best:'good',worse:'bad',worst:'bad'};
+const FIXED={i:'pronoun',you:'pronoun',he:'pronoun',she:'pronoun',it:'pronoun',we:'pronoun',they:'pronoun',me:'pronoun',him:'pronoun',her:'pronoun',us:'pronoun',them:'pronoun',my:'determiner',your:'determiner',his:'determiner',our:'determiner',their:'determiner',its:'determiner',a:'article',an:'article',the:'article',and:'conjunction',but:'conjunction',or:'conjunction',because:'conjunction',although:'conjunction',while:'conjunction',whereas:'conjunction',if:'conjunction',in:'preposition',on:'preposition',at:'preposition',of:'preposition',from:'preposition',for:'preposition',with:'preposition',by:'preposition',can:'modal',could:'modal',may:'modal',might:'modal',must:'modal',should:'modal',will:'modal',would:'modal'};
+function dclean(w){return (w||'').trim().replace(/^[^A-Za-z]+|[^A-Za-z'-]+$/g,'').toLowerCase()}
+function candidates(raw){
+ let w=dclean(raw),a=[];const add=x=>{if(x&&!a.includes(x))a.push(x)};add(w);if(IRR[w])add(IRR[w]);
+ if(w.endsWith('ies')&&w.length>4)add(w.slice(0,-3)+'y');
+ if(w.endsWith('ves')&&w.length>4){add(w.slice(0,-3)+'f');add(w.slice(0,-3)+'fe')}
+ if(w.endsWith('es')&&w.length>3){add(w.slice(0,-1));add(w.slice(0,-2))}
+ if(w.endsWith('s')&&!w.endsWith('ss')&&w.length>3)add(w.slice(0,-1));
+ if(w.endsWith('ing')&&w.length>5){let s=w.slice(0,-3);add(s);add(s+'e');if(s.length>2&&s.at(-1)===s.at(-2))add(s.slice(0,-1))}
+ if(w.endsWith('ied')&&w.length>4)add(w.slice(0,-3)+'y');
+ if(w.endsWith('ed')&&w.length>4){let s=w.slice(0,-2);add(s);add(s+'e');if(s.length>2&&s.at(-1)===s.at(-2))add(s.slice(0,-1))}
+ return a;
+}
+function sentenceContext(){
+ let sel=getSelection();if(!sel||!sel.rangeCount)return'';let n=sel.getRangeAt(0).commonAncestorContainer;if(n.nodeType===3)n=n.parentElement;
+ let host=n.closest?.('p,li,.qbox,.example,.passage,.notice,.production,.modalBody,.formula')||n;
+ let txt=(host.innerText||host.textContent||'').replace(/\s+/g,' ').trim(),chosen=sel.toString().trim(),parts=txt.match(/[^.!?]+[.!?]?/g)||[txt];
+ return (parts.find(x=>x.toLowerCase().includes(chosen.toLowerCase()))||txt).slice(0,700);
+}
+function descape(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function rxEscape(s){return String(s).replace(/[|\\{}()[\]^$+*?.-]/g,'\\$&')}
+function highlightWord(s,w){let x=descape(s);try{return x.replace(new RegExp('\\b('+rxEscape(dclean(w))+')\\b','i'),'<span class="hit">$1</span>')}catch(e){return x}}
+function around(word,sentence){
+ let s=(sentence||'').toLowerCase(),w=dclean(word),i=s.indexOf(w);if(i<0)return{prev:'',next:''};let b=s.slice(0,i),a=s.slice(i+w.length);
+ return{prev:(b.match(/([a-z']+)\s*$/)||[])[1]||'',next:(a.match(/^\s*([a-z']+)/)||[])[1]||''};
+}
+async function translateText(t){
+ t=String(t||'').trim();if(!t)return'';let k=t.toLowerCase();if(tcache[k])return tcache[k];
+ try{let r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t.slice(0,450))+'&langpair=en%7Cvi');if(!r.ok)return'';let j=await r.json(),x=(j?.responseData?.translatedText||'').trim();if(/MYMEMORY WARNING/i.test(x))x='';if(x){tcache[k]=x;let keys=Object.keys(tcache);if(keys.length>400)delete tcache[keys[0]];localStorage.setItem(TCACHE_KEY,JSON.stringify(tcache))}return x}catch(e){return''}
+}
+function coreGroups(base){let x=CORE[base];if(!x)return[];return x.s.map(s=>({partOfSpeech:s[0],definitions:[{definition:s[2],vi:s[1],example:s[3]}]}))}
+function mergeGroups(api,base){
+ let groups=[],push=(pos,def)=>{let g=groups.find(x=>x.partOfSpeech===pos);if(!g){g={partOfSpeech:pos,definitions:[]};groups.push(g)}if(!g.definitions.some(x=>x.definition===def.definition))g.definitions.push(def)};
+ (api||[]).forEach(g=>(g.definitions||[]).slice(0,4).forEach(d=>push(g.partOfSpeech||'unknown',{definition:d.definition||'',example:d.example||'',vi:''})));
+ coreGroups(base).forEach(g=>g.definitions.forEach(d=>push(g.partOfSpeech,d)));
+ return groups;
+}
+async function fetchData(surface){
+ let cs=candidates(surface);
+ for(let base of cs){
+  if(dcache[base])return{base:base,data:dcache[base]};
+  try{let r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(base),{cache:'force-cache'});if(r.ok){let j=await r.json(),phon='',audio='',api=[];j.forEach(e=>{phon=phon||e.phonetic||(e.phonetics||[]).find(p=>p.text)?.text||'';audio=audio||(e.phonetics||[]).find(p=>p.audio)?.audio||'';(e.meanings||[]).forEach(m=>api.push(m))});let data={groups:mergeGroups(api,base),phonetic:phon,audio:audio};dcache[base]=data;let keys=Object.keys(dcache);if(keys.length>220)delete dcache[keys[0]];localStorage.setItem(DCACHE_KEY,JSON.stringify(dcache));return{base:base,data:data}}}catch(e){}
+  if(CORE[base])return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:''}};
+ }
+ let base=cs[0]||surface;return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:''}};
+}
+function inferPOS(surface,base,sentence,groups){
+ let w=dclean(surface),A=around(surface,sentence),prev=A.prev,next=A.next,set=new Set(groups.map(g=>g.partOfSpeech)),fixed=FIXED[w];
+ if(w==='another')return next?'determiner':'pronoun';
+ if(w==='in'){if(['come','go','walk','step','get'].includes(prev)&&!next)return'adverb';return set.has('preposition')?'preposition':(set.has('adverb')?'adverb':'preposition')}
+ if(w==='read'){if(['a','an','the','this','that','another','good','great','interesting','quick'].includes(prev)&&set.has('noun'))return'noun';if(prev==='well'&&set.has('adjective'))return'adjective';return set.has('verb')?'verb':(set.has('noun')?'noun':'verb')}
+ if(['a','an','the','this','that','these','those','my','your','his','her','our','their','its','another','each','every','some','any','many','few','several'].includes(prev)){if(next&&set.has('adjective'))return'adjective';if(set.has('noun'))return'noun'}
+ if(['am','is','are','was','were','be','been','being'].includes(prev)&&w.endsWith('ing')&&set.has('verb'))return'verb';
+ if(['have','has','had'].includes(prev)&&set.has('verb'))return'verb';
+ if(['can','could','may','might','must','should','will','would'].includes(prev)&&set.has('verb'))return'verb';
+ if(prev==='to'&&set.has('verb'))return'verb';
+ if(['very','quite','extremely','highly','relatively','particularly'].includes(prev)){if(set.has('adjective'))return'adjective';if(set.has('adverb'))return'adverb'}
+ if(w.endsWith('ly')&&set.has('adverb'))return'adverb';
+ if(fixed){if(fixed==='article')return'article';if(set.has(fixed)||['modal','article'].includes(fixed))return fixed}
+ if(base!==w&&w.endsWith('s')){if(set.has('noun')&&['a','an','the','these','those','many','more','several','two','three'].includes(prev))return'noun';if(set.has('verb'))return'verb'}
+ if(set.has('verb')&&['i','you','we','they','he','she','it'].includes(prev))return'verb';
+ return groups[0]?.partOfSpeech||fixed||(surface&&surface===surface.toUpperCase()?'proper noun / acronym':'unknown');
+}
+function formLabel(surface,base,pos){
+ let w=dclean(surface);if(w===base)return base;
+ if(w.endsWith('ing'))return surface+' → '+base+' (V-ing / present participle / gerund tùy ngữ cảnh)';
+ if(w.endsWith('ed'))return surface+' → '+base+' (past / past participle)';
+ if(w.endsWith('s')&&pos==='noun')return surface+' → '+base+' (danh từ số nhiều)';
+ if(w.endsWith('s')&&pos==='verb')return surface+' → '+base+' (động từ ngôi 3 số ít)';
+ return surface+' → '+base;
+}
+function roleInfo(surface,pos,sentence){
+ let A=around(surface,sentence),prev=A.prev,next=A.next,w=dclean(surface),role='',pattern='',why='';
+ if(pos==='preposition'){role='Giới thiệu prepositional phrase và nối noun phrase với phần còn lại của câu.';pattern=w+' + noun / noun phrase';why='Trong câu này từ đứng trước một thành phần danh từ nên hoạt động như giới từ.'}
+ else if(pos==='determiner'||pos==='article'){role='Đứng trước danh từ để xác định, giới hạn hoặc chỉ số lượng/phạm vi.';pattern=w+' + noun';why='Vị trí trước danh từ cho thấy chức năng determiner/article.'}
+ else if(pos==='pronoun'){role='Thay thế cho một noun/noun phrase.';pattern='pronoun + verb / verb + pronoun';why='Nó thay cho người/vật/ý đã được hiểu từ ngữ cảnh.'}
+ else if(pos==='noun'){role=prev&&['in','on','at','of','for','from','with','by','to'].includes(prev)?'Danh từ làm object của preposition.':'Danh từ có thể làm subject, object hoặc complement.';pattern=(prev?prev+' ':'')+w+(next?' '+next:'');why='Vị trí trong noun phrase/mệnh đề cho thấy chức năng danh từ.'}
+ else if(pos==='verb'||pos==='auxiliary'){role='Động từ/trợ động từ trong vị ngữ.';if(['am','is','are','was','were'].includes(prev)&&w.endsWith('ing')){pattern=prev+' + V-ing';why='be + V-ing tạo cấu trúc tiếp diễn.'}else if(['can','could','may','might','must','should','will','would'].includes(prev)){pattern=prev+' + base verb';why='Sau modal dùng base verb.'}else{pattern='subject + verb (+ object/complement)';why='Động từ là trung tâm của vị ngữ.'}}
+ else if(pos==='adjective'){role='Bổ nghĩa cho noun hoặc làm subject complement sau linking verb.';pattern='adjective + noun / be + adjective';why='Vị trí cạnh noun hoặc sau linking verb cho thấy chức năng tính từ.'}
+ else if(pos==='adverb'){role='Bổ nghĩa cho verb, adjective, adverb hoặc cả clause.';pattern=w.endsWith('ly')?'verb/adjective + adverb':'adverb position depends on meaning';why='Nó bổ sung thông tin về cách thức, tần suất, thời gian, mức độ hoặc thái độ.'}
+ else if(pos==='conjunction'){role='Nối hai từ/cụm/mệnh đề và thể hiện quan hệ logic.';pattern='clause + '+w+' + clause';why='Chức năng là nối ý.'}
+ else if(pos==='modal'){role='Modal verb bổ sung ý nghĩa khả năng, lời khuyên, nghĩa vụ hoặc dự đoán.';pattern=w+' + base verb';why='Modal được theo sau bởi base verb.'}
+ else{role='Chức năng được suy đoán từ vị trí trong câu.';pattern=[prev,w,next].filter(Boolean).join(' ');why='Nếu từ có nhiều chức năng, xem danh sách loại từ bên dưới để so sánh.'}
+ return{role:role,pattern:pattern,why:why};
+}
+function scoreDefinition(def,sentence){
+ let stop=new Set(['the','a','an','and','or','to','of','in','on','at','for','with','is','are','was','were','be','this','that','it','as','by']);
+ let st=(sentence||'').toLowerCase().match(/[a-z']+/g)||[],dt=((def.definition||'')+' '+(def.example||'')).toLowerCase().match(/[a-z']+/g)||[],S=new Set(st.filter(x=>!stop.has(x)));
+ return dt.reduce((n,x)=>n+(S.has(x)?1:0),0);
+}
+async function renderDictionary(surface,targetId,sentence){
+ let target=document.getElementById(targetId);if(!target)return;surface=(surface||'').trim();if(!surface)return;
+ target.innerHTML='<div class="dictWord">'+descape(surface)+'</div><div class="muted">Đang phân tích nghĩa, loại từ và cách dùng trong câu…</div>';
+ let got=await fetchData(surface),base=got.base,groups=got.data.groups||[],pos=inferPOS(surface,base,sentence,groups),g=groups.find(x=>x.partOfSpeech===pos)||groups[0];
+ if(g&&g.definitions&&g.definitions.length)g.definitions.sort((x,y)=>scoreDefinition(y,sentence)-scoreDefinition(x,sentence));
+ let def=g?.definitions?.[0]||{},coreSense=CORE[base]?.s.find(x=>x[0]===pos),meaning=def.vi||coreSense?.[1]||await translateText(def.definition||base);
+ if(!meaning)meaning=await translateText(base);
+ let info=roleInfo(surface,pos,sentence),cards='';
+ for(let group of groups){
+  let posName=POSVI[group.partOfSpeech]||group.partOfSpeech,defs='';
+  for(let i=0;i<Math.min(2,group.definitions.length);i++){
+   let d=group.definitions[i],v=d.vi||'';if(!v&&i===0)v=await translateText(d.definition);
+   defs+='<div class="definition">'+(v?'<div class="vi">'+descape(v)+'</div>':'')+'<div class="en">'+descape(d.definition)+'</div>'+(d.example?'<div class="en">Example: '+descape(d.example)+'</div>':'')+'</div>';
+  }
+  cards+='<div class="posCard"><b>'+descape(posName)+'</b><span class="posBadge">'+descape(group.partOfSpeech)+'</span>'+(group.partOfSpeech===pos?'<span class="posBadge">đang dùng trong câu</span>':'')+defs+'</div>';
+ }
+ if(!cards)cards='<div class="posCard"><b>Chưa có word-class data từ nguồn từ điển.</b><div class="en">Web vẫn hiển thị nghĩa dịch và phân tích theo vị trí trong câu.</div></div>';
+ target.innerHTML='<div class="dictWord">'+descape(surface)+'</div>'+(surface.toLowerCase()!==base?'<div class="dictMeaning"><b>Dạng gốc:</b> '+descape(base)+'</div>':'')+(got.data.phonetic?'<div class="phonetic">'+descape(got.data.phonetic)+'</div>':'')+'<div class="contextCard"><b>🔎 Cách dùng trong câu này</b>'+(sentence?'<div class="contextSentence">'+highlightWord(sentence,surface)+'</div>':'')+'<div class="usage"><b>Nghĩa phù hợp</b><span>'+descape(meaning||'Xem các nghĩa bên dưới')+'</span><b>Loại từ đang dùng</b><span><b>'+descape(POSVI[pos]||pos)+'</b> <span class="posBadge">'+descape(pos)+'</span></span><b>Dạng từ</b><span>'+descape(formLabel(surface,base,pos))+'</span><b>Vai trò trong câu</b><span>'+descape(info.role)+'</span><b>Cấu trúc / pattern</b><span><code>'+descape(info.pattern)+'</code></span><b>Vì sao dùng như vậy?</b><span>'+descape(info.why)+'</span></div></div><h3>📚 Tất cả loại từ / nghĩa phổ biến của “'+descape(base)+'”</h3>'+cards+'<div class="dictActions"><button id="dictPlayWord">🔊 Phát âm</button><button class="save" id="dictSaveWord">⭐ Lưu ôn</button><a target="_blank" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a></div>';
+ document.getElementById('dictPlayWord').onclick=()=>{if(got.data.audio)new Audio(got.data.audio).play();else{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(surface);u.lang='en-GB';u.rate=.82;speechSynthesis.speak(u)}};
+ document.getElementById('dictSaveWord').onclick=function(){st.saved[base]={w:base,m:meaning||''};save();renderSaved();this.textContent='✓ Đã lưu'};
+}
+window.lookupDictionary=function(raw,targetId='dictFloatResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
+window.toggleDictionary=function(force){let open=force===undefined?!dict.classList.contains('open'):!!force;dict.classList.toggle('open',open)};
+window.dictMinimize=function(){dict.classList.toggle('min')};
+window.dictMaximize=function(){dict.classList.toggle('max')};
+let dg=false,dx=0,dy=0;
+try{let p=JSON.parse(localStorage.getItem(DPOS_KEY)||'null');if(p){dict.style.left=p.left+'px';dict.style.top=p.top+'px';dict.style.right='auto';dict.style.bottom='auto';if(p.width)dict.style.width=p.width+'px';if(p.height)dict.style.height=p.height+'px'}}catch(e){}
+hd.onpointerdown=e=>{if(e.target.closest('button')||dict.classList.contains('max'))return;let r=dict.getBoundingClientRect();dg=true;dx=e.clientX-r.left;dy=e.clientY-r.top;hd.setPointerCapture?.(e.pointerId)};
+hd.onpointermove=e=>{if(!dg)return;let l=Math.max(0,Math.min(innerWidth-dict.offsetWidth,e.clientX-dx)),t=Math.max(0,Math.min(innerHeight-dict.offsetHeight,e.clientY-dy));dict.style.left=l+'px';dict.style.top=t+'px';dict.style.right='auto';dict.style.bottom='auto'};
+hd.onpointerup=()=>{if(!dg)return;dg=false;let r=dict.getBoundingClientRect();localStorage.setItem(DPOS_KEY,JSON.stringify({left:r.left,top:r.top,width:r.width,height:r.height}))};
+document.getElementById('dictButton').onclick=()=>toggleDictionary();
+document.getElementById('dictClose').onclick=()=>toggleDictionary(false);
+document.getElementById('dictMin').onclick=e=>{e.stopPropagation();dictMinimize()};
+document.getElementById('dictMax').onclick=e=>{e.stopPropagation();dictMaximize()};
+document.getElementById('dictGo').onclick=()=>{let di=document.getElementById('dictInput'),fi=document.getElementById('dictFloatInput');lookupDictionary(di?.value||fi?.value||'','dictFloatResult','')};
+let di=document.getElementById('dictInput');if(di)di.onkeydown=e=>{if(e.key==='Enter')lookupDictionary(di.value,'dictFloatResult','')};
+document.addEventListener('dblclick',()=>{
+ let sel=(getSelection()?.toString()||'').trim();if(!sel||!/[A-Za-z]/.test(sel)||sel.split(/\s+/).length>1)return;
+ lookupDictionary(sel,'dictFloatResult',sentenceContext());
+});
 document.getElementById('search').oninput=e=>{let q=e.target.value.toLowerCase(),d=days.find(x=>JSON.stringify(x).toLowerCase().includes(q));if(d){renderToday(d.day);show('today')}};
 renderDays();renderToday();renderRoadmap();renderGrammar();renderSaved();progress();
