@@ -8,7 +8,8 @@ if(typeof baseOpenLesson!=='function') return;
 var listeningState = {
   playing:false, paused:false, stopped:true,
   segments:[], segIndex:0, localStart:0, globalChar:0, totalChars:1,
-  rate:1, voiceMode:'auto-uk', utterance:null, dragging:false, seekWasActive:false
+  rate:1, voiceMode:'auto-uk', utterance:null, dragging:false, seekWasActive:false,
+  progressTimer:null, utterStartTime:0, utterStartGlobal:0, utterEndGlobal:0
 };
 
 function esc(s){
@@ -83,8 +84,36 @@ function locateChar(ch){
   for(var i=0;i<s.segments.length;i++){var seg=s.segments[i];if(ch<=seg.end)return {i:i,local:nearestWord(seg.text,ch-seg.start)}}
   return {i:Math.max(0,s.segments.length-1),local:0};
 }
+
+function stopProgressTicker(){
+  var s=listeningState;
+  if(s.progressTimer){clearInterval(s.progressTimer);s.progressTimer=null}
+}
+function syncEstimatedProgress(){
+  var s=listeningState;
+  if(!s.playing||s.paused||!s.utterStartTime)return;
+  var elapsed=(performance.now()-s.utterStartTime)/1000;
+  var remainingChars=Math.max(1,s.utterEndGlobal-s.utterStartGlobal);
+  var segText='';
+  var seg=s.segments[s.segIndex];
+  if(seg)segText=seg.text.slice(Math.max(0,s.localStart||0));
+  var w=(segText.match(/\b[\w'-]+\b/g)||[]).length;
+  var dur=Math.max(.6,(w/155)*60/Math.max(.65,s.rate||1));
+  var ratio=Math.max(0,Math.min(1,elapsed/dur));
+  var est=Math.round(s.utterStartGlobal+remainingChars*ratio);
+  if(est>s.globalChar)s.globalChar=Math.min(est,s.utterEndGlobal);
+}
+function startProgressTicker(){
+  stopProgressTicker();
+  listeningState.progressTimer=setInterval(function(){
+    syncEstimatedProgress();
+    updateSeek(false);
+  },80);
+}
+
 function updateSeek(force){
   var s=listeningState,bar=document.getElementById('listenSeek');if(!bar)return;
+  if(s.playing&&!s.paused)syncEstimatedProgress();
   var ratio=Math.max(0,Math.min(1,s.globalChar/Math.max(1,s.totalChars)));
   if(!s.dragging||force)bar.value=Math.round(ratio*1000);
   var a=document.getElementById('listenCurrentTime'),b=document.getElementById('listenTotalTime');
@@ -93,7 +122,7 @@ function updateSeek(force){
 function setStatus(t){var e=document.getElementById('listenStatusText');if(e)e.textContent=t;updateSeek(false)}
 function stopListening(reset){
   try{speechSynthesis.cancel()}catch(e){}
-  var s=listeningState;s.playing=false;s.paused=false;s.stopped=true;s.utterance=null;
+  var s=listeningState;stopProgressTicker();s.playing=false;s.paused=false;s.stopped=true;s.utterance=null;
   if(reset){s.segIndex=0;s.localStart=0;s.globalChar=0}
   setStatus('Đã dừng');updateSeek(true);
 }
@@ -105,14 +134,15 @@ function speakCurrent(){
   var u=new SpeechSynthesisUtterance(spoken),mode=s.voiceMode||'auto-uk',voice=chooseVoice(mode,seg.speaker);
   u.lang=mode==='auto-us'?'en-US':'en-GB';if(voice){u.voice=voice;u.lang=voice.lang||u.lang}
   u.rate=s.rate||1;u.pitch=seg.speaker==='M'?0.92:(seg.speaker==='F'?1.05:1);u.volume=1;
-  u.onstart=function(){s.playing=true;s.paused=false;s.stopped=false;s.globalChar=seg.start+start;setStatus('Đang phát')};
-  u.onboundary=function(e){if(typeof e.charIndex==='number'){s.localStart=start+e.charIndex;s.globalChar=seg.start+s.localStart;updateSeek(false)}};
+  u.onstart=function(){s.playing=true;s.paused=false;s.stopped=false;s.globalChar=seg.start+start;s.utterStartGlobal=s.globalChar;s.utterEndGlobal=seg.end;s.utterStartTime=performance.now();startProgressTicker();setStatus('Đang phát')};
+  u.onboundary=function(e){if(typeof e.charIndex==='number'){s.localStart=start+e.charIndex;s.globalChar=seg.start+s.localStart;s.utterStartGlobal=s.globalChar;s.utterStartTime=performance.now();updateSeek(false)}};
   u.onend=function(){
+    stopProgressTicker();
     if(s.stopped)return;s.globalChar=seg.end;s.segIndex++;s.localStart=0;
     if(s.segIndex>=s.segments.length){s.playing=false;s.paused=false;s.stopped=true;s.globalChar=s.totalChars;var pb=document.getElementById('playAudio');if(pb)pb.textContent='▶ Phát';setStatus('Đã phát xong');updateSeek(true);return}
     setTimeout(speakCurrent,25);
   };
-  u.onerror=function(){if(s.stopped)return;s.segIndex++;s.localStart=0;setTimeout(speakCurrent,25)};
+  u.onerror=function(){stopProgressTicker();if(s.stopped)return;s.segIndex++;s.localStart=0;setTimeout(speakCurrent,25)};
   s.utterance=u;try{speechSynthesis.speak(u)}catch(e){setStatus('Không thể phát audio')}
 }
 function startListening(){
@@ -126,8 +156,8 @@ function pauseListening(){
   var s=listeningState;if(!s.playing&&!s.paused)return;
   try{
     var b=document.getElementById('pauseAudio');
-    if(s.paused){speechSynthesis.resume();s.paused=false;s.playing=true;if(b)b.textContent='⏸ Tạm dừng';setStatus('Đang phát')}
-    else{speechSynthesis.pause();s.paused=true;s.playing=false;if(b)b.textContent='▶ Tiếp tục';setStatus('Đã tạm dừng')}
+    if(s.paused){speechSynthesis.resume();s.paused=false;s.playing=true;s.utterStartGlobal=s.globalChar;s.utterStartTime=performance.now();startProgressTicker();if(b)b.textContent='⏸ Tạm dừng';setStatus('Đang phát')}
+    else{syncEstimatedProgress();speechSynthesis.pause();s.paused=true;s.playing=false;stopProgressTicker();if(b)b.textContent='▶ Tiếp tục';setStatus('Đã tạm dừng')}
   }catch(e){}
 }
 
@@ -135,14 +165,14 @@ function toggleListeningPlayback(){
   var s=listeningState,btn=document.getElementById('playAudio');
   if(s.paused){
     try{speechSynthesis.resume()}catch(e){}
-    s.paused=false;s.playing=true;s.stopped=false;
+    s.paused=false;s.playing=true;s.stopped=false;s.utterStartGlobal=s.globalChar;s.utterStartTime=performance.now();startProgressTicker();
     if(btn)btn.textContent='⏸ Tạm dừng';
     setStatus('Đang phát');
     return;
   }
   if(s.playing){
-    try{speechSynthesis.pause()}catch(e){}
-    s.paused=true;s.playing=false;
+    syncEstimatedProgress();try{speechSynthesis.pause()}catch(e){}
+    s.paused=true;s.playing=false;stopProgressTicker();
     if(btn)btn.textContent='▶ Tiếp tục';
     setStatus('Đã tạm dừng');
     return;
@@ -152,7 +182,7 @@ function toggleListeningPlayback(){
 }
 
 function seekRatio(ratio,auto){
-  var s=listeningState,loc=locateChar(Math.round(Math.max(0,Math.min(1,ratio))*s.totalChars));
+  var s=listeningState;stopProgressTicker();var loc=locateChar(Math.round(Math.max(0,Math.min(1,ratio))*s.totalChars));
   try{speechSynthesis.cancel()}catch(e){}
   s.segIndex=loc.i;s.localStart=loc.local;s.globalChar=s.segments[loc.i].start+loc.local;s.paused=false;
   if(auto){s.stopped=false;s.playing=true;setTimeout(speakCurrent,30)}
@@ -194,6 +224,7 @@ function initListeningEnhancement(d){
   seek.onpointerdown=function(){
     listeningState.dragging=true;
     listeningState.seekWasActive=listeningState.playing||listeningState.paused;
+    syncEstimatedProgress();stopProgressTicker();
     try{speechSynthesis.cancel()}catch(e){}
     listeningState.playing=false;listeningState.paused=false;listeningState.stopped=true;
   };
