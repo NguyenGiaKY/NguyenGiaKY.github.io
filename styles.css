@@ -38,3 +38,17 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
 
 /* Disable retired AI tutor */
 .aiTutor{display:none!important}
+
+/* Flexible Skill Curriculum */
+.flexHeroLine{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.noPressure{background:#f3f8ff;border:1px solid #cfe0ff;border-radius:14px;padding:12px 14px;line-height:1.55;margin:12px 0}
+.queueControls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0}.queueControls span{font-weight:800;margin-right:3px}
+.flexQueue{display:grid;gap:10px}.flexTask{border:1px solid var(--line);border-radius:14px;padding:13px;background:#fff;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}.flexTask.done{background:#f3fbf5;border-color:#c9e7d2}.flexTask h4{margin:5px 0 4px}.flexTask p{margin:0;color:var(--muted);line-height:1.45}.flexTaskActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.skillPill{display:inline-block;border-radius:999px;padding:3px 7px;font-size:11px;font-weight:900;background:#eef2ff;color:#3157d5}.skillPill.listening{background:#edf8ff}.skillPill.reading{background:#f1f7ed}.skillPill.writing{background:#fff5e8}.skillPill.speaking{background:#f8efff}.skillPill.support{background:#f3f4f6}
+.skillSnapshot{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:15px}.snapshotCard{border:1px solid var(--line);border-radius:13px;padding:11px;background:#fbfcff}.snapshotCard b,.snapshotCard span{display:block}.snapshotCard strong{display:block;font-size:25px;margin:4px 0}
+.skillHead{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.skillHead>strong{font-size:38px;color:#3157d5}
+.scoreBox{border:1px solid #d7e0f5;border-radius:14px;background:#f8faff;padding:13px;margin:13px 0;display:grid;grid-template-columns:1.2fr auto;gap:10px}.scoreBox h3{margin:0}.scoreBox p{margin:5px 0}.scoreEntry{display:flex;gap:7px;align-items:start}.scoreEntry input{width:110px;border:1px solid var(--line);border-radius:10px;padding:9px}.scoreHistory{grid-column:1/-1;color:#5b667a}
+.moduleStack{display:grid;gap:12px}.moduleCard{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}.moduleHead{display:flex;justify-content:space-between;gap:12px}.moduleHead h3{margin:3px 0 5px}.moduleHead p{margin:0 0 9px;color:var(--muted)}.moduleId{font-size:11px;font-weight:900;letter-spacing:.06em;background:#eef2ff;color:#3157d5;border-radius:999px;padding:4px 7px}
+#view-roadmap{display:none!important}
+@media(max-width:900px){.skillSnapshot{grid-template-columns:repeat(2,1fr)}.flexTask{grid-template-columns:1fr}.flexTaskActions{justify-content:flex-start}.scoreBox{grid-template-columns:1fr}.scoreHistory{grid-column:auto}}
+@media(max-width:560px){.skillSnapshot{grid-template-columns:1fr}.queueControls{align-items:stretch}.queueControls span{width:100%}.flexTaskActions .btn{flex:1}}
