@@ -579,3 +579,127 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
 @media(max-width:700px){
   .spkPronTitle{flex-direction:column}
 }
+
+/* Speaking inline correction layout */
+.spkOpenQuizResult{max-width:900px}
+.spkInlineReview{
+  border:1px solid #aee8bf;
+  background:#f1fff5;
+  border-radius:16px;
+  padding:16px 18px;
+  margin-bottom:14px;
+}
+.spkInlineHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px;
+  color:#4b5563;
+  font-size:13px;
+}
+.spkInlineHead b{
+  background:#d9f7e2;
+  color:#16813a;
+  padding:5px 9px;
+  border-radius:7px;
+}
+.spkAnswerMarked{
+  font-size:18px;
+  line-height:1.72;
+  color:#1f2937;
+}
+.spkInlineFix{
+  display:inline;
+}
+.spkInlineFix del{
+  color:#e3342f;
+  text-decoration-color:#e3342f;
+  text-decoration-thickness:2px;
+  margin-right:4px;
+}
+.spkInlineFix ins{
+  color:#16813a;
+  text-decoration:none;
+  font-weight:800;
+}
+.spkPronInline{
+  margin-top:10px;
+  padding:8px 0 10px;
+  border-bottom:1px solid #d8efe0;
+  color:#6b7280;
+  font-size:13px;
+}
+.spkPronIcon{
+  color:#e29a18;
+  text-decoration:underline wavy #e29a18;
+  font-weight:800;
+  margin-right:5px;
+}
+.spkPronFlag{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  margin:3px 5px 3px 0;
+  padding:3px 7px;
+  border-radius:7px;
+  background:#fff6da;
+  border:1px solid #f2cf72;
+  color:#8a5b00;
+  cursor:pointer;
+}
+.spkPronFlag em{
+  font-style:normal;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color:#667085;
+}
+.spkPronNone{color:#87909d}
+.spkRewriteLine{
+  margin-top:12px;
+  font-size:16px;
+  line-height:1.68;
+  color:#4b5563;
+}
+.spkRewriteLine b{color:#1f2937}
+.spkHiddenCorrections{display:none}
+.spkCompactBands{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:10px 12px;
+  background:#fafbfc;
+}
+.spkOverallChip{
+  min-width:46px;
+  height:38px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:#111827;
+  color:#fff;
+  font-weight:900;
+}
+.spkCompactBands .spkMetricChip{
+  min-width:auto!important;
+  display:flex!important;
+  grid-template-columns:none!important;
+  gap:8px!important;
+  align-items:center;
+  border-radius:999px;
+  padding:8px 11px;
+}
+.spkCompactBands .spkMetricChip>b{font-size:13px}
+.spkCompactBands .spkMetricChip>strong{font-size:14px}
+.spkOpenQuizTip{margin-top:14px}
+.spkOpenQuizHigh{margin-top:14px}
+.spkOpenQuizAudio{
+  width:100%;
+  margin-top:14px;
+  border-radius:16px;
+  background:#f1f3f6;
+}
+@media(max-width:700px){
+  .spkAnswerMarked{font-size:16px}
+  .spkCompactBands .spkMetricChip{flex:1 1 calc(50% - 8px)}
+}
