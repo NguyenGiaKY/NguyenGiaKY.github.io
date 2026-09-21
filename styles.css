@@ -52,3 +52,14 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
 #view-roadmap{display:none!important}
 @media(max-width:900px){.skillSnapshot{grid-template-columns:repeat(2,1fr)}.flexTask{grid-template-columns:1fr}.flexTaskActions{justify-content:flex-start}.scoreBox{grid-template-columns:1fr}.scoreHistory{grid-column:auto}}
 @media(max-width:560px){.skillSnapshot{grid-template-columns:1fr}.queueControls{align-items:stretch}.queueControls span{width:100%}.flexTaskActions .btn{flex:1}}
+
+/* Listening player */
+.listenPlayer{border:1px solid var(--line);border-radius:16px;padding:12px 14px;background:#fbfcff;margin:12px 0 16px}
+.listenPlayerMain{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.listenSettings{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.listenSettings label{display:flex;align-items:center;gap:8px;font-weight:700}
+.listenSettings label span{min-width:58px}
+.listenSettings input[type="range"]{flex:1;min-width:130px}
+.listenSettings select{flex:1;min-width:170px;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff}
+.listenStatus{display:flex;justify-content:space-between;gap:10px;margin-top:8px;color:var(--muted);font-size:13px}
+@media(max-width:700px){.listenSettings{grid-template-columns:1fr}.listenPlayerMain .btn{flex:1}.listenStatus{flex-direction:column}}
