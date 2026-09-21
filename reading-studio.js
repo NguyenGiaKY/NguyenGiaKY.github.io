@@ -97,6 +97,62 @@
     }).join("");
   }
 
+  function getSavedSplit(){
+    try{
+      var n=parseFloat(localStorage.getItem("ielts_reading_split")||"50");
+      return isFinite(n)?Math.max(28,Math.min(72,n)):50;
+    }catch(e){return 50;}
+  }
+
+  function setSplitPct(pct){
+    pct=Math.max(28,Math.min(72,Number(pct)||50));
+    var split=document.getElementById("rsSplit");
+    var review=document.getElementById("rrSplit");
+    if(split)split.style.setProperty("--reading-left",pct+"%");
+    if(review)review.style.setProperty("--reading-left",pct+"%");
+    var label=document.getElementById("rsSplitLabel");
+    if(label)label.textContent=Math.round(pct)+" / "+Math.round(100-pct);
+    try{localStorage.setItem("ielts_reading_split",String(pct));}catch(e){}
+  }
+
+  function bindSplitResize(splitId,dividerId){
+    var split=document.getElementById(splitId),divider=document.getElementById(dividerId);
+    if(!split||!divider)return;
+    setSplitPct(getSavedSplit());
+    var dragging=false;
+    divider.onpointerdown=function(ev){
+      dragging=true;
+      divider.classList.add("dragging");
+      document.body.classList.add("rsResizing");
+      try{divider.setPointerCapture(ev.pointerId);}catch(e){}
+      ev.preventDefault();
+    };
+    divider.onpointermove=function(ev){
+      if(!dragging)return;
+      var r=split.getBoundingClientRect();
+      var pct=((ev.clientX-r.left)/r.width)*100;
+      setSplitPct(pct);
+    };
+    divider.onpointerup=function(ev){
+      dragging=false;
+      divider.classList.remove("dragging");
+      document.body.classList.remove("rsResizing");
+      try{divider.releasePointerCapture(ev.pointerId);}catch(e){}
+    };
+    divider.onpointercancel=function(){
+      dragging=false;
+      divider.classList.remove("dragging");
+      document.body.classList.remove("rsResizing");
+    };
+  }
+
+  function bindSplitPresets(){
+    var a=document.getElementById("rsMorePassage"),b=document.getElementById("rsEqualSplit"),d=document.getElementById("rsMoreQuestions");
+    if(a)a.onclick=function(){setSplitPct(64);};
+    if(b)b.onclick=function(){setSplitPct(50);};
+    if(d)d.onclick=function(){setSplitPct(36);};
+  }
+
   function renderTest(){
     var body=document.getElementById("lessonBody");
     if(!body||!RS.pack)return;
@@ -108,12 +164,13 @@
 
     body.innerHTML=
       '<div class="readingStudio">'+
-        '<div class="rsTop"><button id="rsExit" class="rsCloseGhost">×</button><div class="rsTimerPill">⏱ <span id="rsTimer">'+fmt(RS.elapsed)+'</span></div><div class="rsTopRight"><span id="rsAnswered">'+answeredCount()+' / '+RS.pack.q.length+' answered</span></div></div>'+
+        '<div class="rsTop"><button id="rsExit" class="rsCloseGhost">×</button><div class="rsTimerPill">⏱ <span id="rsTimer">'+fmt(RS.elapsed)+'</span></div><div class="rsTopRight"><div class="rsSplitControls"><button id="rsMorePassage" type="button">◀ Bài đọc</button><button id="rsEqualSplit" type="button"><span id="rsSplitLabel">50 / 50</span></button><button id="rsMoreQuestions" type="button">Câu hỏi ▶</button></div><span id="rsAnswered">'+answeredCount()+' / '+RS.pack.q.length+' answered</span></div></div>'+
         toolsHTML()+
-        '<div class="rsSplit">'+
+        '<div class="rsSplit" id="rsSplit">'+
           '<article class="rsPassagePane" id="rsPassagePane">'+
             '<div class="rsPassageInner"><h2>'+esc(RS.pack.title)+'</h2><p>'+esc(RS.pack.text)+'</p></div>'+
           '</article>'+
+          '<div class="rsDivider" id="rsDivider" role="separator" aria-label="Kéo để thay đổi kích thước"><span>⋮</span></div>'+
           '<main class="rsQuestionsPane">'+
             '<div class="rsInstruction"><h2>Questions 1 - '+RS.pack.q.length+'</h2>'+
               '<p>'+(isTFNG(RS.pack.q[0])?'Do the following statements agree with the information given in the passage?':'Choose the best answer for each question.')+'</p>'+
@@ -145,6 +202,8 @@
     document.getElementById("rsLookup").onclick=lookupSelection;
     document.getElementById("rsNoteClose").onclick=toggleNotes;
     document.getElementById("rsNoteText").oninput=function(){RS.note=this.value;};
+    bindSplitResize("rsSplit","rsDivider");
+    bindSplitPresets();
 
     startTimer();
   }
@@ -316,8 +375,9 @@
     body.innerHTML=
       '<div class="readingReview">'+
         '<div class="rrTop"><button id="rrBack" class="spkGhost">← Kết quả</button><div><b>'+scoreData().correct+'/'+RS.pack.q.length+'</b> câu đúng</div><button id="rrNextWrong" class="spkGhost">Câu sai tiếp →</button></div>'+
-        '<div class="rrSplit">'+
+        '<div class="rrSplit" id="rrSplit">'+
           '<article class="rrPassage"><div class="rrPassageInner"><h2>'+esc(RS.pack.title)+'</h2>'+highlightedPassage(evidence)+'</div></article>'+
+          '<div class="rsDivider" id="rrDivider" role="separator" aria-label="Kéo để thay đổi kích thước"><span>⋮</span></div>'+
           '<main class="rrExplain">'+
             '<div class="rrQuestionHead"><span class="rsQNum">'+(i+1)+'</span><h2>'+esc(q[0])+'</h2></div>'+
             reviewSteps(q,i,evidence)+
@@ -344,6 +404,7 @@
     document.querySelectorAll("[data-rr]").forEach(function(b){
       b.onclick=function(){RS.currentReview=Number(this.getAttribute("data-rr"));renderReview();};
     });
+    bindSplitResize("rrSplit","rrDivider");
   }
 
   function initReadingStudio(d){
