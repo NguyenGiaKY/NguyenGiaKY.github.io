@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "api/speaking-grade.js": {
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/speaking-grade",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}
