@@ -24,3 +24,14 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
 .aiQuick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.aiQuick button{border:1px solid #d6dff7;background:#fff;border-radius:999px;padding:6px 9px;font-size:12px}
 .aiRaw{white-space:pre-wrap;line-height:1.55;background:#fff;border:1px solid var(--line);padding:10px;border-radius:10px}
 @media(max-width:700px){.aiGrid{grid-template-columns:1fr}.aiFollow{grid-template-columns:1fr}}
+
+/* ChatGPT-style Dictionary */
+.chatExplain{margin-top:4px}.chatExplain h2{font-size:31px;letter-spacing:-.02em}.chatExplain h3{margin:18px 0 8px;font-size:18px}
+.memoryTip{margin:10px 0;padding:10px 12px;background:#fff8df;border:1px solid #f2dda0;border-radius:11px;line-height:1.55}
+.easyCompare{margin:9px 0;padding:10px 12px;background:#f4f7ff;border-left:4px solid #3157d5;border-radius:9px;line-height:1.55}
+.usageExample{margin:8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;line-height:1.5}
+.usageExample span{color:#52617a}
+.familyTableWrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.familyTable{width:100%;border-collapse:collapse;font-size:14px}.familyTable th,.familyTable td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}.familyTable th{background:#f6f8fc}.familyTable tr:last-child td{border-bottom:0}
+.patternCard{padding:9px 10px;margin:7px 0;border-left:4px solid #3157d5;background:#f7f9ff;border-radius:8px}
+.dictDetails{margin-top:15px;border-top:1px solid var(--line);padding-top:10px}.dictDetails summary{cursor:pointer;font-weight:800;color:#40506b}
