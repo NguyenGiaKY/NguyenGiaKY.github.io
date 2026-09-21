@@ -247,7 +247,7 @@ document.getElementById('lessonClose').onclick=()=>{document.getElementById('les
 
 /* Universal contextual dictionary: online-first, every word, all POS */
 const dict=document.getElementById('dictionary'),hd=document.getElementById('dictHandle');
-const DCACHE_KEY='ielts_dict_v12_cache',TCACHE_KEY='ielts_dict_v12_translate',DPOS_KEY='ielts_dict_v11_window';
+const DCACHE_KEY='ielts_dict_v13_cache',TCACHE_KEY='ielts_dict_v12_translate',DPOS_KEY='ielts_dict_v11_window';
 let dcache={},tcache={};
 try{dcache=JSON.parse(localStorage.getItem(DCACHE_KEY)||'{}')}catch(e){}
 try{tcache=JSON.parse(localStorage.getItem(TCACHE_KEY)||'{}')}catch(e){}
@@ -351,36 +351,62 @@ async function fetchDatamuse(base,sentence){
   return {base:head,data:{groups:mergeGroups(groups,head),phonetic:pron,audio:'',source:'Datamuse / Wiktionary / WordNet'}};
  }catch(e){return null}
 }
+
 async function fetchFreeDictionary(base){
  try{
-  let r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(base),{cache:'force-cache'});if(!r.ok)return null;
-  let j=await r.json(),phon='',audio='',api=[];
-  j.forEach(e=>{phon=phon||e.phonetic||(e.phonetics||[]).find(p=>p.text)?.text||'';audio=audio||(e.phonetics||[]).find(p=>p.audio)?.audio||'';(e.meanings||[]).forEach(m=>api.push(m))});
-  return {base:base,data:{groups:mergeGroups(api,base),phonetic:phon,audio:audio,source:'Free Dictionary API'}};
+  let r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(base),{cache:'force-cache'});
+  if(!r.ok)return null;
+  let j=await r.json(),phon='',audio='',audios=[],api=[];
+  const addAudio=(url,text)=>{
+   if(!url||audios.some(x=>x.url===url))return;
+   let u=String(url),label=/[-_/]uk[.-]/i.test(u)||/gb/i.test(u)?'UK':(/[-_/]us[.-]/i.test(u)?'US':'Audio');
+   audios.push({url:u,label:label,phonetic:text||''});
+  };
+  j.forEach(e=>{
+   phon=phon||e.phonetic||(e.phonetics||[]).find(p=>p.text)?.text||'';
+   (e.phonetics||[]).forEach(p=>{if(p.audio){addAudio(p.audio,p.text||'');audio=audio||p.audio}});
+   (e.meanings||[]).forEach(m=>api.push(m));
+  });
+  return {base:base,data:{groups:mergeGroups(api,base),phonetic:phon,audio:audio,audios:audios,source:'Free Dictionary API'}};
  }catch(e){return null}
 }
+
 async function fetchData(surface,sentence){
  let cs=candidates(surface);
  for(let base of cs){
   let cached=dcache[base];
   if(cached&&cached.groups&&cached.groups.length)return{base:cached.base||base,data:cached};
-  // Curated entries are merged even when an online source succeeds.
-  let dm=await fetchDatamuse(base,sentence);
-  let fd=null;
-  if(!dm||!dm.data.groups.length)fd=await fetchFreeDictionary(base);
-  let got=dm||fd;
+
+  let results=await Promise.all([fetchDatamuse(base,sentence),fetchFreeDictionary(base)]);
+  let dm=results[0],fd=results[1],got=null;
+
+  if(dm&&dm.data&&dm.data.groups&&dm.data.groups.length){
+   got=dm;
+   if(fd&&fd.data){
+    got.data.groups=mergeGroups((got.data.groups||[]).concat(fd.data.groups||[]),got.base);
+    got.data.phonetic=fd.data.phonetic||got.data.phonetic||'';
+    got.data.audio=fd.data.audio||'';
+    got.data.audios=fd.data.audios||[];
+    got.data.source='Datamuse / Wiktionary / WordNet + Free Dictionary audio';
+   }
+  }else if(fd&&fd.data&&fd.data.groups&&fd.data.groups.length){
+   got=fd;
+  }
+
   if(got&&got.data.groups&&got.data.groups.length){
    got.data.groups=mergeGroups(got.data.groups,got.base);
    got.data.base=got.base;
+   got.data.audios=got.data.audios||[];
    dcache[base]=got.data;
    let keys=Object.keys(dcache);if(keys.length>300)delete dcache[keys[0]];
    localStorage.setItem(DCACHE_KEY,JSON.stringify(dcache));
    return got;
   }
-  if(CORE[base])return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:'',source:'Built-in IELTS lexicon'}};
+
+  if(CORE[base])return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:'',audios:[],source:'Built-in IELTS lexicon'}};
  }
  let base=cs[0]||dclean(surface);
- return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:'',source:'fallback'}};
+ return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:'',audios:[],source:'fallback'}};
 }
 function inferPOS(surface,base,sentence,groups){
  let w=dclean(surface),A=around(surface,sentence),prev=A.prev,next=A.next,set=new Set(groups.map(g=>g.partOfSpeech)),fixed=FIXED[w];
@@ -648,6 +674,25 @@ async function chatStyleHTML(surface,base,groups,pos,sentence,simpleMeaning,mean
   (patterns.length?patterns.map(p=>'<div class="patternCard"><code>'+descape(p)+'</code></div>').join(''):'<div class="muted">Xem các ví dụ và collocations bên dưới.</div>')+
  '</div>';
 }
+
+function dictionaryAudioButtons(audios,base){
+ let list=(audios||[]).filter(x=>x&&x.url);
+ if(!list.length)return '<button class="btn" disabled title="Nguồn từ điển chưa có bản ghi âm cho từ này">🔇 Chưa có audio</button>';
+ let ordered=list.slice().sort((a,b)=>({UK:0,US:1,Audio:2}[a.label]??9)-({UK:0,US:1,Audio:2}[b.label]??9));
+ return ordered.slice(0,3).map((a,i)=>'<button class="btn dictAudioBtn" data-audio="'+descape(a.url)+'" title="'+descape(a.phonetic||base)+'">🔊 '+descape(a.label||('Audio '+(i+1)))+'</button>').join('');
+}
+function bindDictionaryAudio(target){
+ target.querySelectorAll('.dictAudioBtn').forEach(btn=>btn.onclick=async()=>{
+  try{
+   target.querySelectorAll('audio.dictInlineAudio').forEach(a=>{a.pause();a.remove()});
+   let audio=document.createElement('audio');audio.className='dictInlineAudio';audio.src=btn.dataset.audio;audio.preload='auto';target.appendChild(audio);
+   await audio.play();
+  }catch(e){
+   btn.textContent='⚠️ Không phát được';
+   setTimeout(()=>btn.textContent='🔊 '+(btn.textContent.includes('UK')?'UK':btn.textContent.includes('US')?'US':'Audio'),1600);
+  }
+ });
+}
 async function renderDictionary(surface,targetId,sentence){
  let target=document.getElementById(targetId);if(!target)return;surface=(surface||'').trim();if(!surface)return;
  let hasContext=!!String(sentence||'').trim();
@@ -682,12 +727,13 @@ async function renderDictionary(surface,targetId,sentence){
   '<h3 style="margin-top:14px">📚 Tất cả loại từ & nghĩa phổ biến của “'+descape(base)+'”</h3>'+
   cards+
   '<div class="dictActions">'+
-    '<a target="_blank" rel="noopener" href="https://dictionary.cambridge.org/pronunciation/english/'+encodeURIComponent(base)+'">🔊 Nghe Cambridge UK/US ↗</a>'+
+    dictionaryAudioButtons(got.data.audios,base)+
     '<button class="save" id="dictSaveWord">⭐ Lưu ôn</button>'+
     '<a target="_blank" rel="noopener" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge Dictionary ↗</a>'+
   '</div>'+
   chatBlock+
   '<div class="muted" style="font-size:11px;margin-top:12px">Nguồn lexical: '+descape(got.data.source||'dictionary sources')+'</div>';
+ bindDictionaryAudio(target);
  document.getElementById('dictSaveWord').onclick=function(){st.saved[base]={w:base,m:simpleMeaning||meaning||''};save();renderSaved();this.textContent='✓ Đã lưu'};
 }
 window.lookupDictionary=function(raw,targetId='dictResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
