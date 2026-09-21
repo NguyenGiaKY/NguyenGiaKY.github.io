@@ -1,5 +1,5 @@
 
-const S='ielts100_online';let st=JSON.parse(localStorage.getItem(S)||'{}');st.done=st.done||{};st.notes=st.notes||{};st.err=st.err||[];st.saved=st.saved||{};st.answers=st.answers||{};const save=()=>localStorage.setItem(S,JSON.stringify(st));
+const S='ielts100_online';let st=JSON.parse(localStorage.getItem(S)||'{}');st.done=st.done||{};st.notes=st.notes||{};st.err=st.err||[];st.saved=st.saved||{};st.answers=st.answers||{};st.mistakes=st.mistakes||[];st.errorNotes=st.errorNotes||{};const save=()=>localStorage.setItem(S,JSON.stringify(st));
 const topics=['Education','Technology','Environment','Work','Health','Society','Travel','Culture','Crime','Language'];
 const grammar=['Present Simple vs Present Continuous','Past Simple vs Past Continuous','Present Perfect','Articles','Subject–Verb Agreement','Comparatives & Superlatives','Modal Verbs','Passive Voice','Relative Clauses','Conditionals','Gerunds & Infinitives','Linking Ideas','Prepositions for Task 1','Word Formation','Complex Sentences'];
 const start=new Date('2026-09-21T00:00:00');
@@ -9,12 +9,26 @@ function phase(d){return d<=70?'Học giáo trình':d<=84?'Học lại phần sa
 function slots(d){let u=Math.min(10,Math.ceil(Math.min(d,70)/7)),g=grammar[(d-1)%grammar.length],t=topics[u-1];if(d<=70)return[['05:00–05:50','grammar','Grammar • '+g],['05:50–06:45','reading','Reading • '+t],['06:45–07:30','listening','Listening • '+t],['07:30–08:00','vocab','Vocabulary • '+t],['16:15–17:30','writing','Writing • '+t],['17:30–18:15','speaking','Speaking • '+t],['18:15–18:45','review','Review 1–3–7'],['18:45–19:20','fix','Fix mistakes'],['19:20–20:00','mixed','Weak-skill drill']];return[['05:00–06:00','review','Review / Mock'],['06:00–07:00','reading','Reading repair'],['07:00–08:00','listening','Listening repair'],['16:15–17:30','writing','Writing repair'],['17:30–18:15','speaking','Speaking repair'],['18:15–19:00','fix','Error Log'],['19:00–20:00','mixed','Integrated review']]}
 function key(d,i){return d+'_'+i}
 function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+v).classList.add('active');document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.view===v))}
-document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>show(b.dataset.view));
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{show(b.dataset.view);if(b.dataset.view==='review')renderReview();if(b.dataset.view==='errors')initErrorNotes();});
 function renderDays(){let e=document.getElementById('dayGrid'),c=cd();e.innerHTML='';for(let d=1;d<=100;d++){let b=document.createElement('button');b.textContent=d;if(d===c)b.classList.add('current');if(slots(d).every((_,i)=>st.done[key(d,i)]))b.classList.add('done');b.onclick=()=>{renderToday(d);show('today')};e.appendChild(b)}}
 function renderToday(d=cd()){let s=slots(d),h='<div class="dayHeader"><div><span class="phase">'+phase(d)+'</span><h2>Day '+d+' • '+dateOf(d)+'</h2><div class="muted">Unit '+Math.min(10,Math.ceil(Math.min(d,70)/7))+'</div></div></div><h3>Bấm vào từng khung để học ngay</h3><div class="slots">';s.forEach((x,i)=>h+='<button class="slot '+(st.done[key(d,i)]?'done':'')+'" data-i="'+i+'"><span class="time">'+x[0]+'</span><span><b>'+x[2]+'</b><small>Learn → Practice → Check → Fix → Review</small></span></button>');h+='</div><h3>Ghi chú Day '+d+'</h3><textarea id="note" class="note">'+(st.notes[d]||'')+'</textarea>';document.getElementById('todayCard').innerHTML=h;document.querySelectorAll('.slot').forEach(b=>b.onclick=()=>openLesson(d,+b.dataset.i));document.getElementById('note').oninput=e=>{st.notes[d]=e.target.value;save()}}
 function renderRoadmap(){let h='';for(let d=1;d<=100;d++)h+='<div class="roadDay"><b>Day '+d+' • '+dateOf(d)+'</b><div class="muted">'+phase(d)+'</div><button class="btn primary" onclick="renderToday('+d+');show(&quot;today&quot;)">Mở Day '+d+'</button></div>';document.getElementById('roadmapList').innerHTML=h}
 function renderGrammar(){document.getElementById('grammarList').innerHTML=grammar.map(x=>'<div class="grammarCard"><h3>'+x+'</h3><p>Học rule → examples → 20 câu → 3 câu tự viết → sửa lỗi.</p></div>').join('')}
 function renderSaved(){let a=Object.values(st.saved);document.getElementById('savedWords').innerHTML=a.length?a.map(x=>'<div class="reviewItem"><b>'+x.w+'</b> — '+x.m+'</div>').join(''):'<p class="muted">Chưa lưu từ nào.</p>'}
+
+function mistake(day,type,prompt,correct,explain){
+ let exists=st.mistakes.find(m=>m.day===day&&m.type===type&&m.p===prompt&&!m.mastered);
+ if(!exists)st.mistakes.push({id:String(Date.now())+Math.random().toString(36).slice(2),day:day,type:type,p:prompt,c:correct,e:explain,due:[day+1,day+3,day+7].filter(x=>x<=100),mastered:false});
+ save();renderReview();
+}
+function master(id){let m=st.mistakes.find(x=>x.id===id);if(m)m.mastered=true;save();renderReview()}
+function renderReview(){
+ let list=document.getElementById('reviewList');if(!list)return;let now=cd(),a=st.mistakes.filter(m=>!m.mastered);
+ list.innerHTML=a.length?a.map(m=>'<div class="reviewItem '+(m.due.includes(now)?'due':'')+'"><b>'+m.p+'</b><div class="muted">'+m.type+' • Day '+m.day+' • ôn Day '+m.due.join(', ')+'</div><div><b>Đáp án:</b> '+m.c+'</div><div>'+m.e+'</div><button class="btn" onclick="master(\''+m.id+'\')">✓ Đã nhớ</button></div>').join(''):'<p class="muted">Chưa có lỗi cần ôn. Khi bạn làm sai Grammar/Reading/Listening, câu đó sẽ tự vào lịch +1, +3, +7 ngày.</p>';
+}
+function initErrorNotes(){
+ document.querySelectorAll('.error').forEach(t=>{t.value=st.errorNotes[t.dataset.key]||'';t.oninput=e=>{st.errorNotes[e.target.dataset.key]=e.target.value;save()}});
+}
 function progress(){let t=0,d=0;for(let i=1;i<=100;i++)slots(i).forEach((_,j)=>{t++;if(st.done[key(i,j)])d++});let p=Math.round(d/t*100);document.getElementById('pct').textContent=p;document.getElementById('bar').style.width=p+'%';document.getElementById('progressText').textContent=d+'/'+t+' nhiệm vụ hoàn thành'}
 
 function grammarInfo(topic){
@@ -398,5 +412,11 @@ document.addEventListener('dblclick',()=>{
  let sel=(getSelection()?.toString()||'').trim();if(!sel||!/[A-Za-z]/.test(sel)||sel.split(/\s+/).length>1)return;
  lookupDictionary(sel,'dictResult',sentenceContext());
 });
+
+let dpg=document.getElementById('dictPageGo');
+if(dpg)dpg.onclick=()=>lookupDictionary(document.getElementById('dictPageInput').value,'dictPageResult','');
+let dpi=document.getElementById('dictPageInput');
+if(dpi)dpi.onkeydown=e=>{if(e.key==='Enter')lookupDictionary(dpi.value,'dictPageResult','')};
+renderReview();initErrorNotes();
 document.getElementById('search').oninput=e=>{let q=e.target.value.toLowerCase(),d=days.find(x=>JSON.stringify(x).toLowerCase().includes(q));if(d){renderToday(d.day);show('today')}};
 renderDays();renderToday();renderRoadmap();renderGrammar();renderSaved();progress();
