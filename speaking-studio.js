@@ -701,6 +701,7 @@
           '<div class="spkInlineHead"><span>Câu trả lời của bạn</span><b>Hoàn thành</b></div>'+
           '<div class="spkAnswerMarked" id="spkTranscriptMarked">'+inlineCorrectionHTML(transcript,localFix)+'</div>'+
           '<div class="spkPronInline"><span class="spkPronIcon">Aa Aa Aa</span><b> Phát âm cần chú ý:</b> <span id="spkPronInlineList">'+pronunciationSummaryHTML([])+'</span></div>'+
+          '<div id="spkDeliveryFeedback" class="spkDeliveryFeedback hidden"></div>'+
           '<div class="spkRewriteLine"><b>Sửa lỗi:</b> <span id="spkCorrected">'+esc(localCorrected)+'</span></div>'+
           '<div id="spkCorrections" class="spkHiddenCorrections"></div>'+
         '</div>'+
@@ -806,10 +807,94 @@
     if(stateEl)stateEl.textContent=label;
   }
 
+  async function blobToWavBase64(blob){
+    var C=window.AudioContext||window.webkitAudioContext;
+    var ctx=new C();
+    try{
+      var ab=await blob.arrayBuffer();
+      var audio=await ctx.decodeAudioData(ab.slice(0));
+      var len=audio.length,channels=audio.numberOfChannels,sampleRate=audio.sampleRate;
+      var mono=new Float32Array(len);
+      for(var ch=0;ch<channels;ch++){
+        var data=audio.getChannelData(ch);
+        for(var i=0;i<len;i++)mono[i]+=data[i]/channels;
+      }
+      var buffer=new ArrayBuffer(44+mono.length*2),view=new DataView(buffer);
+      function str(off,s){for(var j=0;j<s.length;j++)view.setUint8(off+j,s.charCodeAt(j));}
+      str(0,"RIFF");view.setUint32(4,36+mono.length*2,true);str(8,"WAVE");str(12,"fmt ");
+      view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);
+      view.setUint32(24,sampleRate,true);view.setUint32(28,sampleRate*2,true);
+      view.setUint16(32,2,true);view.setUint16(34,16,true);str(36,"data");
+      view.setUint32(40,mono.length*2,true);
+      var off=44;
+      for(var k=0;k<mono.length;k++,off+=2){
+        var s=Math.max(-1,Math.min(1,mono[k]));
+        view.setInt16(off,s<0?s*0x8000:s*0x7fff,true);
+      }
+      var bytes=new Uint8Array(buffer),chunk=0x8000,binary="";
+      for(var p=0;p<bytes.length;p+=chunk){
+        binary+=String.fromCharCode.apply(null,bytes.subarray(p,Math.min(p+chunk,bytes.length)));
+      }
+      return btoa(binary);
+    }finally{
+      try{ctx.close();}catch(e){}
+    }
+  }
+
+  async function tryExternalAudioGrader(q,transcript,local){
+    var endpoint=String(window.SPEAKING_AI_ENDPOINT||"").trim();
+    if(!endpoint||!st.blob)return false;
+    var stateEl=document.getElementById("spkAIState");
+    try{
+      if(stateEl)stateEl.textContent="AI đang nghe trực tiếp file audio của bạn…";
+      var audioBase64=await blobToWavBase64(st.blob);
+      var res=await fetch(endpoint,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          question:q.q,
+          transcriptHint:transcript,
+          audioBase64:audioBase64,
+          format:"wav"
+        })
+      });
+      if(!res.ok)throw new Error("Audio grader HTTP "+res.status);
+      var data=await res.json();
+      if(!data||data.error)throw new Error(data&&data.error?data.error:"Invalid audio grader response");
+      var aiTranscript=String(data.transcript||transcript||"").trim();
+      if(aiTranscript){
+        st.transcript=aiTranscript;
+        var marked=document.getElementById("spkTranscriptMarked");
+        if(marked)marked.textContent=aiTranscript;
+      }
+      applyAIResult(data,aiTranscript||transcript,local,"AI đã nghe trực tiếp audio của bạn để chấm nội dung và delivery.");
+      var delivery=data.delivery_feedback||{};
+      var box=document.getElementById("spkDeliveryFeedback");
+      if(box){
+        var rows=[
+          ["Ngữ điệu",delivery.intonation_vi],
+          ["Trọng âm",delivery.stress_vi],
+          ["Nhịp điệu",delivery.rhythm_vi],
+          ["Nối âm",delivery.linking_vi],
+          ["Tốc độ",delivery.pace_vi]
+        ].filter(function(x){return x[1];});
+        if(rows.length){
+          box.innerHTML=rows.map(function(x){return '<div><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></div>';}).join("");
+          box.classList.remove("hidden");
+        }
+      }
+      return true;
+    }catch(err){
+      if(stateEl)stateEl.textContent="AI audio backend chưa hoạt động; đang dùng phương án dự phòng.";
+      return false;
+    }
+  }
+
   async function runAIEnhancement(q, transcript, local) {
     var stateEl=document.getElementById("spkAIState");
+    if(await tryExternalAudioGrader(q,transcript,local))return;
     if(!window.LanguageModel){
-      if(stateEl)stateEl.textContent="Chrome AI không khả dụng. Điểm hiện tại vẫn được tính từ transcript thật + tốc độ nói + độ tin cậy nhận giọng; không phải điểm IELTS chính thức.";
+      if(stateEl)stateEl.textContent=window.SPEAKING_AI_ENDPOINT?"Audio AI backend không phản hồi; đang dùng transcript dự phòng.":"Audio AI backend chưa được kết nối; điểm hiện tại chỉ là phương án dự phòng từ transcript.";
       return;
     }
 
