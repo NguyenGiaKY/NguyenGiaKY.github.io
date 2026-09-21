@@ -38,18 +38,111 @@
   function clamp(n,a,b) { return Math.max(a, Math.min(b,n)); }
   function wordList(t) { return String(t || "").trim().split(/\s+/).filter(Boolean); }
 
+  function speakingBuilderSteps(q){
+    var map={
+      "What do you usually do after school?":[
+        {label:"Trả lời",text:"After school, I usually review my lessons and then relax for a while."},
+        {label:"Lý do",text:"I do this because I want to keep a simple routine and avoid leaving all my schoolwork until later."},
+        {label:"Ví dụ",text:"For example, I normally spend a short time checking what I learned before I play games or watch videos."},
+        {label:"Kết luận",text:"Overall, this routine helps me balance studying and relaxing."}
+      ],
+      "Do you prefer studying alone or with other people?":[
+        {label:"Trả lời",text:"I prefer studying alone most of the time."},
+        {label:"Lý do",text:"The main reason is that I can concentrate better when the environment is quiet."},
+        {label:"Ví dụ",text:"For example, when I study by myself, I can work at my own pace and spend more time on difficult topics."},
+        {label:"Kết luận",text:"So, studying alone is usually more effective for me."}
+      ],
+      "How often do you read in English?":[
+        {label:"Trả lời",text:"I read in English almost every day."},
+        {label:"Lý do",text:"I do it because regular exposure helps me become more familiar with vocabulary and sentence structures."},
+        {label:"Ví dụ",text:"For example, I read school materials, short articles and English content online."},
+        {label:"Kết luận",text:"Overall, daily reading has become an important part of my English practice."}
+      ],
+      "Describe a skill you would like to improve.":[
+        {label:"Trả lời",text:"A skill I would really like to improve is my English speaking."},
+        {label:"Lý do",text:"I want to improve it because speaking clearly and confidently is important for study and everyday communication."},
+        {label:"Ví dụ",text:"For example, I can record myself, listen to my mistakes and practise answering IELTS questions regularly."},
+        {label:"Kết luận",text:"If I keep practising consistently, I think I will make steady progress."}
+      ],
+      "Describe a place where you like to study.":[
+        {label:"Trả lời",text:"I like studying in a quiet place where I can focus properly."},
+        {label:"Lý do",text:"A calm environment helps me stay productive and avoid distractions."},
+        {label:"Ví dụ",text:"For example, I can keep my books and laptop nearby and work without being interrupted."},
+        {label:"Kết luận",text:"That is why a quiet study space works best for me."}
+      ],
+      "To what extent do you think family members tend to have similar personality traits?":[
+        {label:"Trả lời",text:"I think family members can have some similar personality traits, but they are not always the same."},
+        {label:"Lý do",text:"This may be partly because of genetics and partly because people grow up in the same environment."},
+        {label:"Ví dụ",text:"For example, relatives may share a similar temperament, while different life experiences can still shape their behaviour in different ways."},
+        {label:"Kết luận",text:"So, there can be a resemblance in personality, but it is rarely complete."}
+      ],
+      "Why do some people struggle to study consistently?":[
+        {label:"Trả lời",text:"Some people struggle to study consistently because they find it difficult to maintain a routine."},
+        {label:"Lý do",text:"A lack of discipline, clear goals or enough rest can make regular study much harder."},
+        {label:"Ví dụ",text:"For example, someone who is easily distracted may keep postponing tasks until the last minute."},
+        {label:"Kết luận",text:"Therefore, a realistic routine and clear priorities can make studying more consistent."}
+      ],
+      "How has technology changed the way people learn?":[
+        {label:"Trả lời",text:"Technology has made learning much more accessible."},
+        {label:"Lý do",text:"People can now find information, lessons and explanations almost immediately."},
+        {label:"Ví dụ",text:"For example, students can use online courses, videos and AI tools to review difficult topics."},
+        {label:"Kết luận",text:"Overall, technology has made learning more flexible, although learners still need to use it carefully."}
+      ]
+    };
+    return map[q.q]||[
+      {label:"Trả lời",text:"Give a direct answer to the question."},
+      {label:"Lý do",text:"Explain the main reason for your answer."},
+      {label:"Ví dụ",text:"Add one specific example from your own idea."},
+      {label:"Kết luận",text:"Finish with a short result, feeling or summary."}
+    ];
+  }
+
+  function builderPanelHTML(q){
+    var steps=speakingBuilderSteps(q);
+    return '<aside class="spkBuilder">'+
+      '<div class="spkBuilderHead"><div><span>💡 Gợi ý từng bước</span><b id="spkBuilderProgress">0/4 bước</b></div><small>Cấu trúc trả lời cho Speaking Builder</small></div>'+
+      '<div class="spkBuilderBar"><i id="spkBuilderBarFill"></i></div>'+
+      '<div class="spkBuilderSteps">'+steps.map(function(s,i){
+        return '<button class="spkBuilderStep" data-builder-step="'+i+'"><span class="spkBuilderNum">'+(i+1)+'</span><span class="spkBuilderLabel">'+esc(s.label)+'</span><span class="spkBuilderArrow">›</span></button>'+
+          '<div class="spkBuilderExample hidden" id="spkBuilderExample'+i+'"><b>'+esc(s.label)+'</b><p>'+esc(s.text)+'</p></div>';
+      }).join("")+'</div>'+
+      '<div class="spkBuilderTip">Mẹo: dùng ý của <b>bạn</b>. Các câu trên chỉ là khung để bạn biết cách mở rộng câu trả lời.</div>'+
+    '</aside>';
+  }
+
+  function bindBuilder(){
+    var opened={};
+    document.querySelectorAll("[data-builder-step]").forEach(function(btn){
+      btn.onclick=function(){
+        var i=Number(this.getAttribute("data-builder-step"));
+        var ex=document.getElementById("spkBuilderExample"+i);
+        if(!ex)return;
+        var isHidden=ex.classList.contains("hidden");
+        ex.classList.toggle("hidden");
+        if(isHidden)opened[i]=true;else delete opened[i];
+        this.classList.toggle("active",isHidden);
+        var count=Object.keys(opened).length;
+        var p=document.getElementById("spkBuilderProgress");
+        var bar=document.getElementById("spkBuilderBarFill");
+        if(p)p.textContent=count+"/4 bước";
+        if(bar)bar.style.width=(count/4*100)+"%";
+      };
+    });
+  }
+
   function renderQuestion() {
     var body = document.getElementById("lessonBody");
     if (!body) return;
     var q = current();
 
     body.innerHTML =
-      '<div class="spkApp">' +
+      '<div class="spkApp spkQuestionPage">' +
         '<div class="spkTopbar">' +
           '<button id="spkChange" class="spkGhost">⟳ Đổi câu hỏi</button>' +
           '<span class="spkPart">IELTS Part ' + q.part + '</span>' +
           '<span class="spkCount">Câu hỏi: ' + (st.index + 1) + ' / ' + questions.length + '</span>' +
         '</div>' +
+        '<div class="spkBuilderLayout">' +
         '<div class="spkQuestionCard">' +
           '<h2>' + esc(q.q) + '</h2>' +
           '<p class="spkTarget">Hãy thử dùng <b>' + esc(q.word) + '</b> <span>(' + esc(q.pos) + ') · ' + esc(q.ipa) + '</span> trong câu trả lời</p>' +
@@ -65,6 +158,8 @@
             '<button id="spkType" class="spkTypeBtn">⌨ Nhập</button>' +
           '</div>' +
           '<div id="spkTypedWrap" class="spkTypedWrap hidden"><textarea id="spkTyped" placeholder="Nhập câu trả lời..."></textarea><button id="spkTypedSend" class="btn primary">Chấm câu trả lời</button></div>' +
+        '</div>' +
+        builderPanelHTML(q) +
         '</div>' +
         '<div class="lessonActions"><button id="finish" class="btn green">Đã hoàn thành block</button></div>' +
       '</div>';
@@ -84,6 +179,7 @@
       };
     });
 
+    bindBuilder();
     document.getElementById("spkStart").onclick = openRecorder;
     document.getElementById("spkType").onclick = function () {
       document.getElementById("spkTypedWrap").classList.toggle("hidden");
