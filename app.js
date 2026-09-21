@@ -204,12 +204,15 @@ function lessonText(type,d){
  if(type==='listening'){
   let l=listeningPack(d),h='<div class="timePlan"><div><b>0–5 phút</b>Predict</div><div><b>5–12 phút</b>Listen 1</div><div><b>12–25 phút</b>10 câu</div><div><b>25–37 phút</b>Transcript</div><div><b>37–45 phút</b>Listen again</div></div><div class="notice"><b>Prediction:</b> trước khi nghe, đoán loại đáp án: date, time, place, number, noun...</div>'+
   '<div class="listenPlayer">'+
+    '<div class="listenSeekRow">'+
+      '<span id="listenCurrentTime">0:00</span>'+
+      '<input id="listenSeek" class="listenSeek" type="range" min="0" max="1000" step="1" value="0" aria-label="Thanh tua audio">'+
+      '<span id="listenTotalTime">0:00</span>'+
+    '</div>'+
     '<div class="listenPlayerMain">'+
-      '<button id="rewindAudio" class="btn" title="Tua lại khoảng 10 giây">↶ 10s</button>'+
       '<button id="playAudio" class="btn primary">▶ Phát</button>'+
       '<button id="pauseAudio" class="btn">⏸ Tạm dừng</button>'+
       '<button id="stopAudio" class="btn">⏹ Dừng</button>'+
-      '<button id="forwardAudio" class="btn" title="Tua tới khoảng 10 giây">10s ↷</button>'+
       '<button id="showScript" class="btn">Transcript</button>'+
     '</div>'+
     '<div class="listenSettings">'+
@@ -239,7 +242,7 @@ function checkChoice(prefix,qs,d,type){
  let s=document.getElementById(prefix+'-score');if(s)s.textContent=correct+'/'+qs.length;
 }
 
-const listeningTTSState={playing:false,paused:false,stopped:true,chunks:[],index:0,script:'',rate:.9,voiceMode:'auto-uk',utterance:null,startedAt:0,elapsedInChunk:0};
+const listeningTTSState={playing:false,paused:false,stopped:true,chunks:[],index:0,script:'',rate:.9,voiceMode:'auto-uk',utterance:null,startedAt:0,elapsedInChunk:0,seekSecond:0,seeking:false,uiTimer:null};
 
 function listeningVoices(){
  try{return speechSynthesis.getVoices()||[]}catch(e){return[]}
@@ -301,7 +304,7 @@ function listeningTimelineSeconds(){
  for(let i=0;i<s.index;i++)total+=estimatedChunkSeconds(s.chunks[i],s.rate);
  if(s.playing&&!s.paused&&s.startedAt)total+=Math.max(0,(performance.now()-s.startedAt)/1000);
  else total+=s.elapsedInChunk||0;
- return total;
+ return Math.max(0,Math.min(totalListeningSeconds(),total));
 }
 function totalListeningSeconds(){
  return listeningTTSState.chunks.reduce((sum,x)=>sum+estimatedChunkSeconds(x,listeningTTSState.rate),0);
@@ -316,36 +319,72 @@ function indexForListeningSecond(target){
  }
  return {index:Math.max(0,s.chunks.length-1),offset:0};
 }
-function seekListeningBy(seconds){
+
+function formatListeningTime(sec){
+ sec=Math.max(0,Math.round(sec||0));
+ let m=Math.floor(sec/60),s=sec%60;
+ return m+':'+String(s).padStart(2,'0');
+}
+function updateListeningSeekUI(force=false){
+ let s=listeningTTSState,bar=document.getElementById('listenSeek');
+ if(!bar)return;
+ let total=totalListeningSeconds(),cur=listeningTimelineSeconds();
+ if(!s.seeking||force)bar.value=total?Math.round((cur/total)*1000):0;
+ let now=document.getElementById('listenCurrentTime'),end=document.getElementById('listenTotalTime');
+ if(now)now.textContent=formatListeningTime(cur);
+ if(end)end.textContent=formatListeningTime(total);
+}
+function startListeningUITimer(){
+ let s=listeningTTSState;
+ if(s.uiTimer)clearInterval(s.uiTimer);
+ s.uiTimer=setInterval(()=>updateListeningSeekUI(false),180);
+}
+function stopListeningUITimer(){
+ let s=listeningTTSState;
+ if(s.uiTimer){clearInterval(s.uiTimer);s.uiTimer=null}
+}
+function seekListeningTo(target,autoplay){
  let s=listeningTTSState;
  if(!s.chunks.length)return;
- let target=listeningTimelineSeconds()+seconds,pos=indexForListeningSecond(target);
+ target=Math.max(0,Math.min(totalListeningSeconds(),Number(target)||0));
+ let pos=indexForListeningSecond(target),wasActive=s.playing||s.paused;
  try{speechSynthesis.cancel()}catch(e){}
  s.index=pos.index;
+ // Browser TTS cannot begin in the middle of a word/sentence. Keep the bar at the requested
+ // position but restart from the nearest sentence/chunk.
  s.elapsedInChunk=0;
  s.startedAt=0;
- s.stopped=false;
+ s.seekSecond=target;
  s.paused=false;
- s.playing=true;
- // SpeechSynthesis cannot seek inside a spoken sentence, so restart from the closest sentence/chunk.
- setListeningStatus(seconds<0?'Đã tua lại khoảng 10 giây':'Đã tua tới khoảng 10 giây');
- setTimeout(speakListeningChunk,80);
+ if(autoplay===undefined)autoplay=wasActive;
+ if(autoplay){
+   s.stopped=false;s.playing=true;
+   setListeningStatus('Đang phát từ vị trí đã tua');
+   setTimeout(speakListeningChunk,80);
+ }else{
+   s.stopped=true;s.playing=false;
+   setListeningStatus('Đã tua tới '+formatListeningTime(target));
+ }
+ updateListeningSeekUI(true);
 }
 function setListeningStatus(text){
  let el=document.getElementById('listenStatusText');if(el)el.textContent=text;
  let p=document.getElementById('listenProgress');
  if(p)p.textContent=listeningTTSState.chunks.length&&listeningTTSState.playing?'Câu '+Math.min(listeningTTSState.index+1,listeningTTSState.chunks.length)+' / '+listeningTTSState.chunks.length:'';
+ updateListeningSeekUI(false);
 }
 function stopListeningAudio(reset=true){
  try{speechSynthesis.cancel()}catch(e){}
  listeningTTSState.playing=false;listeningTTSState.paused=false;listeningTTSState.stopped=true;listeningTTSState.utterance=null;listeningTTSState.startedAt=0;listeningTTSState.elapsedInChunk=0;
- if(reset)listeningTTSState.index=0;
+ if(reset){listeningTTSState.index=0;listeningTTSState.seekSecond=0}
+ stopListeningUITimer();
  setListeningStatus('Đã dừng');
+ updateListeningSeekUI(true);
 }
 function speakListeningChunk(){
  let s=listeningTTSState;
  if(s.stopped||s.index>=s.chunks.length){
-   s.playing=false;s.paused=false;s.stopped=true;s.index=0;setListeningStatus('Đã phát xong');return;
+   s.playing=false;s.paused=false;s.stopped=true;s.index=0;s.seekSecond=0;stopListeningUITimer();setListeningStatus('Đã phát xong');updateListeningSeekUI(true);return;
  }
  let u=new SpeechSynthesisUtterance(s.chunks[s.index]);
  let mode=s.voiceMode||'auto-uk',voice=chooseListeningVoice(mode);
@@ -354,7 +393,7 @@ function speakListeningChunk(){
  u.rate=s.rate||.9;
  u.pitch=1;
  u.volume=1;
- u.onstart=()=>{s.playing=true;s.paused=false;s.startedAt=performance.now();s.elapsedInChunk=0;setListeningStatus('Đang phát')};
+ u.onstart=()=>{s.playing=true;s.paused=false;s.startedAt=performance.now();s.elapsedInChunk=0;startListeningUITimer();setListeningStatus('Đang phát')};
  u.onend=()=>{if(s.stopped)return;s.startedAt=0;s.elapsedInChunk=0;s.index++;setTimeout(speakListeningChunk,80)};
  u.onerror=()=>{if(s.stopped)return;s.startedAt=0;s.elapsedInChunk=0;s.index++;setTimeout(speakListeningChunk,80)};
  s.utterance=u;
@@ -363,9 +402,15 @@ function speakListeningChunk(){
 function startListeningAudio(script){
  let s=listeningTTSState;
  try{speechSynthesis.cancel()}catch(e){}
- s.script=script;s.chunks=splitListeningScript(script);s.index=0;s.stopped=false;s.paused=false;s.playing=true;s.startedAt=0;s.elapsedInChunk=0;
+ s.script=script;
+ if(!s.chunks.length)s.chunks=splitListeningScript(script);
  let rate=document.getElementById('listenRate');if(rate)s.rate=parseFloat(rate.value)||.9;
  let voice=document.getElementById('listenVoice');if(voice)s.voiceMode=voice.value||'auto-uk';
+ if(s.stopped&&s.seekSecond>0){
+   let pos=indexForListeningSecond(s.seekSecond);s.index=pos.index;
+ }else if(s.stopped){s.index=0}
+ s.stopped=false;s.paused=false;s.playing=true;s.startedAt=0;s.elapsedInChunk=0;
+ startListeningUITimer();
  speakListeningChunk();
 }
 function pauseResumeListening(){
@@ -384,20 +429,34 @@ function restartListeningAtRate(){
  setTimeout(speakListeningChunk,80);
 }
 function initListeningPlayer(script){
- let rate=document.getElementById('listenRate'),rateLabel=document.getElementById('listenRateLabel'),voice=document.getElementById('listenVoice');
+ let s=listeningTTSState,rate=document.getElementById('listenRate'),rateLabel=document.getElementById('listenRateLabel'),voice=document.getElementById('listenVoice'),seek=document.getElementById('listenSeek');
+ stopListeningUITimer();
+ s.script=script;s.chunks=splitListeningScript(script);s.index=0;s.startedAt=0;s.elapsedInChunk=0;s.seekSecond=0;s.stopped=true;s.playing=false;s.paused=false;s.seeking=false;
  populateListeningVoices();
  if(typeof speechSynthesis!=='undefined')speechSynthesis.onvoiceschanged=()=>populateListeningVoices();
  if(rate){
-   rate.oninput=()=>{if(rateLabel)rateLabel.textContent=Number(rate.value).toFixed(2)+'×'};
+   s.rate=parseFloat(rate.value)||.9;
+   rate.oninput=()=>{if(rateLabel)rateLabel.textContent=Number(rate.value).toFixed(2)+'×';s.rate=parseFloat(rate.value)||.9;updateListeningSeekUI(true)};
    rate.onchange=()=>restartListeningAtRate();
  }
  if(voice)voice.onchange=()=>restartListeningAtRate();
- document.getElementById('rewindAudio').onclick=()=>seekListeningBy(-10);
+ if(seek){
+   seek.onpointerdown=()=>{s.seeking=true};
+   seek.oninput=()=>{
+     let total=totalListeningSeconds(),target=(Number(seek.value)/1000)*total;
+     let now=document.getElementById('listenCurrentTime');if(now)now.textContent=formatListeningTime(target);
+   };
+   seek.onchange=()=>{
+     let total=totalListeningSeconds(),target=(Number(seek.value)/1000)*total,autoplay=s.playing||s.paused;
+     s.seeking=false;s.seekSecond=target;seekListeningTo(target,autoplay);
+   };
+   seek.onpointerup=()=>{s.seeking=false};
+ }
  document.getElementById('playAudio').onclick=()=>startListeningAudio(script);
  document.getElementById('pauseAudio').onclick=()=>pauseResumeListening();
  document.getElementById('stopAudio').onclick=()=>stopListeningAudio(true);
- document.getElementById('forwardAudio').onclick=()=>seekListeningBy(10);
  setListeningStatus('Sẵn sàng');
+ updateListeningSeekUI(true);
 }
 function openLesson(d,i){
  let s=slots(d)[i],type=s[1];
