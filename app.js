@@ -745,24 +745,14 @@ async function renderDictionary(surface,targetId,sentence){
  let g=(pos?groups.find(x=>x.partOfSpeech===pos):null)||groups[0];
  if(g&&g.definitions&&g.definitions.length)g.definitions.sort((x,y)=>scoreDefinition(y,sentence)-scoreDefinition(x,sentence));
  let def=g?.definitions?.[0]||{},coreSense=pos?CORE[base]?.s.find(x=>x[0]===pos):null;
- let meaning=coreSense?.[1]||def.vi||await translateText(def.definition||base);
+ let cleanDefinition=String(def.definition||base).replace(/^\((?:intransitive|transitive|countable|uncountable|informal|formal|dated|archaic)[^)]*\)\s*/i,'').trim();
+ let meaning=coreSense?.[1]||def.vi||await translateText(cleanDefinition||base);
  if(!meaning)meaning=await translateText(base);
- let simpleMeaning=await translateText(base);
- if(!simpleMeaning||simpleMeaning.toLowerCase()===String(base).toLowerCase()||simpleMeaning.length>90)simpleMeaning=meaning;
+ let simpleQuery=((pos||g?.partOfSpeech)==='verb'?'to ':'')+base;
+ let simpleMeaning=await translateText(simpleQuery);
+ simpleMeaning=String(simpleMeaning||'').replace(/^để\s+/i,'').trim();
+ if(!simpleMeaning||simpleMeaning.toLowerCase()===String(base).toLowerCase()||simpleMeaning.length>70)simpleMeaning=meaning;
  let cards='',summary=[];
- for(let group of groups){
-  let posName=POSVI[group.partOfSpeech]||group.partOfSpeech,defs='',firstVi='';
-  for(let i=0;i<Math.min(3,group.definitions.length);i++){
-   let d=group.definitions[i],v=d.vi||'';
-   if(!v&&(i<2))v=await translateText(d.definition);
-   if(i===0)firstVi=v;
-   defs+='<div class="definition">'+(v?'<div class="vi">'+descape(v)+'</div>':'')+'<div class="en">'+descape(d.definition)+'</div>'+(d.example?'<div class="en"><b>Example:</b> '+descape(d.example)+'</div>':'')+'</div>';
-  }
-  if(firstVi)summary.push('<div><b>'+descape(posName)+'</b> <span class="posBadge">'+descape(group.partOfSpeech)+'</span><br><span>'+descape(firstVi)+'</span></div>');
-  cards+='<div class="posCard"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><b>'+descape(posName)+'</b><span class="posBadge">'+descape(group.partOfSpeech)+'</span>'+(hasContext&&group.partOfSpeech===pos?'<span class="posBadge">✓ đang dùng trong câu</span>':'')+'</div>'+defs+'</div>';
- }
- if(!cards)cards='<div class="posCard"><b>Chưa lấy được lexical data.</b><div class="en">Bạn vẫn có thể mở Cambridge; web sẽ tiếp tục thử nguồn khác ở lần tra sau.</div></div>';
-
  let chatBlock=await chatStyleHTML(surface,base,groups,pos,sentence,simpleMeaning,meaning,got.data.phonetic);
  target.innerHTML=
   '<div class="dictWord">'+descape(titleWord(surface))+'</div>'+
