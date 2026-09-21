@@ -241,3 +241,53 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
  .rsResultPage{padding:70px 12px 24px}.rsResultBody{padding:20px 14px}.rsResultHeader{flex-direction:column}.rsResultHeader>div{text-align:left}
  .rsNav{max-width:70%;overflow:auto;flex-wrap:nowrap}.rsResultMessage{padding:22px}.rsResultEmoji{font-size:64px}
 }
+
+
+/* Reading resizable split */
+.rsSplit,.rrSplit{
+  grid-template-columns:minmax(280px,var(--reading-left,50%)) 10px minmax(320px,1fr)!important;
+}
+.rsDivider{
+  position:relative;
+  cursor:col-resize;
+  background:#f3f5f8;
+  border-left:1px solid #e1e6ed;
+  border-right:1px solid #e1e6ed;
+  display:grid;
+  place-items:center;
+  touch-action:none;
+  user-select:none;
+  z-index:3;
+}
+.rsDivider span{
+  width:20px;
+  height:42px;
+  border:1px solid #d5dbe4;
+  background:#fff;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  color:#7b8797;
+  font-weight:900;
+  box-shadow:0 2px 8px rgba(15,23,42,.08);
+}
+.rsDivider:hover,.rsDivider.dragging{background:#e7eefc}
+.rsDivider.dragging span{border-color:#3157d5;color:#3157d5}
+.rsResizing{cursor:col-resize!important;user-select:none!important}
+.rsResizing *{cursor:col-resize!important}
+.rsTopRight{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.rsSplitControls{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.rsSplitControls button{border:0;border-right:1px solid var(--line);background:#fff;padding:7px 9px;font-size:12px;font-weight:800;color:#475569;cursor:pointer}
+.rsSplitControls button:last-child{border-right:0}
+.rsSplitControls button:hover{background:#f3f6fb;color:#3157d5}
+
+/* Simplified Listening player */
+.listenMainPlay{min-width:118px}
+.listenSeek{touch-action:none}
+.listenSeek::-webkit-slider-thumb{cursor:grab}
+.listenSeek:active::-webkit-slider-thumb{cursor:grabbing}
+
+@media(max-width:900px){
+  .rsSplit,.rrSplit{grid-template-columns:1fr!important}
+  .rsDivider,.rsSplitControls{display:none!important}
+}
