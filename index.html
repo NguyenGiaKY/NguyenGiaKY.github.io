@@ -32,7 +32,9 @@
         <button class="nav" data-view="review">🔁 Ôn 1–3–7</button>
         <button class="nav" data-view="grammar">🧠 Grammar Library</button>
         <button class="nav" data-view="vocab">🗂️ Vocabulary</button>
+        <button class="nav" data-view="dictionary">📖 Từ điển & Gợi ý</button>
         <button class="nav" data-view="errors">🧾 Error Log</button>
+        <button class="nav" data-view="books">📚 3 PDF Books</button>
         <button class="nav" data-view="resources">🌐 Nguồn học</button>
       </nav>
       <div class="sideTitle">DAY 1 → 100</div>
@@ -45,6 +47,17 @@
       <section id="view-review" class="view"><div class="card panel"><h2>Ôn lỗi 1–3–7</h2><p class="muted">Câu bạn làm sai sẽ tự quay lại sau 1, 3 và 7 ngày.</p><div id="reviewList"></div></div></section>
       <section id="view-grammar" class="view"><div class="card panel"><h2>Grammar Library</h2><div id="grammarList" class="grid2"></div></div></section>
       <section id="view-vocab" class="view"><div class="card panel"><h2>Vocabulary & Saved Words</h2><div id="savedWords"></div></div></section>
+      <section id="view-dictionary" class="view"><div class="card panel"><h2>Từ điển & Gợi ý</h2>
+<p class="muted">Double-click bất kỳ từ tiếng Anh nào trong bài. Web sẽ giải thích nghĩa trong đúng câu đó, loại từ đang dùng, dạng gốc, vai trò ngữ pháp, cấu trúc và tất cả loại từ phổ biến khác của cùng từ.</p>
+<div class="dictSearch" style="max-width:700px"><input id="dictPageInput" class="search" placeholder="Ví dụ: in, another, read, routine..."><button class="btn primary" id="dictPageGo">Tra từ</button></div>
+<div id="dictPageResult" style="margin-top:12px"></div>
+</div></section>
+<section id="view-books" class="view"><div class="card panel"><h2>3 Improve Your Skills Books</h2>
+<p class="muted">Website dùng 3 cuốn sách làm khung giáo trình. Bản online không public nguyên PDF; nội dung học chính đã được đưa trực tiếp vào từng khung giờ để bạn không cần tự tìm trang.</p>
+<div class="grid2"><div class="grammarCard"><h3>Reading 6.0–7.5</h3><p>10 Units. Roadmap liên kết Unit 1 → Unit 10 với Reading skill và practice trong từng ngày.</p></div>
+<div class="grammarCard"><h3>Writing 6.0–7.5</h3><p>Task 1 + Task 2, outline, timed writing, self-check và rewrite.</p></div>
+<div class="grammarCard"><h3>Listening & Speaking 6.0–7.5</h3><p>Listening Sections + Speaking Part 1–3, transcript, replay và repair.</p></div></div>
+</div></section>
       <section id="view-errors" class="view"><div class="card panel"><h2>Error Log</h2><div class="grid2">
         <textarea class="note error" data-key="grammar" placeholder="Grammar errors..."></textarea>
         <textarea class="note error" data-key="reading" placeholder="Reading errors..."></textarea>
@@ -88,6 +101,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20260921-2"></script>
+<script src="app.js?v=20260921-5"></script>
 </body>
 </html>
