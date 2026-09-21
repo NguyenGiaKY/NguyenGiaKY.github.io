@@ -888,14 +888,20 @@
       return true;
     }catch(err){
       st.lastAudioBackendError=String(err&&err.message?err.message:err);
-      if(stateEl)stateEl.textContent="AI audio backend lỗi: "+st.lastAudioBackendError+" · đang dùng phương án dự phòng.";
+      if(stateEl)stateEl.textContent="❌ Direct Audio AI lỗi: "+st.lastAudioBackendError;
       return false;
     }
   }
 
   async function runAIEnhancement(q, transcript, local) {
     var stateEl=document.getElementById("spkAIState");
-    if(await tryExternalAudioGrader(q,transcript,local))return;
+    st.lastAudioBackendError="";
+    var externalConfigured=!!String(window.SPEAKING_AI_ENDPOINT||"").trim();
+    if(externalConfigured){
+      if(await tryExternalAudioGrader(q,transcript,local))return;
+      if(stateEl)stateEl.textContent="❌ Direct Audio AI lỗi: "+(st.lastAudioBackendError||"không rõ lỗi")+". Không dùng transcript để giả lập chấm phát âm.";
+      return;
+    }
     if(!window.LanguageModel){
       if(stateEl)stateEl.textContent=st.lastAudioBackendError
         ? "Audio AI chưa chạy được ("+st.lastAudioBackendError+"). Điểm hiện tại chỉ là phương án dự phòng từ transcript."
