@@ -712,3 +712,115 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
   font-size:12px;
   line-height:1.45;
 }
+
+/* Speaking Builder panel */
+.spkQuestionPage{max-width:1180px}
+.spkBuilderLayout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 340px;
+  gap:16px;
+  align-items:start;
+}
+.spkBuilder{
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fff;
+  padding:16px;
+  box-shadow:0 8px 30px rgba(23,32,51,.05);
+  position:sticky;
+  top:14px;
+}
+.spkBuilderHead>div{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+.spkBuilderHead span{font-weight:900;color:#1f2937}
+.spkBuilderHead b{font-size:13px;color:#475569}
+.spkBuilderHead small{
+  display:block;
+  margin-top:6px;
+  color:var(--muted);
+  line-height:1.4;
+}
+.spkBuilderBar{
+  height:6px;
+  border-radius:999px;
+  background:#eceff4;
+  overflow:hidden;
+  margin:12px 0;
+}
+.spkBuilderBar i{
+  display:block;
+  width:0;
+  height:100%;
+  background:#22a447;
+  border-radius:999px;
+  transition:width .2s ease;
+}
+.spkBuilderSteps{display:grid;gap:8px}
+.spkBuilderStep{
+  width:100%;
+  border:1px solid #e2e7ef;
+  background:#fff;
+  border-radius:12px;
+  padding:10px 11px;
+  display:grid;
+  grid-template-columns:32px 1fr auto;
+  gap:9px;
+  align-items:center;
+  text-align:left;
+  cursor:pointer;
+}
+.spkBuilderStep:hover{background:#f7f9fc}
+.spkBuilderStep.active{
+  border-color:#8fdba3;
+  background:#f1fff5;
+}
+.spkBuilderNum{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#eef5ff;
+  color:#3157d5;
+  font-weight:900;
+}
+.spkBuilderStep.active .spkBuilderNum{
+  background:#22a447;
+  color:#fff;
+}
+.spkBuilderLabel{font-weight:900;color:#253047}
+.spkBuilderArrow{font-size:22px;color:#98a2b3}
+.spkBuilderExample{
+  border-left:3px solid #22a447;
+  margin:-2px 4px 4px 14px;
+  padding:9px 10px;
+  background:#f8fffa;
+  border-radius:0 10px 10px 0;
+}
+.spkBuilderExample b{
+  display:block;
+  margin-bottom:4px;
+  color:#14813a;
+}
+.spkBuilderExample p{
+  margin:0;
+  line-height:1.5;
+  color:#344054;
+  font-size:14px;
+}
+.spkBuilderTip{
+  margin-top:12px;
+  border-top:1px solid #edf0f4;
+  padding-top:10px;
+  color:#667085;
+  font-size:12px;
+  line-height:1.5;
+}
+@media(max-width:950px){
+  .spkBuilderLayout{grid-template-columns:1fr}
+  .spkBuilder{position:static}
+}
