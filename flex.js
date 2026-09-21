@@ -5,6 +5,7 @@ let fs={};
 try{fs=JSON.parse(localStorage.getItem(FLEX_KEY)||'{}')}catch(e){}
 fs.done=fs.done||{};
 fs.queue=fs.queue||[];
+fs.queueSize=[2,4,6].includes(Number(fs.queueSize))?Number(fs.queueSize):4;
 fs.scores=fs.scores||{listening:[],reading:[],writing:[],speaking:[]};
 fs.phase=fs.phase||'foundation';
 const saveFlex=()=>localStorage.setItem(FLEX_KEY,JSON.stringify(fs));
@@ -267,18 +268,32 @@ function openCheckpoint(t){
 
 function renderFlexHome(){
  const card=document.getElementById('todayCard');if(!card)return;
- let [phase,desc]=phaseInfo(),q=chooseQueue(4,false);
+ let [phase,desc]=phaseInfo(),q=chooseQueue(fs.queueSize,false);
+ const qBtn=n=>'<button class="btn '+(fs.queueSize===n?'primary':'')+'" data-qsize="'+n+'">'+(n===2?'Nhẹ':n===4?'Vừa':'Nhiều')+' • '+n+' task</button>';
  card.innerHTML='<div class="flexHeroLine"><div><span class="phase">'+phase+'</span><h2>Study Queue linh hoạt</h2><p class="muted">'+desc+'</p></div></div>'+
  '<div class="noPressure"><b>Không có “trễ lịch”.</b> Task chưa xong hôm nay sẽ ở lại queue cho lần học tiếp theo. Bạn có thể học ít hôm nay và bù vào ngày khác mà không làm hỏng lộ trình.</div>'+
- '<div class="queueControls"><span>Chọn lượng học phù hợp hôm nay:</span><button class="btn" data-qsize="2">Nhẹ • 2 task</button><button class="btn primary" data-qsize="4">Vừa • 4 task</button><button class="btn" data-qsize="6">Nhiều • 6 task</button><button class="btn" id="newQueue">Đổi gợi ý</button></div>'+
+ '<div class="queueControls"><span>Chọn lượng học phù hợp hôm nay:</span>'+qBtn(2)+qBtn(4)+qBtn(6)+'<button class="btn" id="newQueue">Đổi gợi ý</button></div>'+
  '<div class="flexQueue">'+q.map(t=>taskCard(t,true)).join('')+'</div>'+
  '<div class="skillSnapshot">'+['listening','reading','writing','speaking'].map(s=>{
    let v=latestScore(s),m=skillMeta[s];
    return '<div class="snapshotCard"><b>'+m.label+' '+m.target+'</b><strong>'+pctSkill(s)+'%</strong><span>'+(v===null?'Chưa nhập checkpoint':'Gần nhất: '+v+(m.metric==='/40'?'/40':' band'))+'</span></div>';
  }).join('')+'</div>';
  bindTaskButtons(card);
- card.querySelectorAll('[data-qsize]').forEach(b=>b.onclick=()=>{fs.queue=[];saveFlex();let n=+b.dataset.qsize;let nq=chooseQueue(n,true);fs.queue=nq.map(x=>x.id);saveFlex();renderFlexHome()});
- document.getElementById('newQueue').onclick=()=>{fs.queue=[];chooseQueue(4,true);renderFlexHome()};
+ card.querySelectorAll('[data-qsize]').forEach(b=>b.onclick=()=>{
+   let n=+b.dataset.qsize;
+   fs.queueSize=n;
+   fs.queue=[];
+   saveFlex();
+   let nq=chooseQueue(n,true);
+   fs.queue=nq.map(x=>x.id);
+   saveFlex();
+   renderFlexHome();
+ });
+ document.getElementById('newQueue').onclick=()=>{
+   fs.queue=[];
+   chooseQueue(fs.queueSize,true);
+   renderFlexHome();
+ };
 }
 
 function scoreBox(skill){
