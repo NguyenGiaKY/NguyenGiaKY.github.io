@@ -518,11 +518,18 @@
     };
   }
 
-  function sampleAnswer(q) {
-    if (q.part === 1) return "I usually spend some time reviewing what I learned at school, and then I relax. Having a simple routine helps me stay organised without feeling too stressed.";
-    if (q.part === 2) return "One skill I would really like to improve is my English speaking. I have made progress, but I still hesitate when I need to explain complex ideas. I plan to practise regularly by recording myself and reviewing my mistakes.";
-    return "I think there is often some resemblance between family members because genetics can influence certain personality traits. However, people also have different life experiences, so they do not always behave or think in the same way.";
+  function sameIdeaHighBandFallback(transcript,corrections){
+    var text=applyCorrectionsText(String(transcript||"").trim(),corrections||[]);
+    if(!text)return "";
+    text=text.replace(/\s+/g," ").trim();
+    text=text.replace(/\bi think\b/gi,"In my view");
+    text=text.replace(/\bin my opinion\b/gi,"From my perspective");
+    text=text.replace(/\bbecause\b/gi,"mainly because");
+    text=text.replace(/\balso\b/gi,"also");
+    if(text && !/[.!?]$/.test(text))text+=".";
+    return text;
   }
+
 
   function applyCorrectionsText(text,corrections){
     var out=String(text||"");
@@ -606,7 +613,7 @@
           '<div id="spkAIState" class="spkAIState">'+(useAI?'Đang thử AI để chấm sâu hơn từ audio/transcript thật…':'Điểm trên là ước lượng luyện tập từ transcript thật.')+'</div>'+
         '</div>'+
 
-        '<div class="spkHighBand spkOpenQuizHigh"><b>Câu trả lời điểm cao</b><p id="spkHighText">'+esc(sampleAnswer(q))+'</p><button id="spkReadHigh" class="spkLinkBtn">🔊 Nghe câu mẫu</button></div>'+
+        '<div class="spkHighBand spkOpenQuizHigh"><b>Câu trả lời band cao hơn · giữ nguyên ý của bạn</b><p id="spkHighText">'+esc(sameIdeaHighBandFallback(transcript,localFix))+'</p><small class="spkSameIdeaNote">Chỉ nâng cách diễn đạt; không thêm hành động, lý do hay ví dụ mới.</small><button id="spkReadHigh" class="spkLinkBtn">🔊 Nghe câu mẫu</button></div>'+
         (st.url?'<audio controls class="spkReplay spkOpenQuizAudio" src="'+esc(st.url)+'"></audio>':'')+
         '<div class="spkResultActions"><button id="spkRetry" class="btn">↻ Trả lời lại</button><button id="spkNext" class="btn primary">Câu tiếp theo →</button></div>'+
         '<div class="lessonActions"><button id="finish" class="btn green">Đã hoàn thành block</button></div>'+
@@ -656,7 +663,7 @@
     setText("spkOverallBand",ob.toFixed(1));
     setText("spkBandBadge",ob.toFixed(1)+"/9.0");
     if(d.feedback_vi)setText("spkFeedbackText",d.feedback_vi);
-    if(d.high_band)setText("spkHighText",d.high_band);
+    if(d.high_band&&String(d.high_band).trim())setText("spkHighText",d.high_band);
 
     var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,10):[];
     var corrected=d.corrected||applyCorrectionsText(transcript,corrections);
@@ -687,7 +694,7 @@
     var prompt=
       "You are an IELTS Speaking practice examiner. Grade ONLY the learner answer below against the exact question. Use Fluency and Coherence, Lexical Resource, Grammatical Range and Accuracy, and Pronunciation. Be strict about relevance. Do not reward answer length by itself. Question: "+q.q+
       ". Browser transcript: "+transcript+
-      '. Return VALID JSON ONLY: {"overall_band":6.0,"grammar_band":6.0,"vocab_band":6.0,"coherence_band":6.0,"pronunciation_band":6.0,"corrected":"minimal corrected version preserving learner meaning","feedback_vi":"specific Vietnamese feedback referring to what the learner actually said","high_band":"a stronger natural answer to the same question","corrections":[{"wrong":"exact learner wording","better":"correction","reason":"short Vietnamese reason"}]}. Use 0.5 band steps.';
+      '. IMPORTANT FOR high_band: preserve the learner\'s exact ideas and factual content. Do NOT add any new action, activity, reason, example, place, person, preference, frequency, event, opinion, or detail that is not explicitly present in the transcript. You may ONLY correct grammar, improve naturalness, reorganise the same ideas, use more precise vocabulary with the same meaning, and add cohesive devices that do not add new factual content. Return VALID JSON ONLY: {"overall_band":6.0,"grammar_band":6.0,"vocab_band":6.0,"coherence_band":6.0,"pronunciation_band":6.0,"corrected":"minimal corrected version preserving learner meaning","feedback_vi":"specific Vietnamese feedback referring to what the learner actually said","high_band":"a higher-band version using ONLY the learner\'s existing ideas and facts","corrections":[{"wrong":"exact learner wording","better":"correction","reason":"short Vietnamese reason"}]}. Use 0.5 band steps.';
 
     try{
       if(st.blob){
