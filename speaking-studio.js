@@ -867,24 +867,50 @@
     try{
       var ab=await blob.arrayBuffer();
       var audio=await ctx.decodeAudioData(ab.slice(0));
-      var len=audio.length,channels=audio.numberOfChannels,sampleRate=audio.sampleRate;
-      var mono=new Float32Array(len);
+      var sourceRate=audio.sampleRate;
+      var channels=audio.numberOfChannels;
+      var sourceLen=audio.length;
+      var duration=sourceLen/sourceRate;
+
+      var mono=new Float32Array(sourceLen);
       for(var ch=0;ch<channels;ch++){
         var data=audio.getChannelData(ch);
-        for(var i=0;i<len;i++)mono[i]+=data[i]/channels;
+        for(var i=0;i<sourceLen;i++)mono[i]+=data[i]/channels;
       }
-      var buffer=new ArrayBuffer(44+mono.length*2),view=new DataView(buffer);
+
+      // Keep requests below Vercel's serverless request-body limit.
+      // Short answers keep 16 kHz for clearer pronunciation analysis;
+      // very long answers are downsampled more aggressively.
+      var targetRate=duration<=90?16000:(duration<=150?12000:8000);
+      targetRate=Math.min(targetRate,sourceRate);
+
+      var ratio=sourceRate/targetRate;
+      var outLen=Math.max(1,Math.floor(sourceLen/ratio));
+      var pcm=new Float32Array(outLen);
+
+      for(var o=0;o<outLen;o++){
+        var start=Math.floor(o*ratio);
+        var end=Math.min(sourceLen,Math.floor((o+1)*ratio));
+        if(end<=start)end=Math.min(sourceLen,start+1);
+        var sum=0,count=0;
+        for(var n=start;n<end;n++){sum+=mono[n];count++;}
+        pcm[o]=count?sum/count:mono[Math.min(start,sourceLen-1)];
+      }
+
+      var buffer=new ArrayBuffer(44+pcm.length*2),view=new DataView(buffer);
       function str(off,s){for(var j=0;j<s.length;j++)view.setUint8(off+j,s.charCodeAt(j));}
-      str(0,"RIFF");view.setUint32(4,36+mono.length*2,true);str(8,"WAVE");str(12,"fmt ");
+      str(0,"RIFF");view.setUint32(4,36+pcm.length*2,true);str(8,"WAVE");str(12,"fmt ");
       view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);
-      view.setUint32(24,sampleRate,true);view.setUint32(28,sampleRate*2,true);
+      view.setUint32(24,targetRate,true);view.setUint32(28,targetRate*2,true);
       view.setUint16(32,2,true);view.setUint16(34,16,true);str(36,"data");
-      view.setUint32(40,mono.length*2,true);
+      view.setUint32(40,pcm.length*2,true);
+
       var off=44;
-      for(var k=0;k<mono.length;k++,off+=2){
-        var s=Math.max(-1,Math.min(1,mono[k]));
+      for(var k=0;k<pcm.length;k++,off+=2){
+        var s=Math.max(-1,Math.min(1,pcm[k]));
         view.setInt16(off,s<0?s*0x8000:s*0x7fff,true);
       }
+
       var bytes=new Uint8Array(buffer),chunk=0x8000,binary="";
       for(var p=0;p<bytes.length;p+=chunk){
         binary+=String.fromCharCode.apply(null,bytes.subarray(p,Math.min(p+chunk,bytes.length)));
@@ -900,8 +926,9 @@
     if(!endpoint||!st.blob)return false;
     var stateEl=document.getElementById("spkAIState");
     try{
-      if(stateEl)stateEl.textContent="AI đang nghe trực tiếp file audio của bạn…";
+      if(stateEl)stateEl.textContent="Đang tối ưu file ghi âm để gửi AI…";
       var audioBase64=await blobToWavBase64(st.blob);
+      if(stateEl)stateEl.textContent="AI đang nghe trực tiếp file audio của bạn…";
       var res=await fetch(endpoint,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
