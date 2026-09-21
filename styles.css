@@ -824,3 +824,31 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
   .spkBuilderLayout{grid-template-columns:1fr}
   .spkBuilder{position:static}
 }
+
+/* Speaking direct-audio delivery feedback */
+.spkDeliveryFeedback{
+  margin:10px 0 2px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.spkDeliveryFeedback>div{
+  border:1px solid #dbe4f0;
+  background:#fff;
+  border-radius:10px;
+  padding:9px 10px;
+  display:grid;
+  gap:3px;
+}
+.spkDeliveryFeedback b{
+  font-size:12px;
+  color:#3157d5;
+}
+.spkDeliveryFeedback span{
+  font-size:13px;
+  line-height:1.45;
+  color:#4b5563;
+}
+@media(max-width:700px){
+  .spkDeliveryFeedback{grid-template-columns:1fr}
+}
