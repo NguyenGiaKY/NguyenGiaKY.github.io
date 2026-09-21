@@ -703,3 +703,12 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
   .spkAnswerMarked{font-size:16px}
   .spkCompactBands .spkMetricChip{flex:1 1 calc(50% - 8px)}
 }
+
+/* Speaking same-idea high band */
+.spkSameIdeaNote{
+  display:block;
+  margin-top:8px;
+  color:#5f6b7a;
+  font-size:12px;
+  line-height:1.45;
+}
