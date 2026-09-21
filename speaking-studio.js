@@ -524,62 +524,111 @@
     return "I think there is often some resemblance between family members because genetics can influence certain personality traits. However, people also have different life experiences, so they do not always behave or think in the same way.";
   }
 
-  function markWrong(text,corrections){
-    var html=esc(text);
+  function applyCorrectionsText(text,corrections){
+    var out=String(text||"");
     (corrections||[]).forEach(function(x){
-      if(!x.wrong)return;
-      var safe=esc(x.wrong);
-      html=html.replace(safe,'<span class="spkWrongWord">'+safe+'</span>');
+      var wrong=String(x.wrong||"").trim(),better=String(x.better||"").trim();
+      if(!wrong||!better)return;
+      var low=out.toLowerCase(),idx=low.indexOf(wrong.toLowerCase());
+      if(idx>=0)out=out.slice(0,idx)+better+out.slice(idx+wrong.length);
     });
+    return out;
+  }
+
+  function inlineCorrectionHTML(text,corrections){
+    text=String(text||"");
+    var used=[],ranges=[];
+    (corrections||[]).forEach(function(x){
+      var wrong=String(x.wrong||"").trim(),better=String(x.better||"").trim();
+      if(!wrong||!better)return;
+      var low=text.toLowerCase(),needle=wrong.toLowerCase(),start=0,idx=-1;
+      while((idx=low.indexOf(needle,start))>=0){
+        var overlap=used.some(function(r){return idx<r.end && idx+wrong.length>r.start;});
+        if(!overlap)break;
+        start=idx+wrong.length;
+      }
+      if(idx>=0){
+        var range={start:idx,end:idx+wrong.length,wrong:text.slice(idx,idx+wrong.length),better:better};
+        used.push(range);ranges.push(range);
+      }
+    });
+    ranges.sort(function(x,y){return x.start-y.start;});
+    if(!ranges.length)return esc(text);
+    var html="",pos=0;
+    ranges.forEach(function(r){
+      html+=esc(text.slice(pos,r.start));
+      html+='<span class="spkInlineFix"><del>'+esc(r.wrong)+'</del><ins>'+esc(r.better)+'</ins></span>';
+      pos=r.end;
+    });
+    html+=esc(text.slice(pos));
     return html;
   }
 
-  function showResult(useAI) {
-    var body = document.getElementById("lessonBody");
-    if (!body) return;
-    var q = current();
-    var s = localScores();
-    var transcript = st.transcript || "No clear transcript was detected.";
-    var localFix=s.corrections||[];
+  function pronunciationSummaryHTML(list){
+    var arr=Array.isArray(list)&&list.length?list:st.uncertainWords;
+    if(!arr||!arr.length)return '<span class="spkPronNone">Chưa xác định lỗi phát âm cụ thể.</span>';
+    return arr.slice(0,6).map(function(x){
+      var word=x.word||"",ipa=x.ipa||"";
+      return '<span class="spkPronFlag" data-word="'+esc(word)+'"><b>'+esc(word)+'</b>'+(ipa?' <em>'+esc(ipa)+'</em>':'')+'</span>';
+    }).join(" ");
+  }
 
-    body.innerHTML =
-      '<div class="spkApp">' +
-        '<div class="spkResultTop"><button id="spkBack" class="spkGhost">← Câu hỏi</button><span class="spkPart">IELTS Part ' + q.part + '</span><button id="spkNextTop" class="spkGhost">Câu tiếp →</button></div>' +
-        '<div class="spkFeedbackCard good">' +
-          '<div class="spkDoneLine"><span>✓ Đã hoàn thành câu trả lời</span><b id="spkOverallBand">Band luyện tập ' + s.band.toFixed(1) + '</b></div>' +
-          '<h3>Bạn nói</h3><p class="spkTranscript" id="spkTranscriptMarked">' + markWrong(transcript,localFix) + '</p>' +
-          '<h3>Sửa lỗi</h3><p class="spkCorrected" id="spkCorrected">' + esc(transcript) + '</p>' +
-          '<div id="spkCorrections">' + (localFix.length?'<ul class="spkCorrectionList">'+localFix.map(function(x){return '<li><del>'+esc(x.wrong)+'</del> → <b>'+esc(x.better)+'</b></li>';}).join("")+'</ul>':'') + '</div>' +
-        '</div>' +
-        '<div class="spkScoreRow spkBandRow">' +
-          '<span class="spkMetricChip"><b>Ngữ pháp</b> <strong id="spkGrammarBand">' + s.grammarBand.toFixed(1) + '</strong><small id="spkGrammarPct">' + s.grammar + '%</small></span>' +
-          '<span class="spkMetricChip"><b>Từ vựng</b> <strong id="spkVocabBand">' + s.vocabBand.toFixed(1) + '</strong><small id="spkVocabPct">' + s.vocab + '%</small></span>' +
-          '<span class="spkMetricChip"><b>Mạch lạc</b> <strong id="spkCoherenceBand">' + s.coherenceBand.toFixed(1) + '</strong><small id="spkCoherencePct">' + s.coherence + '%</small></span>' +
-          '<span class="spkMetricChip"><b>Phát âm</b> <strong id="spkPronBand">' + s.pronunciationBand.toFixed(1) + '</strong><small id="spkPronPct">' + s.pronunciation + '%</small></span>' +
-        '</div>' +
-        '<div class="spkPronunciationCard"><div class="spkPronTitle"><div><span class="phase">PRONUNCIATION</span><h3>Sửa phát âm</h3></div><small>Word · IPA · lỗi âm/stress · cách sửa</small></div><div id="spkPronunciationFeedback">'+fallbackPronHTML()+'</div></div>' +
-        '<div class="spkCoachBox"><div><span>Gợi ý</span><b id="spkBandBadge">' + s.band.toFixed(1) + '/9.0</b></div><p id="spkFeedbackText">Website đã chấm transcript của chính bạn: ' + s.words + ' từ, khoảng ' + s.wpm + ' từ/phút, mức bám câu hỏi khoảng ' + Math.round(s.relevance*100) + '%. Hãy trả lời trực tiếp hơn, phát triển một lý do/ví dụ và sửa các lỗi được đánh dấu.</p><div id="spkAIState" class="spkAIState">' + (useAI?'Đang thử AI để chấm sâu hơn từ audio/transcript thật…':'Điểm trên là ước lượng luyện tập từ transcript thật.') + '</div></div>' +
-        '<div class="spkHighBand"><b>Câu trả lời band cao</b><p id="spkHighText">' + esc(sampleAnswer(q)) + '</p><button id="spkReadHigh" class="spkLinkBtn">🔊 Nghe câu mẫu</button></div>' +
-        (st.url ? '<audio controls class="spkReplay" src="' + esc(st.url) + '"></audio>' : '') +
-        '<div class="spkResultActions"><button id="spkRetry" class="btn">↻ Trả lời lại</button><button id="spkNext" class="btn primary">Câu tiếp theo →</button></div>' +
-        '<div class="lessonActions"><button id="finish" class="btn green">Đã hoàn thành block</button></div>' +
+
+  function showResult(useAI) {
+    var body=document.getElementById("lessonBody");
+    if(!body)return;
+    var q=current(),s=localScores(),transcript=st.transcript||"No clear transcript was detected.";
+    var localFix=s.corrections||[];
+    var localCorrected=applyCorrectionsText(transcript,localFix);
+
+    body.innerHTML=
+      '<div class="spkApp spkOpenQuizResult">'+
+        '<div class="spkResultTop"><button id="spkBack" class="spkGhost">← Câu hỏi</button><span class="spkPart">IELTS Part '+q.part+'</span><button id="spkNextTop" class="spkGhost">Câu tiếp →</button></div>'+
+
+        '<div class="spkInlineReview">'+
+          '<div class="spkInlineHead"><span>Câu trả lời của bạn</span><b>Hoàn thành</b></div>'+
+          '<div class="spkAnswerMarked" id="spkTranscriptMarked">'+inlineCorrectionHTML(transcript,localFix)+'</div>'+
+          '<div class="spkPronInline"><span class="spkPronIcon">Aa Aa Aa</span><b> Phát âm cần chú ý:</b> <span id="spkPronInlineList">'+pronunciationSummaryHTML([])+'</span></div>'+
+          '<div class="spkRewriteLine"><b>Sửa lỗi:</b> <span id="spkCorrected">'+esc(localCorrected)+'</span></div>'+
+          '<div id="spkCorrections" class="spkHiddenCorrections"></div>'+
+        '</div>'+
+
+        '<div class="spkScoreRow spkBandRow spkCompactBands">'+
+          '<span class="spkOverallChip"><b id="spkOverallBand">'+s.band.toFixed(1)+'</b></span>'+
+          '<span class="spkMetricChip"><b>Ngữ pháp</b> <strong id="spkGrammarBand">'+s.grammarBand.toFixed(1)+'</strong></span>'+
+          '<span class="spkMetricChip"><b>Từ vựng</b> <strong id="spkVocabBand">'+s.vocabBand.toFixed(1)+'</strong></span>'+
+          '<span class="spkMetricChip"><b>Mạch lạc</b> <strong id="spkCoherenceBand">'+s.coherenceBand.toFixed(1)+'</strong></span>'+
+          '<span class="spkMetricChip"><b>Phát âm</b> <strong id="spkPronBand">'+s.pronunciationBand.toFixed(1)+'</strong></span>'+
+        '</div>'+
+
+        '<div class="spkCoachBox spkOpenQuizTip"><div><span>Gợi ý</span><b id="spkBandBadge">'+s.band.toFixed(1)+'/9.0</b></div>'+
+          '<p id="spkFeedbackText">Website đã chấm transcript của chính bạn: '+s.words+' từ, khoảng '+s.wpm+' từ/phút. Hãy trả lời trực tiếp, sửa những chỗ màu đỏ và luyện lại các từ được đánh dấu phát âm.</p>'+
+          '<div id="spkAIState" class="spkAIState">'+(useAI?'Đang thử AI để chấm sâu hơn từ audio/transcript thật…':'Điểm trên là ước lượng luyện tập từ transcript thật.')+'</div>'+
+        '</div>'+
+
+        '<div class="spkHighBand spkOpenQuizHigh"><b>Câu trả lời điểm cao</b><p id="spkHighText">'+esc(sampleAnswer(q))+'</p><button id="spkReadHigh" class="spkLinkBtn">🔊 Nghe câu mẫu</button></div>'+
+        (st.url?'<audio controls class="spkReplay spkOpenQuizAudio" src="'+esc(st.url)+'"></audio>':'')+
+        '<div class="spkResultActions"><button id="spkRetry" class="btn">↻ Trả lời lại</button><button id="spkNext" class="btn primary">Câu tiếp theo →</button></div>'+
+        '<div class="lessonActions"><button id="finish" class="btn green">Đã hoàn thành block</button></div>'+
       '</div>';
 
-    document.getElementById("spkBack").onclick = renderQuestion;
-    document.getElementById("spkRetry").onclick = renderQuestion;
-    document.getElementById("spkNextTop").onclick = nextQ;
-    document.getElementById("spkNext").onclick = nextQ;
-    document.getElementById("spkReadHigh").onclick = function () {
-      var u = new SpeechSynthesisUtterance(document.getElementById("spkHighText").textContent);
-      u.lang = "en-GB"; u.rate = .88;
-      try { speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
+    document.getElementById("spkBack").onclick=renderQuestion;
+    document.getElementById("spkRetry").onclick=renderQuestion;
+    document.getElementById("spkNextTop").onclick=nextQ;
+    document.getElementById("spkNext").onclick=nextQ;
+    document.getElementById("spkReadHigh").onclick=function(){
+      var u=new SpeechSynthesisUtterance(document.getElementById("spkHighText").textContent);
+      u.lang="en-GB";u.rate=.88;
+      try{speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
     };
+    document.querySelectorAll(".spkPronFlag").forEach(function(el){
+      el.onclick=function(){speakPronWord(this.getAttribute("data-word"));};
+    });
 
-    var finish = document.getElementById("finish");
-    if (finish && st.finishHandler) finish.onclick = st.finishHandler;
-    hydrateFallbackPronunciation();
+    var finish=document.getElementById("finish");
+    if(finish&&st.finishHandler)finish.onclick=st.finishHandler;
 
-    if (useAI) runAIEnhancement(q, transcript, s);
+    if(useAI)runAIEnhancement(q,transcript,s);
   }
 
   function nextQ() {
@@ -604,20 +653,26 @@
     setText("spkVocabBand",vb.toFixed(1));
     setText("spkCoherenceBand",cb.toFixed(1));
     setText("spkPronBand",pb.toFixed(1));
-    setText("spkOverallBand","Band luyện tập "+ob.toFixed(1));
+    setText("spkOverallBand",ob.toFixed(1));
     setText("spkBandBadge",ob.toFixed(1)+"/9.0");
-    if(d.corrected)setText("spkCorrected",d.corrected);
     if(d.feedback_vi)setText("spkFeedbackText",d.feedback_vi);
     if(d.high_band)setText("spkHighText",d.high_band);
-    if(Array.isArray(d.pronunciation_feedback))renderAIPronunciation(d.pronunciation_feedback);
 
-    var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,8):[];
-    if(corrections.length){
-      var holder=document.getElementById("spkCorrections");
-      if(holder)holder.innerHTML='<ul class="spkCorrectionList">'+corrections.map(function(x){return '<li><del>'+esc(x.wrong||"")+'</del> → <b>'+esc(x.better||"")+'</b>'+(x.reason?'<small>'+esc(x.reason)+'</small>':'')+'</li>';}).join("")+'</ul>';
-      var tr=document.getElementById("spkTranscriptMarked");
-      if(tr)tr.innerHTML=markWrong(transcript,corrections);
+    var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,10):[];
+    var corrected=d.corrected||applyCorrectionsText(transcript,corrections);
+    var tr=document.getElementById("spkTranscriptMarked");
+    if(tr)tr.innerHTML=inlineCorrectionHTML(transcript,corrections);
+    setText("spkCorrected",corrected);
+
+    var pron=Array.isArray(d.pronunciation_feedback)?d.pronunciation_feedback:[];
+    var pronHolder=document.getElementById("spkPronInlineList");
+    if(pronHolder){
+      pronHolder.innerHTML=pronunciationSummaryHTML(pron);
+      pronHolder.querySelectorAll(".spkPronFlag").forEach(function(el){
+        el.onclick=function(){speakPronWord(this.getAttribute("data-word"));};
+      });
     }
+
     var stateEl=document.getElementById("spkAIState");
     if(stateEl)stateEl.textContent=label;
   }
