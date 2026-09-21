@@ -173,9 +173,9 @@ function listeningPack(d){
  return packs[(d-1)%packs.length];
 }
 function qHTML(q,i,p){
- let h='<div class="qbox"><b>'+(i+1)+'. '+q[0]+'</b>';
+ let h='<div class="q"><b>'+(i+1)+'. '+q[0]+'</b>';
  q[1].forEach((o,j)=>h+='<button class="opt" data-p="'+p+'" data-q="'+i+'" data-o="'+j+'">'+o+'</button>');
- h+='<button class="hintBtn" type="button" data-p="'+p+'" data-q="'+i+'">💡 Gợi ý</button><div class="hintBox hidden" id="'+p+'-h-'+i+'">Tìm signal word, subject, word form hoặc evidence trước khi chọn. Loại đáp án sai ngữ pháp trước.</div><div class="feedback hidden" id="'+p+'-fb-'+i+'"></div></div>';
+ h+='<button class="btn hintBtn" type="button" data-p="'+p+'" data-q="'+i+'">💡 Gợi ý</button><div class="hint hidden" id="'+p+'-h-'+i+'">Tìm signal word, subject, word form hoặc evidence trước khi chọn. Loại đáp án sai ngữ pháp trước.</div><div class="feedback hidden" id="'+p+'-fb-'+i+'"></div></div>';
  return h;
 }
 function lessonText(type,d){
@@ -189,7 +189,7 @@ function lessonText(type,d){
  }
  if(type==='listening'){
   let l=listeningPack(d),h='<div class="timePlan"><div><b>0–5 phút</b>Predict</div><div><b>5–12 phút</b>Listen 1</div><div><b>12–25 phút</b>10 câu</div><div><b>25–37 phút</b>Transcript</div><div><b>37–45 phút</b>Listen again</div></div><div class="notice"><b>Prediction:</b> trước khi nghe, đoán loại đáp án: date, time, place, number, noun...</div><div class="checkRow"><button id="playAudio" class="btn primary">▶ Play audio</button><button id="showScript" class="btn">Transcript</button></div><div id="script" class="passage hidden">'+l.script+'</div><h3>Questions • 10 câu thật</h3>';
-  l.q.forEach((q,i)=>h+='<div class="qbox"><b>'+(i+1)+'. '+q[0]+'</b><input class="search lanswer" data-i="'+i+'" placeholder="Your answer"><div class="feedback hidden" id="l-fb-'+i+'"></div></div>');
+  l.q.forEach((q,i)=>h+='<div class="q"><b>'+(i+1)+'. '+q[0]+'</b><input class="search lanswer" data-i="'+i+'" placeholder="Your answer"><div class="feedback hidden" id="l-fb-'+i+'"></div></div>');
   return h+'<div class="checkRow"><button id="checkListening" class="btn primary">Check Listening</button></div>';
  }
  if(type==='writing')return '<div class="timePlan"><div><b>0–10 phút</b>Analyse</div><div><b>10–20 phút</b>Outline</div><div><b>20–60 phút</b>Timed write</div><div><b>60–70 phút</b>Self-check</div><div><b>70–75 phút</b>Rewrite</div></div><div class="notice"><b>Prompt:</b> Some people think schools should focus mainly on academic subjects, while others believe practical life skills are equally important. Discuss both views and give your own opinion.</div><div class="production"><b>Outline</b><textarea placeholder="Position + Body 1 + Body 2 + examples..."></textarea></div><div class="production"><b>Essay</b><textarea id="writeArea" style="min-height:360px"></textarea></div><div class="rubric"><label><input type="checkbox"> Tôi trả lời đủ mọi phần của đề.</label><label><input type="checkbox"> Mỗi body có main idea rõ.</label><label><input type="checkbox"> Tôi đã kiểm S-V, tense, plural, article và punctuation.</label><label><input type="checkbox"> Tôi rewrite ít nhất 2 câu yếu.</label></div>';
@@ -202,7 +202,7 @@ function checkChoice(prefix,qs,d,type){
  qs.forEach((q,i)=>{
   let a=st.answers[prefix+'_'+i],fb=document.getElementById(prefix+'-fb-'+i),ok=a===q[2];
   if(ok)correct++;
-  fb.classList.remove('hidden');fb.className='feedback '+(ok?'ok':'bad');
+  fb.classList.remove('hidden');fb.className='feedback '+(ok?'good':'bad');
   fb.innerHTML=ok?'✓ Correct':'✗ Correct: <b>'+q[1][q[2]]+'</b><br><b>Giải thích:</b> '+q[3];
   if(!ok && typeof mistake==='function')mistake(d,type,q[0],q[1][q[2]],q[3]);
  });
@@ -224,7 +224,7 @@ function openLesson(d,i){
   let l=listeningPack(d);
   document.getElementById('playAudio').onclick=()=>{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(l.script);u.lang='en-GB';u.rate=.9;speechSynthesis.speak(u);};
   document.getElementById('showScript').onclick=()=>document.getElementById('script').classList.toggle('hidden');
-  document.getElementById('checkListening').onclick=()=>document.querySelectorAll('.lanswer').forEach(inp=>{let j=+inp.dataset.i,q=l.q[j],ok=inp.value.trim().toLowerCase()===q[1].toLowerCase(),fb=document.getElementById('l-fb-'+j);fb.classList.remove('hidden');fb.className='feedback '+(ok?'ok':'bad');fb.innerHTML=ok?'✓ Correct':'✗ Correct: <b>'+q[1]+'</b><br>'+q[2];if(!ok&&typeof mistake==='function')mistake(d,'listening',q[0],q[1],q[2]);});
+  document.getElementById('checkListening').onclick=()=>document.querySelectorAll('.lanswer').forEach(inp=>{let j=+inp.dataset.i,q=l.q[j],ok=inp.value.trim().toLowerCase()===q[1].toLowerCase(),fb=document.getElementById('l-fb-'+j);fb.classList.remove('hidden');fb.className='feedback '+(ok?'good':'bad');fb.innerHTML=ok?'✓ Correct':'✗ Correct: <b>'+q[1]+'</b><br>'+q[2];if(!ok&&typeof mistake==='function')mistake(d,'listening',q[0],q[1],q[2]);});
  }
  document.getElementById('finish').onclick=()=>{st.done[key(d,i)]=true;save();progress();renderDays();document.getElementById('finish').textContent='✓ Đã hoàn thành';};
 }
@@ -379,7 +379,7 @@ async function renderDictionary(surface,targetId,sentence){
  document.getElementById('dictPlayWord').onclick=()=>{if(got.data.audio)new Audio(got.data.audio).play();else{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(surface);u.lang='en-GB';u.rate=.82;speechSynthesis.speak(u)}};
  document.getElementById('dictSaveWord').onclick=function(){st.saved[base]={w:base,m:meaning||''};save();renderSaved();this.textContent='✓ Đã lưu'};
 }
-window.lookupDictionary=function(raw,targetId='dictFloatResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
+window.lookupDictionary=function(raw,targetId='dictResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
 window.toggleDictionary=function(force){let open=force===undefined?!dict.classList.contains('open'):!!force;dict.classList.toggle('open',open)};
 window.dictMinimize=function(){dict.classList.toggle('min')};
 window.dictMaximize=function(){dict.classList.toggle('max')};
@@ -392,11 +392,11 @@ document.getElementById('dictButton').onclick=()=>toggleDictionary();
 document.getElementById('dictClose').onclick=()=>toggleDictionary(false);
 document.getElementById('dictMin').onclick=e=>{e.stopPropagation();dictMinimize()};
 document.getElementById('dictMax').onclick=e=>{e.stopPropagation();dictMaximize()};
-document.getElementById('dictGo').onclick=()=>{let di=document.getElementById('dictInput'),fi=document.getElementById('dictFloatInput');lookupDictionary(di?.value||fi?.value||'','dictFloatResult','')};
-let di=document.getElementById('dictInput');if(di)di.onkeydown=e=>{if(e.key==='Enter')lookupDictionary(di.value,'dictFloatResult','')};
+document.getElementById('dictGo').onclick=()=>{let di=document.getElementById('dictInput'),fi=document.getElementById('dictFloatInput');lookupDictionary(di?.value||fi?.value||'','dictResult','')};
+let di=document.getElementById('dictInput');if(di)di.onkeydown=e=>{if(e.key==='Enter')lookupDictionary(di.value,'dictResult','')};
 document.addEventListener('dblclick',()=>{
  let sel=(getSelection()?.toString()||'').trim();if(!sel||!/[A-Za-z]/.test(sel)||sel.split(/\s+/).length>1)return;
- lookupDictionary(sel,'dictFloatResult',sentenceContext());
+ lookupDictionary(sel,'dictResult',sentenceContext());
 });
 document.getElementById('search').oninput=e=>{let q=e.target.value.toLowerCase(),d=days.find(x=>JSON.stringify(x).toLowerCase().includes(q));if(d){renderToday(d.day);show('today')}};
 renderDays();renderToday();renderRoadmap();renderGrammar();renderSaved();progress();
