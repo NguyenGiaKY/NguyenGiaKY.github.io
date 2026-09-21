@@ -1159,3 +1159,17 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
   .spkInlineRecorder{grid-template-columns:auto auto minmax(0,1fr)}
   .spkVolume{display:none}
 }
+
+/* Study Queue selected size */
+.queueControls .qsizeBtn{
+  background:#fff;
+  color:#1f2937;
+  border-color:var(--line);
+  transition:background .15s ease,color .15s ease,border-color .15s ease,box-shadow .15s ease;
+}
+.queueControls .qsizeBtn[aria-pressed="true"]{
+  background:#3157d5 !important;
+  color:#fff !important;
+  border-color:#3157d5 !important;
+  box-shadow:0 4px 12px rgba(49,87,213,.18);
+}
