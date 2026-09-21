@@ -67,8 +67,8 @@
       'LEXICAL DATA FROM WEBSITE: '+(st.lexical || '[không có dữ liệu]'),
       '',
       'Trả về JSON THUẦN, không markdown, theo schema:',
-      '{"meaning_in_context":"...","general_meaning":"...","part_of_speech_in_context":"...","why_this_pos":"...","grammar_role":"...","grammar_pattern":"...","naturalness":"...","word_family":[{"form":"...","pos":"noun|verb|adjective|adverb|other","common":true,"meaning":"...","use":"...","position":"...","pattern":"...","example":"..."}],"missing_core_forms":["adjective"],"collocations":["..."],"common_mistakes":["..."],"ielts_examples":["...","..."]}',
-      'Word family phải kiểm tra noun/verb/adjective/adverb nếu thực sự tồn tại và phổ biến. Có thể thêm other POS nếu hữu ích. Không tạo dạng không có thật.'
+      '{"simple_meaning":"...","meaning_in_context":"...","general_meaning":"...","easy_explanation":"...","part_of_speech_in_context":"...","why_this_pos":"...","grammar_role":"...","grammar_pattern":"...","naturalness":"...","word_family":[{"form":"...","pos":"noun|verb|adjective|adverb|other","common":true,"simple_meaning":"...","meaning":"...","use":"...","position":"...","pattern":"...","example":"..."}],"missing_core_forms":["adjective"],"collocations":["..."],"common_mistakes":["..."],"ielts_examples":["...","..."]}',
+      'simple_meaning phải là nghĩa cực dễ hiểu như đang giải thích cho người học A2-B1, dùng từ Việt đơn giản trước rồi mới giải thích chính xác hơn. Ví dụ employer = người hoặc công ty thuê người làm và trả lương; employee = người làm việc cho công ty/chủ và nhận lương. Không dùng định nghĩa dịch máy khó hiểu nếu có cách nói đơn giản hơn. Word family phải kiểm tra noun/verb/adjective/adverb nếu thực sự tồn tại và phổ biến. Có thể thêm other POS nếu hữu ích. Không tạo dạng không có thật.'
     ].join('\n');
   }
   function listHTML(a){
@@ -80,7 +80,8 @@
     return '<div class="aiFamily">'+a.map(function(x){
       return '<div class="aiFamilyItem">'+
         '<div class="aiFamilyTop"><b>'+esc(x.form || '')+'</b><span class="posBadge">'+esc(x.pos || '')+'</span>'+(x.common === false ? '<span class="posBadge">không phổ biến</span>' : '')+'</div>'+
-        (x.meaning ? '<div><b>Nghĩa:</b> '+esc(x.meaning)+'</div>' : '')+
+        (x.simple_meaning ? '<div><b>Nghĩa dễ hiểu:</b> '+esc(x.simple_meaning)+'</div>' : '')+
+        (x.meaning ? '<div><b>Nghĩa chính xác:</b> '+esc(x.meaning)+'</div>' : '')+
         (x.use ? '<div><b>Công dụng:</b> '+esc(x.use)+'</div>' : '')+
         (x.position ? '<div><b>Vị trí:</b> '+esc(x.position)+'</div>' : '')+
         (x.pattern ? '<div><b>Pattern:</b> <code>'+esc(x.pattern)+'</code></div>' : '')+
@@ -92,7 +93,9 @@
     var out=document.getElementById('ai-out-'+id); if(!out) return;
     out.innerHTML =
       '<div class="aiGrid">'+
-        '<b>Nghĩa trong câu</b><span>'+esc(obj.meaning_in_context || obj.general_meaning || '—')+'</span>'+
+        '<b>💡 Nghĩa dễ hiểu</b><span><b>'+esc(obj.simple_meaning || obj.meaning_in_context || obj.general_meaning || '—')+'</b></span>'+ 
+        '<b>Nghĩa chính xác hơn</b><span>'+esc(obj.meaning_in_context || obj.general_meaning || '—')+'</span>'+ 
+        '<b>Giải thích đơn giản</b><span>'+esc(obj.easy_explanation || '—')+'</span>'+
         '<b>Loại từ trong câu</b><span>'+esc(obj.part_of_speech_in_context || 'Không có câu để xác định')+'</span>'+
         '<b>Vì sao?</b><span>'+esc(obj.why_this_pos || '—')+'</span>'+
         '<b>Vai trò ngữ pháp</b><span>'+esc(obj.grammar_role || '—')+'</span>'+
