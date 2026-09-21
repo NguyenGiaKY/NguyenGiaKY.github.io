@@ -8,7 +8,7 @@ if(typeof baseOpenLesson!=='function') return;
 var listeningState = {
   playing:false, paused:false, stopped:true,
   segments:[], segIndex:0, localStart:0, globalChar:0, totalChars:1,
-  rate:1, voiceMode:'auto-uk', utterance:null, dragging:false
+  rate:1, voiceMode:'auto-uk', utterance:null, dragging:false, seekWasActive:false
 };
 
 function esc(s){
@@ -109,7 +109,7 @@ function speakCurrent(){
   u.onboundary=function(e){if(typeof e.charIndex==='number'){s.localStart=start+e.charIndex;s.globalChar=seg.start+s.localStart;updateSeek(false)}};
   u.onend=function(){
     if(s.stopped)return;s.globalChar=seg.end;s.segIndex++;s.localStart=0;
-    if(s.segIndex>=s.segments.length){s.playing=false;s.stopped=true;s.globalChar=s.totalChars;setStatus('Đã phát xong');updateSeek(true);return}
+    if(s.segIndex>=s.segments.length){s.playing=false;s.paused=false;s.stopped=true;s.globalChar=s.totalChars;var pb=document.getElementById('playAudio');if(pb)pb.textContent='▶ Phát';setStatus('Đã phát xong');updateSeek(true);return}
     setTimeout(speakCurrent,25);
   };
   u.onerror=function(){if(s.stopped)return;s.segIndex++;s.localStart=0;setTimeout(speakCurrent,25)};
@@ -120,7 +120,7 @@ function startListening(){
   var rate=document.getElementById('listenRate'),voice=document.getElementById('listenVoice');
   if(rate)s.rate=parseFloat(rate.value)||1;if(voice)s.voiceMode=voice.value||'auto-uk';
   if(s.globalChar>=s.totalChars-1){s.segIndex=0;s.localStart=0;s.globalChar=0}
-  s.stopped=false;s.paused=false;s.playing=true;speakCurrent();
+  s.stopped=false;s.paused=false;s.playing=true;var b=document.getElementById('playAudio');if(b)b.textContent='⏸ Tạm dừng';speakCurrent();
 }
 function pauseListening(){
   var s=listeningState;if(!s.playing&&!s.paused)return;
@@ -130,6 +130,27 @@ function pauseListening(){
     else{speechSynthesis.pause();s.paused=true;s.playing=false;if(b)b.textContent='▶ Tiếp tục';setStatus('Đã tạm dừng')}
   }catch(e){}
 }
+
+function toggleListeningPlayback(){
+  var s=listeningState,btn=document.getElementById('playAudio');
+  if(s.paused){
+    try{speechSynthesis.resume()}catch(e){}
+    s.paused=false;s.playing=true;s.stopped=false;
+    if(btn)btn.textContent='⏸ Tạm dừng';
+    setStatus('Đang phát');
+    return;
+  }
+  if(s.playing){
+    try{speechSynthesis.pause()}catch(e){}
+    s.paused=true;s.playing=false;
+    if(btn)btn.textContent='▶ Tiếp tục';
+    setStatus('Đã tạm dừng');
+    return;
+  }
+  startListening();
+  if(btn)btn.textContent='⏸ Tạm dừng';
+}
+
 function seekRatio(ratio,auto){
   var s=listeningState,loc=locateChar(Math.round(Math.max(0,Math.min(1,ratio))*s.totalChars));
   try{speechSynthesis.cancel()}catch(e){}
@@ -138,34 +159,60 @@ function seekRatio(ratio,auto){
   else{s.stopped=true;s.playing=false;setStatus('Đã tua tới '+fmt(timeForChar(s.globalChar)))}
   updateSeek(true);
 }
+
 function initListeningEnhancement(d){
   var old=document.querySelector('.listenPlayer'),scriptEl=document.getElementById('script');
   if(!old||!scriptEl)return;
   var script=(scriptEl.textContent||'').trim(),segments=prepareSegments(getListeningSegments(d,script));
   listeningState.segments=segments;listeningState.segIndex=0;listeningState.localStart=0;listeningState.globalChar=0;
-  listeningState.totalChars=segments.length?segments[segments.length-1].end+1:1;listeningState.rate=1;listeningState.stopped=true;listeningState.playing=false;listeningState.paused=false;
+  listeningState.totalChars=segments.length?segments[segments.length-1].end+1:1;listeningState.rate=1;listeningState.stopped=true;listeningState.playing=false;listeningState.paused=false;listeningState.dragging=false;listeningState.seekWasActive=false;
   old.innerHTML=
    '<div class="listenSeekRow"><span id="listenCurrentTime">0:00</span><input id="listenSeek" class="listenSeek" type="range" min="0" max="1000" step="1" value="0"><span id="listenTotalTime">0:00</span></div>'+
-   '<div class="listenPlayerMain"><button id="playAudio" class="btn primary">▶ Phát</button><button id="pauseAudio" class="btn">⏸ Tạm dừng</button><button id="stopAudio" class="btn">⏹ Dừng</button><button id="showScript" class="btn">Transcript</button></div>'+
+   '<div class="listenPlayerMain"><button id="playAudio" class="btn primary listenMainPlay">▶ Phát</button><button id="showScript" class="btn">Transcript</button></div>'+
    '<div class="listenSettings"><label><span>Tốc độ</span><input id="listenRate" type="range" min="0.65" max="1.25" step="0.05" value="1"><b id="listenRateLabel">1.00×</b></label><label><span>Giọng</span><select id="listenVoice"><option value="auto-uk">Tự nhiên • UK</option><option value="auto-us">Tự nhiên • US</option></select></label></div>'+
    '<div class="listenStatus"><span id="listenStatusText">Sẵn sàng</span></div>';
   scriptEl.classList.add('hidden');scriptEl.style.display='none';
   fillVoiceSelect();if(window.speechSynthesis)window.speechSynthesis.onvoiceschanged=fillVoiceSelect;
-  document.getElementById('playAudio').onclick=startListening;
-  document.getElementById('pauseAudio').onclick=pauseListening;
-  document.getElementById('stopAudio').onclick=function(){stopListening(true)};
+  document.getElementById('playAudio').onclick=toggleListeningPlayback;
   document.getElementById('showScript').onclick=function(){var hidden=scriptEl.classList.contains('hidden');scriptEl.classList.toggle('hidden');scriptEl.style.display=hidden?'block':'none';this.textContent=hidden?'Ẩn Transcript':'Transcript'};
   var rate=document.getElementById('listenRate'),label=document.getElementById('listenRateLabel');
   rate.oninput=function(){listeningState.rate=parseFloat(this.value)||1;label.textContent=Number(this.value).toFixed(2)+'×';updateSeek(true)};
-  rate.onchange=function(){var active=listeningState.playing||listeningState.paused;if(active){try{speechSynthesis.cancel()}catch(e){}listeningState.stopped=false;listeningState.playing=true;listeningState.paused=false;setTimeout(speakCurrent,30)}};
-  document.getElementById('listenVoice').onchange=function(){listeningState.voiceMode=this.value;var active=listeningState.playing||listeningState.paused;if(active){try{speechSynthesis.cancel()}catch(e){}listeningState.stopped=false;listeningState.playing=true;listeningState.paused=false;setTimeout(speakCurrent,30)}};
-  var seek=document.getElementById('listenSeek');
-  seek.onpointerdown=function(){listeningState.dragging=true};
-  seek.oninput=function(){listeningState.dragging=true;var a=document.getElementById('listenCurrentTime');if(a)a.textContent=fmt(totalSeconds()*(Number(this.value)/1000))};
-  seek.onchange=function(){var auto=listeningState.playing||listeningState.paused;listeningState.dragging=false;seekRatio(Number(this.value)/1000,auto)};
-  seek.onpointerup=function(){listeningState.dragging=false};
+  rate.onchange=function(){var active=listeningState.playing||listeningState.paused;if(active){try{speechSynthesis.cancel()}catch(e){}listeningState.stopped=false;listeningState.playing=true;listeningState.paused=false;var pb=document.getElementById('playAudio');if(pb)pb.textContent='⏸ Tạm dừng';setTimeout(speakCurrent,30)}};
+  document.getElementById('listenVoice').onchange=function(){listeningState.voiceMode=this.value;var active=listeningState.playing||listeningState.paused;if(active){try{speechSynthesis.cancel()}catch(e){}listeningState.stopped=false;listeningState.playing=true;listeningState.paused=false;var pb=document.getElementById('playAudio');if(pb)pb.textContent='⏸ Tạm dừng';setTimeout(speakCurrent,30)}};
+
+  var seek=document.getElementById('listenSeek'),dragCommitted=false;
+  function commitSeek(){
+    if(dragCommitted)return;
+    dragCommitted=true;
+    var ratio=Number(seek.value)/1000,auto=listeningState.seekWasActive;
+    listeningState.dragging=false;
+    seekRatio(ratio,auto);
+    var pb=document.getElementById('playAudio');
+    if(pb)pb.textContent=auto?'⏸ Tạm dừng':'▶ Phát';
+    setTimeout(function(){dragCommitted=false},60);
+  }
+  seek.onpointerdown=function(){
+    listeningState.dragging=true;
+    listeningState.seekWasActive=listeningState.playing||listeningState.paused;
+    try{speechSynthesis.cancel()}catch(e){}
+    listeningState.playing=false;listeningState.paused=false;listeningState.stopped=true;
+  };
+  seek.oninput=function(){
+    listeningState.dragging=true;
+    var ratio=Number(this.value)/1000;
+    var a=document.getElementById('listenCurrentTime');if(a)a.textContent=fmt(totalSeconds()*ratio);
+  };
+  seek.onpointerup=commitSeek;
+  seek.onchange=commitSeek;
+  seek.onkeydown=function(e){
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='Home'||e.key==='End'){
+      listeningState.seekWasActive=listeningState.playing||listeningState.paused;
+      setTimeout(function(){dragCommitted=false;commitSeek()},0);
+    }
+  };
   updateSeek(true);
 }
+
 
 /* Speaking recorder + Chrome on-device AI */
 var speakingState={stream:null,recorder:null,chunks:[],blob:null,url:null,start:0,timer:null,recognition:null,finalText:'',interimText:''};
