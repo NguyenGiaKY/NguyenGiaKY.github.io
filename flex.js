@@ -235,7 +235,21 @@ function toggleDone(id){
 function openFlexTask(t){
  if(!t)return;
  if(t.day==='checkpoint'){openCheckpoint(t);return;}
- if(typeof window.openLesson==='function')window.openLesson(t.day,t.index);
+ if(typeof window.openLesson==='function'){
+  window.openLesson(t.day,t.index);
+  setTimeout(()=>{
+   const finish=document.getElementById('finish');
+   if(finish){
+    const oldFinish=finish.onclick;
+    finish.onclick=function(e){
+     if(oldFinish)oldFinish.call(this,e);
+     fs.done[t.id]=true;fs.queue=(fs.queue||[]).filter(x=>x!==t.id);saveFlex();
+     this.textContent='✓ Đã hoàn thành';
+     updateHero();
+    };
+   }
+  },0);
+ }
 }
 function openCheckpoint(t){
  const skill=t.index,meta=skillMeta[skill],overlay=document.getElementById('lessonOverlay');
