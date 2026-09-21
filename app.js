@@ -524,6 +524,8 @@ async function renderDictionary(surface,targetId,sentence){
  let def=g?.definitions?.[0]||{},coreSense=pos?CORE[base]?.s.find(x=>x[0]===pos):null;
  let meaning=coreSense?.[1]||def.vi||await translateText(def.definition||base);
  if(!meaning)meaning=await translateText(base);
+ let simpleMeaning=await translateText(base);
+ if(!simpleMeaning||simpleMeaning.toLowerCase()===String(base).toLowerCase()||simpleMeaning.length>90)simpleMeaning=meaning;
  let cards='',summary=[];
  for(let group of groups){
   let posName=POSVI[group.partOfSpeech]||group.partOfSpeech,defs='',firstVi='';
@@ -541,14 +543,14 @@ async function renderDictionary(surface,targetId,sentence){
  let top='';
  if(hasContext){
   let info=roleInfo(surface,pos,sentence);
-  top='<div class="contextCard"><b>🔎 Nghĩa & cách dùng TRONG CÂU NÀY</b><div class="contextSentence">'+highlightWord(sentence,surface)+'</div><div class="usage"><b>Nghĩa trong câu</b><span>'+descape(meaning||'Xem các nghĩa bên dưới')+'</span><b>Loại từ trong câu</b><span><b>'+descape(POSVI[pos]||pos)+'</b> <span class="posBadge">'+descape(pos)+'</span></span><b>Dạng từ</b><span>'+descape(formLabel(surface,base,pos))+'</span><b>Vai trò</b><span>'+descape(info.role)+'</span><b>Pattern</b><span><code>'+descape(info.pattern)+'</code></span><b>Vì sao?</b><span>'+descape(info.why)+'</span></div></div>';
+  top='<div class="contextCard"><b>🔎 Nghĩa & cách dùng TRONG CÂU NÀY</b><div class="contextSentence">'+highlightWord(sentence,surface)+'</div><div class="usage"><b>💡 Nghĩa dễ hiểu</b><span><b>'+descape(simpleMeaning||meaning||'Xem các nghĩa bên dưới')+'</b></span><b>Giải thích chính xác</b><span>'+descape(meaning||'Xem các nghĩa bên dưới')+'</span><b>Loại từ trong câu</b><span><b>'+descape(POSVI[pos]||pos)+'</b> <span class="posBadge">'+descape(pos)+'</span></span><b>Dạng từ</b><span>'+descape(formLabel(surface,base,pos))+'</span><b>Vai trò</b><span>'+descape(info.role)+'</span><b>Pattern</b><span><code>'+descape(info.pattern)+'</code></span><b>Vì sao?</b><span>'+descape(info.why)+'</span></div></div>';
  }else{
-  top='<div class="contextCard"><b>📖 Tra từ tổng quát</b><div class="en" style="margin-top:6px">Bạn gõ từ trực tiếp nên chưa có câu để xác định “loại từ đang dùng”. Bên dưới web liệt kê <b>tất cả loại từ phổ biến</b>. Double-click từ trong bài để xem loại từ chính xác trong câu.</div>'+(summary.length?'<div style="display:grid;gap:8px;margin-top:10px">'+summary.join('')+'</div>':'')+'</div>';
+  top='<div class="contextCard"><b>📖 Tra từ tổng quát</b><div class="usage" style="margin-top:8px"><b>💡 Nghĩa dễ hiểu</b><span><b>'+descape(simpleMeaning||meaning||'Xem các nghĩa bên dưới')+'</b></span><b>Giải thích chính xác</b><span>'+descape(meaning||'Xem các nghĩa bên dưới')+'</span></div><div class="en" style="margin-top:8px">Bạn gõ từ trực tiếp nên chưa có câu để xác định “loại từ đang dùng”. Bên dưới web liệt kê <b>tất cả loại từ phổ biến</b>. Double-click từ trong bài để xem loại từ chính xác trong câu.</div>'+(summary.length?'<div style="display:grid;gap:8px;margin-top:10px">'+summary.join('')+'</div>':'')+'</div>';
  }
  let readNote=base==='read'?'<div class="contextCard"><b>🔊 Lưu ý phát âm “read”</b><div class="en">Base/present: /riːd/. Past & past participle: /red/. Cùng cách viết nhưng phát âm khác theo thì.</div></div>':'';
  target.innerHTML='<div class="dictWord">'+descape(surface)+'</div>'+(surface.toLowerCase()!==base?'<div class="dictMeaning"><b>Dạng gốc:</b> '+descape(base)+'</div>':'')+(got.data.phonetic?'<div class="phonetic">IPA: '+descape(got.data.phonetic)+'</div>':'')+top+readNote+(family?'<div class="contextCard"><b>🧩 Word family / forms</b><div style="margin-top:8px">'+family+'</div></div>':'')+'<h3>📚 Tất cả loại từ & nghĩa phổ biến của “'+descape(base)+'”</h3>'+cards+'<div class="dictActions"><button id="dictPlayWord">🔊 Phát âm</button><button class="save" id="dictSaveWord">⭐ Lưu ôn</button><a target="_blank" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a></div><div class="muted" style="font-size:11px;margin-top:8px">Nguồn lexical: '+descape(got.data.source||'dictionary sources')+'</div>';
  document.getElementById('dictPlayWord').onclick=()=>{if(got.data.audio)new Audio(got.data.audio).play();else{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(surface);u.lang='en-GB';u.rate=.82;speechSynthesis.speak(u)}};
- document.getElementById('dictSaveWord').onclick=function(){st.saved[base]={w:base,m:meaning||''};save();renderSaved();this.textContent='✓ Đã lưu'};
+ document.getElementById('dictSaveWord').onclick=function(){st.saved[base]={w:base,m:simpleMeaning||meaning||''};save();renderSaved();this.textContent='✓ Đã lưu'};
 }
 window.lookupDictionary=function(raw,targetId='dictResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
 window.toggleDictionary=function(force){let open=force===undefined?!dict.classList.contains('open'):!!force;dict.classList.toggle('open',open)};
