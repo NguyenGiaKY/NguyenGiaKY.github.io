@@ -9,7 +9,7 @@ function cors(req, res) {
   const origin = req.headers.origin || "";
   if (ALLOWED_ORIGINS.has(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
@@ -30,10 +30,52 @@ function clampBand(v) {
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const key = process.env.OPENAI_API_KEY;
-  if (!key) return res.status(503).json({ error: "AI backend is not configured" });
+  const primaryModel = process.env.OPENAI_AUDIO_MODEL || "gpt-audio-mini";
+  const fallbackModel = primaryModel === "gpt-audio" ? "gpt-audio-mini" : "gpt-audio";
+
+  if (req.method === "GET") {
+    if (!key) return res.status(503).json({
+      ok: false,
+      keyConfigured: false,
+      model: primaryModel,
+      error: "OPENAI_API_KEY is missing"
+    });
+    try {
+      const check = await fetch("https://api.openai.com/v1/models/" + encodeURIComponent(primaryModel), {
+        headers: { "Authorization": "Bearer " + key }
+      });
+      const raw = await check.json().catch(() => ({}));
+      if (!check.ok) {
+        return res.status(check.status).json({
+          ok: false,
+          keyConfigured: true,
+          model: primaryModel,
+          openaiStatus: check.status,
+          openaiCode: raw?.error?.code || raw?.error?.type || "",
+          openaiMessage: raw?.error?.message || "OpenAI model check failed"
+        });
+      }
+      return res.status(200).json({
+        ok: true,
+        keyConfigured: true,
+        model: primaryModel,
+        modelAvailable: true
+      });
+    } catch (err) {
+      return res.status(500).json({
+        ok: false,
+        keyConfigured: true,
+        model: primaryModel,
+        error: "Unable to reach OpenAI",
+        detail: String(err?.message || err)
+      });
+    }
+  }
+
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (!key) return res.status(503).json({ error: "AI backend is not configured", code: "missing_api_key" });
 
   try {
     const body = req.body || {};
@@ -104,29 +146,56 @@ export default async function handler(req, res) {
       })
     ].filter(Boolean).join("\n");
 
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + key,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_AUDIO_MODEL || "gpt-audio",
-        temperature: 0.15,
-        messages: [{
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "input_audio", input_audio: { data: audioBase64, format } }
-          ]
-        }]
-      })
-    });
+    async function callAudioModel(model) {
+      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + key,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.15,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "input_audio", input_audio: { data: audioBase64, format } }
+            ]
+          }]
+        })
+      });
+      const payload = await resp.json().catch(() => ({}));
+      return { resp, payload, model };
+    }
 
-    const raw = await openaiRes.json();
+    let attempt = await callAudioModel(primaryModel);
+    if (!attempt.resp.ok) {
+      const code = attempt.payload?.error?.code || attempt.payload?.error?.type || "";
+      const msg = attempt.payload?.error?.message || "";
+      const retryModel =
+        attempt.resp.status === 404 ||
+        /model|access|not found|does not exist/i.test(code + " " + msg);
+      if (retryModel && fallbackModel !== primaryModel) {
+        const second = await callAudioModel(fallbackModel);
+        if (second.resp.ok) attempt = second;
+      }
+    }
+
+    const openaiRes = attempt.resp;
+    const raw = attempt.payload;
+
     if (!openaiRes.ok) {
-      console.error("OpenAI error", raw);
-      return res.status(502).json({ error: "Audio AI request failed" });
+      const safeCode = raw?.error?.code || raw?.error?.type || "openai_error";
+      const safeMessage = raw?.error?.message || "Audio AI request failed";
+      console.error("OpenAI error", {status: openaiRes.status, code: safeCode, message: safeMessage});
+      return res.status(openaiRes.status >= 400 && openaiRes.status < 600 ? openaiRes.status : 502).json({
+        error: "Audio AI request failed",
+        code: safeCode,
+        message: safeMessage,
+        model: attempt.model,
+        openaiStatus: openaiRes.status
+      });
     }
 
     const content = raw?.choices?.[0]?.message?.content;
@@ -138,9 +207,10 @@ export default async function handler(req, res) {
     }
 
     result.source = "openai-audio";
+    result.model = attempt.model;
     return res.status(200).json(result);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Unable to grade audio" });
+    return res.status(500).json({ error: "Unable to grade audio", code: "server_error", message: String(err?.message || err) });
   }
 }
