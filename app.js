@@ -427,7 +427,47 @@ function scoreDefinition(def,sentence){
  return dt.reduce((n,x)=>n+(S.has(x)?1:0),0);
 }
 
-function wordFamilyHTML(surface,base,groups){
+
+function posLearningInfo(pos,base){
+ const special={
+  review:{
+   noun:{use:'Chỉ một lần ôn tập, xem xét hoặc bài đánh giá.',position:'Thường sau article/determiner; có thể làm subject hoặc object.',pattern:'do / conduct / write + a review • review of + noun',example:'I did a quick review before the test.'},
+   verb:{use:'Diễn tả hành động xem lại, ôn lại hoặc đánh giá.',position:'Đứng sau subject; sau modal dùng base form; có thể đi với object trực tiếp.',pattern:'review + noun • review for + exam • review what/how/why...',example:'I review my grammar mistakes every evening.'}
+  },
+  read:{
+   noun:{use:'Chỉ một lần đọc hoặc một thứ đáng đọc.',position:'Thường sau article/adjective và làm subject/object.',pattern:'a good / useful / quick read',example:'This article is a useful read.'},
+   verb:{use:'Diễn tả hành động đọc và hiểu chữ viết.',position:'Làm main verb; có thể có object trực tiếp.',pattern:'read + noun • read about + topic • read for + purpose',example:'I read English articles every day.'},
+   adjective:{use:'Mô tả người có kiến thức nhờ đọc nhiều, thường trong compound “well-read”.',position:'Đứng trước noun hoặc sau be.',pattern:'well-read + noun • be well-read',example:'She is a well-read student.'}
+  },
+  in:{
+   preposition:{use:'Diễn tả vị trí, thời gian, trạng thái hoặc lĩnh vực.',position:'Đứng trước noun/noun phrase.',pattern:'in + place / month / situation / field',example:'She is in the classroom.'},
+   adverb:{use:'Diễn tả chuyển động hoặc trạng thái hướng vào bên trong.',position:'Thường sau verb; không cần noun theo sau.',pattern:'come in • go in • get in',example:'Come in.'},
+   adjective:{use:'Mô tả thứ đang hợp thời hoặc đang được ưa chuộng.',position:'Thường sau be.',pattern:'be in',example:'That style is in.'},
+   noun:{use:'Chỉ một mối quan hệ/lợi thế giúp tiếp cận hoặc có ảnh hưởng, khá informal.',position:'Thường sau article.',pattern:'have an in with + person/group',example:'He has an in with the organisers.'}
+  },
+  another:{
+   determiner:{use:'Chỉ thêm một hoặc một đối tượng khác.',position:'Đứng trước singular countable noun.',pattern:'another + singular noun',example:'Can I have another example?'},
+   pronoun:{use:'Thay thế cho “another + noun” khi noun đã rõ từ ngữ cảnh.',position:'Đứng độc lập ở vị trí subject/object.',pattern:'one ... another • choose another',example:'One answer is correct; another is not.'}
+  }
+ };
+ if(special[base]&&special[base][pos])return special[base][pos];
+
+ const generic={
+  noun:{use:'Dùng để gọi tên người, vật, ý tưởng, quá trình hoặc sự việc.',position:'Có thể làm subject, object, complement; thường đi sau article/determiner/adjective.',pattern:'article/determiner + noun • adjective + noun • verb + noun',example:'The noun can be the subject or object of a sentence.'},
+  verb:{use:'Dùng để diễn tả hành động, trạng thái hoặc quá trình.',position:'Thường đứng sau subject; sau modal dùng base verb; có thể đi với object/complement.',pattern:'subject + verb (+ object/complement)',example:'The verb carries the main action of the clause.'},
+  adjective:{use:'Dùng để mô tả hoặc phân loại noun.',position:'Thường đứng trước noun hoặc sau linking verbs như be, seem, become.',pattern:'adjective + noun • be/seem/become + adjective',example:'The adjective describes a noun or subject.'},
+  adverb:{use:'Dùng để bổ nghĩa cho verb, adjective, adverb khác hoặc cả clause.',position:'Vị trí thay đổi theo loại adverb; nhiều adverb cách thức đứng sau verb/object.',pattern:'verb + adverb • adverb + adjective • sentence adverb',example:'The adverb adds information about how, when or to what degree.'},
+  preposition:{use:'Dùng để tạo quan hệ giữa noun phrase với phần còn lại của câu.',position:'Đứng trước noun/pronoun/noun phrase.',pattern:'preposition + noun phrase',example:'A preposition introduces a prepositional phrase.'},
+  determiner:{use:'Dùng để xác định, giới hạn hoặc chỉ số lượng của noun.',position:'Đứng trước noun, trước adjective nếu có.',pattern:'determiner + (adjective) + noun',example:'A determiner comes before a noun.'},
+  pronoun:{use:'Dùng thay cho noun hoặc noun phrase.',position:'Có thể đứng ở vị trí subject hoặc object.',pattern:'pronoun + verb • verb + pronoun',example:'A pronoun replaces a noun phrase.'},
+  auxiliary:{use:'Hỗ trợ main verb để tạo tense, question, negative, passive hoặc emphasis.',position:'Đứng trước main verb.',pattern:'auxiliary + main verb',example:'Auxiliary verbs help form grammatical structures.'},
+  modal:{use:'Thêm ý nghĩa khả năng, lời khuyên, nghĩa vụ hoặc dự đoán.',position:'Đứng trước base verb.',pattern:'modal + base verb',example:'Students should revise regularly.'},
+  conjunction:{use:'Nối từ, cụm từ hoặc mệnh đề và thể hiện quan hệ logic.',position:'Đứng giữa hai thành phần được nối.',pattern:'clause + conjunction + clause',example:'Although it is difficult, it is useful.'},
+  article:{use:'Xác định noun là cụ thể hay chưa xác định.',position:'Đứng trước singular countable noun hoặc noun phrase.',pattern:'a/an/the + noun phrase',example:'I bought a book.'}
+ };
+ return generic[pos]||{use:'Công dụng phụ thuộc vào ngữ cảnh.',position:'Xem vị trí của từ trong câu.',pattern:base,example:''};
+}
+async function wordFamilyHTML(surface,base,groups){
  let chips=[];
  if(groups.some(g=>g.partOfSpeech==='verb')){
   chips.push(base);
@@ -438,7 +478,40 @@ function wordFamilyHTML(surface,base,groups){
   chips.push(ing,ed);
  }
  if(groups.some(g=>g.partOfSpeech==='noun'))chips.push(base,base.endsWith('s')?base:base+'s');
- return [...new Set(chips)].slice(0,8).map(x=>'<span class="posBadge">'+descape(x)+'</span>').join(' ');
+
+ let order=['noun','verb','adjective','adverb','preposition','determiner','pronoun','auxiliary','modal','conjunction','article'];
+ let groupMap=new Map(groups.map(g=>[g.partOfSpeech,g]));
+ let sections='';
+
+ for(let pos of order){
+  let g=groupMap.get(pos);
+  if(!g)continue;
+  let info=posLearningInfo(pos,base),d=g.definitions?.[0]||{},meaning=d.vi||'';
+  if(!meaning)meaning=await translateText(d.definition||'');
+  sections+='<div class="posCard" style="margin-top:10px">'+
+    '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">'+
+      '<b style="font-size:16px">'+descape(POSVI[pos]||pos)+'</b><span class="posBadge">'+descape(pos)+'</span>'+
+    '</div>'+
+    (meaning?'<div class="vi" style="margin-top:7px"><b>Nghĩa:</b> '+descape(meaning)+'</div>':'')+
+    '<div class="usage" style="margin-top:8px">'+
+      '<b>Công dụng</b><span>'+descape(info.use)+'</span>'+
+      '<b>Vị trí thường gặp</b><span>'+descape(info.position)+'</span>'+
+      '<b>Pattern</b><span><code>'+descape(info.pattern)+'</code></span>'+
+      '<b>Ví dụ</b><span>'+descape(d.example||info.example||'')+'</span>'+
+    '</div>'+
+  '</div>';
+ }
+
+ const coreFour=['noun','verb','adjective','adverb'];
+ let unavailable=coreFour.filter(p=>!groupMap.has(p));
+ let note=unavailable.length?
+  '<div class="en" style="margin-top:10px"><b>Lưu ý:</b> “'+descape(base)+'” không có cách dùng phổ biến được nguồn từ điển ghi nhận như '+unavailable.map(p=>POSVI[p]||p).join(', ')+'. Không phải từ nào cũng có đủ noun / verb / adjective / adverb.</div>':'';
+
+ return '<div>'+
+   (chips.length?'<div><b>Dạng biến đổi:</b><div style="margin-top:7px">'+[...new Set(chips)].slice(0,10).map(x=>'<span class="posBadge">'+descape(x)+'</span>').join(' ')+'</div></div>':'')+
+   '<div style="margin-top:12px"><b>Công dụng theo từng loại từ</b></div>'+
+   sections+note+
+ '</div>';
 }
 async function renderDictionary(surface,targetId,sentence){
  let target=document.getElementById(targetId);if(!target)return;surface=(surface||'').trim();if(!surface)return;
@@ -464,7 +537,7 @@ async function renderDictionary(surface,targetId,sentence){
   cards+='<div class="posCard"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><b>'+descape(posName)+'</b><span class="posBadge">'+descape(group.partOfSpeech)+'</span>'+(hasContext&&group.partOfSpeech===pos?'<span class="posBadge">✓ đang dùng trong câu</span>':'')+'</div>'+defs+'</div>';
  }
  if(!cards)cards='<div class="posCard"><b>Chưa lấy được lexical data.</b><div class="en">Bạn vẫn có thể mở Cambridge; web sẽ tiếp tục thử nguồn khác ở lần tra sau.</div></div>';
- let family=wordFamilyHTML(surface,base,groups);
+ let family=await wordFamilyHTML(surface,base,groups);
  let top='';
  if(hasContext){
   let info=roleInfo(surface,pos,sentence);
