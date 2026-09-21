@@ -858,9 +858,11 @@
           format:"wav"
         })
       });
-      if(!res.ok)throw new Error("Audio grader HTTP "+res.status);
-      var data=await res.json();
-      if(!data||data.error)throw new Error(data&&data.error?data.error:"Invalid audio grader response");
+      var data=await res.json().catch(function(){return {};});
+      if(!res.ok||!data||data.error){
+        var detail=(data&&((data.code||"")+" "+(data.message||data.error||""))).trim();
+        throw new Error("HTTP "+res.status+(detail?" · "+detail:""));
+      }
       var aiTranscript=String(data.transcript||transcript||"").trim();
       if(aiTranscript){
         st.transcript=aiTranscript;
@@ -885,7 +887,8 @@
       }
       return true;
     }catch(err){
-      if(stateEl)stateEl.textContent="AI audio backend chưa hoạt động; đang dùng phương án dự phòng.";
+      st.lastAudioBackendError=String(err&&err.message?err.message:err);
+      if(stateEl)stateEl.textContent="AI audio backend lỗi: "+st.lastAudioBackendError+" · đang dùng phương án dự phòng.";
       return false;
     }
   }
@@ -894,7 +897,9 @@
     var stateEl=document.getElementById("spkAIState");
     if(await tryExternalAudioGrader(q,transcript,local))return;
     if(!window.LanguageModel){
-      if(stateEl)stateEl.textContent=window.SPEAKING_AI_ENDPOINT?"Audio AI backend không phản hồi; đang dùng transcript dự phòng.":"Audio AI backend chưa được kết nối; điểm hiện tại chỉ là phương án dự phòng từ transcript.";
+      if(stateEl)stateEl.textContent=st.lastAudioBackendError
+        ? "Audio AI chưa chạy được ("+st.lastAudioBackendError+"). Điểm hiện tại chỉ là phương án dự phòng từ transcript."
+        : (window.SPEAKING_AI_ENDPOINT?"Audio AI backend không phản hồi; đang dùng transcript dự phòng.":"Audio AI backend chưa được kết nối; điểm hiện tại chỉ là phương án dự phòng từ transcript.");
       return;
     }
 
