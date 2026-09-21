@@ -513,6 +513,143 @@ async function wordFamilyHTML(surface,base,groups){
    sections+note+
  '</div>';
 }
+
+const FAMILY_CACHE_KEY='ielts_family_v2',FAMILY_CACHE=(()=>{try{return JSON.parse(localStorage.getItem(FAMILY_CACHE_KEY)||'{}')}catch(e){return{}}})();
+function titleWord(w){return w?String(w).charAt(0).toUpperCase()+String(w).slice(1):''}
+function memoryTip(base){
+ let w=base.toLowerCase();
+ if(w.endsWith('er')&&w.length>4)return '<b>'+descape(w.slice(0,-2))+' + er → '+descape(w)+'</b> = người/vật thực hiện hành động hoặc có vai trò đó.';
+ if(w.endsWith('ee')&&w.length>4)return '<b>'+descape(w.slice(0,-2))+' + ee → '+descape(w)+'</b> = người nhận/chịu hành động.';
+ if(w.endsWith('ment')&&w.length>6)return '<b>'+descape(w.slice(0,-4))+' + ment → '+descape(w)+'</b> = biến ý/hành động thành danh từ.';
+ if(w.endsWith('ness')&&w.length>6)return '<b>'+descape(w.slice(0,-4))+' + ness → '+descape(w)+'</b> = trạng thái/tính chất.';
+ if(w.endsWith('ly')&&w.length>4)return '<b>'+descape(w.slice(0,-2))+' + ly → '+descape(w)+'</b> = thường biến adjective thành adverb.';
+ if(w.startsWith('un')&&w.length>4)return '<b>un- + '+descape(w.slice(2))+' → '+descape(w)+'</b> = thường mang nghĩa “không / ngược lại”.';
+ if(w.endsWith('ed')&&w.length>4)return '<b>'+descape(w.slice(0,-2))+' + ed</b> = dạng quá khứ/past participle hoặc adjective tùy câu.';
+ if(w.endsWith('ing')&&w.length>5)return '<b>'+descape(w.slice(0,-3))+' + ing</b> = V-ing; có thể là verb form, gerund hoặc adjective tùy câu.';
+ return '<b>'+descape(base)+'</b>: nhớ bằng nghĩa chính + một câu ví dụ thật, thay vì học nghĩa rời.';
+}
+function familyRoots(base){
+ let w=base.toLowerCase(),roots=[w],add=x=>{if(x&&x.length>2&&!roots.includes(x))roots.push(x)};
+ if(w.endsWith('er')&&w.length>4)add(w.slice(0,-2));
+ if(w.endsWith('ee')&&w.length>4)add(w.slice(0,-2));
+ if(w.endsWith('ment')&&w.length>6)add(w.slice(0,-4));
+ if(w.endsWith('ness')&&w.length>6)add(w.slice(0,-4));
+ if(w.endsWith('ly')&&w.length>4)add(w.slice(0,-2));
+ if(w.startsWith('un')&&w.length>4)add(w.slice(2));
+ if(w.endsWith('ed')&&w.length>4){add(w.slice(0,-2));add(w.slice(0,-1))}
+ if(w.endsWith('ing')&&w.length>5){add(w.slice(0,-3));add(w.slice(0,-3)+'e')}
+ if(w.endsWith('ant')&&w.length>5)add(w.slice(0,-3));
+ if(w.endsWith('ent')&&w.length>5)add(w.slice(0,-3));
+ return roots.slice(0,3);
+}
+function familyCandidates(base){
+ let roots=familyRoots(base),arr=[base],add=x=>{if(x&&x.length>2&&!arr.includes(x))arr.push(x)};
+ roots.forEach(r=>{
+  [r,r+'er',r+'ee',r+'ment',r+'ness',r+'ful',r+'less',r+'able',r+'ive',r+'al',r+'ly',r+'ed',r+'ing','un'+r,'un'+r+'ed','un'+r+'ment'].forEach(add);
+ });
+ if(base.endsWith('ant')){let r=base.slice(0,-3);add(r+'ance');add(base+'ly')}
+ if(base.endsWith('ent')){let r=base.slice(0,-3);add(r+'ence');add(base+'ly')}
+ if(base.endsWith('ic'))add(base+'ally');
+ if(base.endsWith('y')){add(base.slice(0,-1)+'iness');add(base.slice(0,-1)+'ily')}
+ if(base==='employer'){['employ','employee','employment','employed','unemployed','unemployment'].forEach(add)}
+ return arr.slice(0,20);
+}
+async function exactLexical(word){
+ try{
+  let r=await fetch('https://api.datamuse.com/words?sp='+encodeURIComponent(word)+'&md=pd&max=4',{cache:'force-cache'});
+  if(!r.ok)return null;let rows=await r.json(),row=rows.find(x=>String(x.word||'').toLowerCase()===word.toLowerCase());if(!row)return null;
+  let defs=row.defs||[],posSet=new Set();
+  defs.forEach(d=>{let p=String(d).split('\t')[0];if(p==='n')posSet.add('noun');else if(p==='v')posSet.add('verb');else if(p==='adj')posSet.add('adjective');else if(p==='adv')posSet.add('adverb')});
+  (row.tags||[]).forEach(p=>{if(p==='n')posSet.add('noun');else if(p==='v')posSet.add('verb');else if(p==='adj')posSet.add('adjective');else if(p==='adv')posSet.add('adverb')});
+  let definition=defs[0]?String(defs[0]).replace(/^[^\t]+\t/,''):'';
+  return {word:word,pos:[...posSet],definition:definition};
+ }catch(e){return null}
+}
+async function chatStyleFamily(base){
+ if(FAMILY_CACHE[base])return FAMILY_CACHE[base];
+ let cand=familyCandidates(base),rows=await Promise.all(cand.map(exactLexical)),valid=rows.filter(Boolean);
+ let seen=new Set(),out=[];
+ for(let x of valid){
+  if(seen.has(x.word))continue;seen.add(x.word);
+  let easy=await translateText(x.word),precise=x.definition?await translateText(x.definition):'';
+  out.push({word:x.word,pos:x.pos[0]||'other',easy:easy||precise||'',precise:precise||''});
+  if(out.length>=9)break;
+ }
+ FAMILY_CACHE[base]=out;try{localStorage.setItem(FAMILY_CACHE_KEY,JSON.stringify(FAMILY_CACHE))}catch(e){}
+ return out;
+}
+function usagePatterns(base,pos){
+ let s=posLearningInfo(pos||'noun',base),parts=String(s.pattern||'').split('•').map(x=>x.trim()).filter(Boolean);
+ return parts.slice(0,4);
+}
+function fallbackExamples(base,pos,definition){
+ let d=(definition||'').toLowerCase();
+ if(pos==='noun'&&/(person|people|company|firm|organisation|organization|entity)/.test(d))return[
+  'I spoke to the '+base+' yesterday.',
+  'The '+base+' is responsible for this decision.',
+  'Please contact the '+base+' for more information.'
+ ];
+ if(pos==='noun')return[
+  'The '+base+' is important in this context.',
+  'We discussed the '+base+' in class.',
+  'This example shows the importance of '+base+'.'
+ ];
+ if(pos==='verb')return[
+  'I '+base+' this every day.',
+  'Students often '+base+' information before a test.',
+  'It is useful to '+base+' carefully.'
+ ];
+ if(pos==='adjective')return[
+  'This is a '+base+' issue.',
+  'The result was '+base+'.',
+  'It is important to consider the '+base+' factors.'
+ ];
+ if(pos==='adverb')return[
+  'The figure changed '+base+'.',
+  'She explained the idea '+base+'.',
+  'The task was completed '+base+'.'
+ ];
+ return['Here is an example using '+base+'.'];
+}
+async function chatStyleExamples(base,groups,sentence,pos){
+ let found=[];
+ if(sentence)found.push(sentence);
+ let order=groups.slice().sort((a,b)=>(a.partOfSpeech===pos?-1:0)-(b.partOfSpeech===pos?-1:0));
+ order.forEach(g=>(g.definitions||[]).forEach(d=>{if(d.example&&!found.includes(d.example))found.push(d.example)}));
+ if(found.length<3){
+  let g=groups.find(x=>x.partOfSpeech===pos)||groups[0],def=g?.definitions?.[0]?.definition||'';
+  fallbackExamples(base,pos||g?.partOfSpeech||'noun',def).forEach(x=>{if(!found.includes(x))found.push(x)});
+ }
+ let out=[];
+ for(let en of found.slice(0,3))out.push({en:en,vi:await translateText(en)});
+ return out;
+}
+async function chatStyleHTML(surface,base,groups,pos,sentence,simpleMeaning,meaning,phonetic){
+ let family=await chatStyleFamily(base),examples=await chatStyleExamples(base,groups,sentence,pos);
+ let familyRows=family.length?family.map(x=>'<tr><td><b>'+descape(x.word)+'</b></td><td><b>'+descape(x.pos)+'</b></td><td>'+descape(x.easy||x.precise||'')+'</td></tr>').join(''):
+  '<tr><td colspan="3">Chưa tìm thấy family words đáng tin cậy.</td></tr>';
+ let g=groups.find(x=>x.partOfSpeech===pos)||groups[0],precise=g?.definitions?.[0]?.definition||'',patterns=usagePatterns(base,pos||g?.partOfSpeech||'noun');
+ let contrast='';
+ if(base.endsWith('er')&&family.some(x=>x.word===base.slice(0,-2)+'ee')){
+   contrast='<div class="easyCompare"><b>'+descape(base.slice(0,-2)+'ee')+'</b> = người nhận hành động / người được thuê<br><b>'+descape(base)+'</b> = người/vật thực hiện hành động / người thuê</div>';
+ }
+ return '<div class="chatExplain">'+
+  '<h2 style="margin-bottom:3px">'+descape(titleWord(surface))+'</h2>'+
+  (phonetic?'<div class="phonetic">/'+descape(String(phonetic).replace(/^\/|\/$/g,''))+'/</div>':'')+
+  '<h3>1. Nghĩa</h3>'+
+  '<p><b>'+descape(base)+'</b> = <b>'+descape(simpleMeaning||meaning||'')+'</b></p>'+
+  (meaning&&meaning!==simpleMeaning?'<p class="muted"><b>Giải thích chính xác hơn:</b> '+descape(meaning)+'</p>':'')+
+  (precise?'<p class="en">'+descape(precise)+'</p>':'')+
+  contrast+
+  '<div class="memoryTip">👉 <b>Dễ nhớ:</b> '+memoryTip(base)+'</div>'+
+  '<h3>2. Cách dùng</h3>'+
+  examples.map(x=>'<div class="usageExample"><b>'+descape(x.en)+'</b><br><span>→ '+descape(x.vi||'')+'</span></div>').join('')+
+  '<h3>Family words</h3>'+
+  '<div class="familyTableWrap"><table class="familyTable"><thead><tr><th>Word</th><th>Loại từ</th><th>Nghĩa dễ hiểu</th></tr></thead><tbody>'+familyRows+'</tbody></table></div>'+
+  '<h3>⭐ Cấu trúc hay dùng</h3>'+
+  (patterns.length?patterns.map(p=>'<div class="patternCard"><code>'+descape(p)+'</code></div>').join(''):'<div class="muted">Xem các ví dụ và collocations bên dưới.</div>')+
+ '</div>';
+}
 async function renderDictionary(surface,targetId,sentence){
  let target=document.getElementById(targetId);if(!target)return;surface=(surface||'').trim();if(!surface)return;
  let hasContext=!!String(sentence||'').trim();
@@ -539,6 +676,7 @@ async function renderDictionary(surface,targetId,sentence){
   cards+='<div class="posCard"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><b>'+descape(posName)+'</b><span class="posBadge">'+descape(group.partOfSpeech)+'</span>'+(hasContext&&group.partOfSpeech===pos?'<span class="posBadge">✓ đang dùng trong câu</span>':'')+'</div>'+defs+'</div>';
  }
  if(!cards)cards='<div class="posCard"><b>Chưa lấy được lexical data.</b><div class="en">Bạn vẫn có thể mở Cambridge; web sẽ tiếp tục thử nguồn khác ở lần tra sau.</div></div>';
+ let chatBlock=await chatStyleHTML(surface,base,groups,pos,sentence,simpleMeaning,meaning,got.data.phonetic);
  let family=await wordFamilyHTML(surface,base,groups);
  let top='';
  if(hasContext){
@@ -548,7 +686,7 @@ async function renderDictionary(surface,targetId,sentence){
   top='<div class="contextCard"><b>📖 Tra từ tổng quát</b><div class="usage" style="margin-top:8px"><b>💡 Nghĩa dễ hiểu</b><span><b>'+descape(simpleMeaning||meaning||'Xem các nghĩa bên dưới')+'</b></span><b>Giải thích chính xác</b><span>'+descape(meaning||'Xem các nghĩa bên dưới')+'</span></div><div class="en" style="margin-top:8px">Bạn gõ từ trực tiếp nên chưa có câu để xác định “loại từ đang dùng”. Bên dưới web liệt kê <b>tất cả loại từ phổ biến</b>. Double-click từ trong bài để xem loại từ chính xác trong câu.</div>'+(summary.length?'<div style="display:grid;gap:8px;margin-top:10px">'+summary.join('')+'</div>':'')+'</div>';
  }
  let readNote=base==='read'?'<div class="contextCard"><b>🔊 Lưu ý phát âm “read”</b><div class="en">Base/present: /riːd/. Past & past participle: /red/. Cùng cách viết nhưng phát âm khác theo thì.</div></div>':'';
- target.innerHTML='<div class="dictWord">'+descape(surface)+'</div>'+(surface.toLowerCase()!==base?'<div class="dictMeaning"><b>Dạng gốc:</b> '+descape(base)+'</div>':'')+(got.data.phonetic?'<div class="phonetic">IPA: '+descape(got.data.phonetic)+'</div>':'')+top+readNote+(family?'<div class="contextCard"><b>🧩 Word family / forms</b><div style="margin-top:8px">'+family+'</div></div>':'')+'<h3>📚 Tất cả loại từ & nghĩa phổ biến của “'+descape(base)+'”</h3>'+cards+'<div class="dictActions"><button id="dictPlayWord">🔊 Phát âm</button><button class="save" id="dictSaveWord">⭐ Lưu ôn</button><a target="_blank" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a></div><div class="muted" style="font-size:11px;margin-top:8px">Nguồn lexical: '+descape(got.data.source||'dictionary sources')+'</div>';
+ target.innerHTML=chatBlock+'<details class="dictDetails"><summary>🔎 Xem phân tích ngữ pháp & định nghĩa từ điển chi tiết</summary><div class="dictWord">'+descape(surface)+'</div>'+(surface.toLowerCase()!==base?'<div class="dictMeaning"><b>Dạng gốc:</b> '+descape(base)+'</div>':'')+(got.data.phonetic?'<div class="phonetic">IPA: '+descape(got.data.phonetic)+'</div>':'')+top+readNote+(family?'<div class="contextCard"><b>🧩 Word family / forms</b><div style="margin-top:8px">'+family+'</div></div>':'')+'<h3>📚 Tất cả loại từ & nghĩa phổ biến của “'+descape(base)+'”</h3>'+cards+'<div class="dictActions"><button id="dictPlayWord">🔊 Phát âm</button><button class="save" id="dictSaveWord">⭐ Lưu ôn</button><a target="_blank" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a></div><div class="muted" style="font-size:11px;margin-top:8px">Nguồn lexical: '+descape(got.data.source||'dictionary sources')+'</div>';
  document.getElementById('dictPlayWord').onclick=()=>{if(got.data.audio)new Audio(got.data.audio).play();else{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(surface);u.lang='en-GB';u.rate=.82;speechSynthesis.speak(u)}};
  document.getElementById('dictSaveWord').onclick=function(){st.saved[base]={w:base,m:simpleMeaning||meaning||''};save();renderSaved();this.textContent='✓ Đã lưu'};
 }
