@@ -247,7 +247,7 @@ document.getElementById('lessonClose').onclick=()=>{document.getElementById('les
 
 /* Universal contextual dictionary: online-first, every word, all POS */
 const dict=document.getElementById('dictionary'),hd=document.getElementById('dictHandle');
-const DCACHE_KEY='ielts_dict_v14_cache',TCACHE_KEY='ielts_dict_v12_translate',DPOS_KEY='ielts_dict_v11_window';
+const DCACHE_KEY='ielts_dict_v15_cache',TCACHE_KEY='ielts_dict_v12_translate',DPOS_KEY='ielts_dict_v11_window';
 let dcache={},tcache={};
 try{dcache=JSON.parse(localStorage.getItem(DCACHE_KEY)||'{}')}catch(e){}
 try{tcache=JSON.parse(localStorage.getItem(TCACHE_KEY)||'{}')}catch(e){}
@@ -372,36 +372,37 @@ async function fetchFreeDictionary(base){
  }catch(e){return null}
 }
 
+
+function timeoutPromise(p,ms){
+ return Promise.race([p,new Promise(resolve=>setTimeout(()=>resolve(null),ms))]);
+}
 async function fetchData(surface,sentence){
  let cs=candidates(surface);
  for(let base of cs){
   let cached=dcache[base];
   if(cached&&cached.groups&&cached.groups.length)return{base:cached.base||base,data:cached};
 
-  let results=await Promise.all([fetchDatamuse(base,sentence),fetchFreeDictionary(base)]);
-  let dm=results[0],fd=results[1],got=null;
-
+  // Fast path: Datamuse normally gives POS + definitions quickly.
+  let dm=await timeoutPromise(fetchDatamuse(base,sentence),1400);
   if(dm&&dm.data&&dm.data.groups&&dm.data.groups.length){
-   got=dm;
-   if(fd&&fd.data){
-    got.data.groups=mergeGroups((got.data.groups||[]).concat(fd.data.groups||[]),got.base);
-    got.data.phonetic=fd.data.phonetic||got.data.phonetic||'';
-    got.data.audio=fd.data.audio||'';
-    got.data.audios=fd.data.audios||[];
-    got.data.source='Datamuse / Wiktionary / WordNet + Free Dictionary audio';
-   }
-  }else if(fd&&fd.data&&fd.data.groups&&fd.data.groups.length){
-   got=fd;
+   dm.data.groups=mergeGroups(dm.data.groups,dm.base);
+   dm.data.base=dm.base;
+   dm.data.audios=dm.data.audios||[];
+   dcache[base]=dm.data;
+   let keys=Object.keys(dcache);if(keys.length>320)delete dcache[keys[0]];
+   localStorage.setItem(DCACHE_KEY,JSON.stringify(dcache));
+   return dm;
   }
 
-  if(got&&got.data.groups&&got.data.groups.length){
-   got.data.groups=mergeGroups(got.data.groups,got.base);
-   got.data.base=got.base;
-   got.data.audios=got.data.audios||[];
-   dcache[base]=got.data;
-   let keys=Object.keys(dcache);if(keys.length>300)delete dcache[keys[0]];
+  // Fallback only when the fast lexical source did not return usable data.
+  let fd=await timeoutPromise(fetchFreeDictionary(base),1800);
+  if(fd&&fd.data&&fd.data.groups&&fd.data.groups.length){
+   fd.data.groups=mergeGroups(fd.data.groups,fd.base);
+   fd.data.base=fd.base;
+   dcache[base]=fd.data;
+   let keys=Object.keys(dcache);if(keys.length>320)delete dcache[keys[0]];
    localStorage.setItem(DCACHE_KEY,JSON.stringify(dcache));
-   return got;
+   return fd;
   }
 
   if(CORE[base])return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:'',audios:[],source:'Built-in IELTS lexicon'}};
@@ -541,7 +542,7 @@ async function wordFamilyHTML(surface,base,groups){
  '</div>';
 }
 
-const FAMILY_CACHE_KEY='ielts_family_v3',FAMILY_CACHE=(()=>{try{return JSON.parse(localStorage.getItem(FAMILY_CACHE_KEY)||'{}')}catch(e){return{}}})();
+const FAMILY_CACHE_KEY='ielts_family_v4',FAMILY_CACHE=(()=>{try{return JSON.parse(localStorage.getItem(FAMILY_CACHE_KEY)||'{}')}catch(e){return{}}})();
 function titleWord(w){return w?String(w).charAt(0).toUpperCase()+String(w).slice(1):''}
 function memoryTip(base){
  let w=base.toLowerCase();
@@ -599,23 +600,25 @@ async function exactLexical(word){
  }catch(e){return null}
 }
 
+
 async function chatStyleFamily(base){
  if(FAMILY_CACHE[base])return FAMILY_CACHE[base];
- let cand=familyCandidates(base),rows=await Promise.all(cand.map(exactLexical)),valid=rows.filter(Boolean);
- // Keep the headword, then prefer genuinely common related forms. This removes obscure forms such as "relaxable".
+ let cand=familyCandidates(base).slice(0,12);
+ let rows=await Promise.all(cand.map(exactLexical)),valid=rows.filter(Boolean);
  valid=valid.filter(x=>x.word===base || x.frequency>=0.08);
  valid.sort((a,b)=>(a.word===base?-1:0)-(b.word===base?-1:0) || (b.frequency||0)-(a.frequency||0));
- let seen=new Set(),out=[];
+ let seen=new Set(),chosen=[];
  for(let x of valid){
-  if(seen.has(x.word))continue;seen.add(x.word);
-  let easy=await translateText(x.word),precise=x.definition?await translateText(x.definition):'';
-  out.push({word:x.word,pos:x.pos[0]||'other',easy:easy||precise||'',precise:precise||'',frequency:x.frequency||0});
-  if(out.length>=8)break;
+  if(seen.has(x.word))continue;seen.add(x.word);chosen.push(x);
+  if(chosen.length>=7)break;
  }
+ let out=await Promise.all(chosen.map(async x=>{
+  let vals=await Promise.all([translateText(x.word),x.definition?translateText(x.definition):Promise.resolve('')]);
+  return {word:x.word,pos:x.pos[0]||'other',easy:vals[0]||vals[1]||'',precise:vals[1]||'',frequency:x.frequency||0};
+ }));
  FAMILY_CACHE[base]=out;try{localStorage.setItem(FAMILY_CACHE_KEY,JSON.stringify(FAMILY_CACHE))}catch(e){}
  return out;
 }
-
 function usagePatterns(base,pos,groups){
  let g=groups?.find(x=>x.partOfSpeech===pos)||groups?.[0],defs=(g?.definitions||[]).map(x=>String(x.definition||'').toLowerCase()).join(' ');
  let patterns=[];
@@ -671,53 +674,66 @@ function fallbackExamples(base,pos,definition){
  return['Here is an example using '+base+'.'];
 }
 
+
 async function chatStyleExamples(base,groups,sentence,pos){
  let found=[];
  if(sentence)found.push(sentence);
  let preferred=groups.find(x=>x.partOfSpeech===pos);
  let ordered=preferred?[preferred].concat(groups.filter(x=>x!==preferred)):groups;
  ordered.forEach(g=>(g.definitions||[]).forEach(d=>{if(d.example&&!found.includes(d.example))found.push(d.example)}));
- let out=[];
- for(let en of found.slice(0,3))out.push({en:en,vi:await translateText(en)});
- return out;
+ let top=found.slice(0,3),translations=await Promise.all(top.map(en=>translateText(en)));
+ return top.map((en,i)=>({en:en,vi:translations[i]||''}));
 }
-async function chatStyleHTML(surface,base,groups,pos,sentence,simpleMeaning,meaning,phonetic){
- let family=await chatStyleFamily(base),examples=await chatStyleExamples(base,groups,sentence,pos);
- let familyRows=family.length?family.map(x=>'<tr><td><b>'+descape(x.word)+'</b></td><td><b>'+descape(x.pos)+'</b></td><td>'+descape(x.easy||x.precise||'')+'</td></tr>').join(''):
-  '<tr><td colspan="3">Chưa tìm thấy family words đáng tin cậy.</td></tr>';
+
+function chatStyleHTML(surface,base,groups,pos,sentence,simpleMeaning,meaning,phonetic,slotId){
  let g=groups.find(x=>x.partOfSpeech===pos)||groups[0],precise=g?.definitions?.[0]?.definition||'',patterns=usagePatterns(base,pos||g?.partOfSpeech||'noun',groups);
- let contrast='';
- if(base.endsWith('er')&&family.some(x=>x.word===base.slice(0,-2)+'ee')){
-   contrast='<div class="easyCompare"><b>'+descape(base.slice(0,-2)+'ee')+'</b> = người nhận hành động / người được thuê<br><b>'+descape(base)+'</b> = người/vật thực hiện hành động / người thuê</div>';
- }
  return '<div class="chatExplain">'+
   '<h3>1. Nghĩa</h3>'+
   '<p><b>'+descape(base)+'</b> = <b>'+descape(simpleMeaning||meaning||'')+'</b></p>'+
   (meaning&&meaning!==simpleMeaning?'<p class="muted"><b>Giải thích chính xác hơn:</b> '+descape(meaning)+'</p>':'')+
   (precise?'<p class="en">'+descape(precise)+'</p>':'')+
-  contrast+
   '<div class="memoryTip">👉 <b>Dễ nhớ:</b> '+memoryTip(base)+'</div>'+
   '<h3>2. ⭐ Cấu trúc hay dùng</h3>'+
   (patterns.length?patterns.map(p=>'<div class="patternCard"><code>'+descape(p)+'</code></div>').join(''):'<div class="muted">Chưa có cấu trúc đáng tin cậy.</div>')+
   '<h3>3. Cách dùng</h3>'+
-  (examples.length?examples.map(x=>'<div class="usageExample"><b>'+descape(x.en)+'</b><br><span>→ '+descape(x.vi||'')+'</span></div>').join(''):'<div class="muted">Nguồn từ điển chưa có câu ví dụ đáng tin cậy cho từ này. Double-click từ trong bài để dùng chính câu đó làm ví dụ.</div>')+
+  '<div id="dictExamples-'+slotId+'" class="muted">Đang tải ví dụ…</div>'+
   '<h3>4. Family words</h3>'+
-  '<div class="familyTableWrap"><table class="familyTable"><thead><tr><th>Word</th><th>Loại từ</th><th>Nghĩa dễ hiểu</th></tr></thead><tbody>'+familyRows+'</tbody></table></div>'+
+  '<div id="dictFamily-'+slotId+'" class="muted">Đang tải family words…</div>'+
  '</div>';
 }
+async function hydrateChatStyle(slotId,base,groups,sentence,pos){
+ let tasks=await Promise.all([chatStyleExamples(base,groups,sentence,pos),chatStyleFamily(base)]);
+ let examples=tasks[0],family=tasks[1];
+ let exEl=document.getElementById('dictExamples-'+slotId);
+ if(exEl){
+  exEl.className='';
+  exEl.innerHTML=examples.length?examples.map(x=>'<div class="usageExample"><b>'+descape(x.en)+'</b><br><span>→ '+descape(x.vi||'')+'</span></div>').join(''):'<div class="muted">Nguồn từ điển chưa có câu ví dụ đáng tin cậy. Double-click từ trong bài để dùng chính câu đó làm ví dụ.</div>';
+ }
+ let famEl=document.getElementById('dictFamily-'+slotId);
+ if(famEl){
+  let rows=family.length?family.map(x=>'<tr><td><b>'+descape(x.word)+'</b></td><td><b>'+descape(x.pos)+'</b></td><td>'+descape(x.easy||x.precise||'')+'</td></tr>').join(''):'<tr><td colspan="3">Chưa tìm thấy family words phổ biến đáng tin cậy.</td></tr>';
+  famEl.className='familyTableWrap';
+  famEl.innerHTML='<table class="familyTable"><thead><tr><th>Word</th><th>Loại từ</th><th>Nghĩa dễ hiểu</th></tr></thead><tbody>'+rows+'</tbody></table>';
+ }
+}
 
-
+function googleTtsURL(base){
+ return 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q='+encodeURIComponent(base);
+}
 function dictionaryAudioButtons(audios,base){
  let list=(audios||[]).filter(x=>x&&x.url).map(x=>{
   let u=String(x.url);if(u.startsWith('//'))u='https:'+u;if(u.startsWith('http:'))u='https:'+u.slice(5);
   return {...x,url:u};
  });
- if(!list.length)return '<span class="muted">🔇 Nguồn từ điển chưa có bản ghi âm cho từ này</span>';
- let ordered=list.slice().sort((a,b)=>({UK:0,US:1,Audio:2}[a.label]??9)-({UK:0,US:1,Audio:2}[b.label]??9));
- return ordered.slice(0,3).map((a,i)=>
+ let ordered=list.slice().sort((a,b)=>({UK:0,US:1,Audio:2}[a.label]??9)-({UK:0,US:1,Audio:2}[b.label]??9)).slice(0,2);
+ let html=ordered.map((a,i)=>
   '<button class="btn dictAudioBtn" data-aidx="'+i+'" type="button" title="'+descape(a.phonetic||base)+'">🔊 '+descape(a.label||('Audio '+(i+1)))+'</button>'+
-  '<audio class="dictInlineAudio" data-aidx="'+i+'" preload="auto" playsinline src="'+descape(a.url)+'"></audio>'
+  '<audio class="dictInlineAudio" data-aidx="'+i+'" preload="metadata" playsinline src="'+descape(a.url)+'"></audio>'
  ).join('');
+ let gi=ordered.length;
+ html+='<button class="btn dictAudioBtn" data-aidx="'+gi+'" type="button" title="Google Translate pronunciation">🔊 Google</button>'+
+       '<audio class="dictInlineAudio" data-aidx="'+gi+'" preload="metadata" playsinline src="'+descape(googleTtsURL(base))+'"></audio>';
+ return html;
 }
 function bindDictionaryAudio(target){
  target.querySelectorAll('.dictAudioBtn').forEach(btn=>btn.onclick=()=>{
@@ -725,14 +741,14 @@ function bindDictionaryAudio(target){
   target.querySelectorAll('audio.dictInlineAudio').forEach(a=>{if(a!==audio){a.pause();try{a.currentTime=0}catch(e){}}});
   if(!audio)return;
   try{audio.pause();audio.currentTime=0;audio.volume=1;}catch(e){}
+  const original=btn.textContent;
   let p=audio.play();
   if(p&&p.catch)p.catch(()=>{
-    let others=[...target.querySelectorAll('audio.dictInlineAudio')].filter(a=>a!==audio);
-    const tryNext=k=>{
-      if(k>=others.length){btn.textContent='⚠️ Audio lỗi';setTimeout(()=>btn.textContent='🔊 '+(btn.title.includes('UK')?'UK':btn.title.includes('US')?'US':'Nghe'),1800);return}
-      try{others[k].currentTime=0;let q=others[k].play();if(q&&q.catch)q.catch(()=>tryNext(k+1));}catch(e){tryNext(k+1)}
-    };
-    tryNext(0);
+    // If a dictionary recording fails, try Google Translate automatically.
+    let google=[...target.querySelectorAll('.dictAudioBtn')].find(b=>/Google/.test(b.textContent));
+    if(google&&google!==btn){google.click();return}
+    btn.textContent='⚠️ Không phát được';
+    setTimeout(()=>btn.textContent=original,1800);
   });
  });
 }
@@ -746,14 +762,17 @@ async function renderDictionary(surface,targetId,sentence){
  if(g&&g.definitions&&g.definitions.length)g.definitions.sort((x,y)=>scoreDefinition(y,sentence)-scoreDefinition(x,sentence));
  let def=g?.definitions?.[0]||{},coreSense=pos?CORE[base]?.s.find(x=>x[0]===pos):null;
  let cleanDefinition=String(def.definition||base).replace(/^\((?:intransitive|transitive|countable|uncountable|informal|formal|dated|archaic)[^)]*\)\s*/i,'').trim();
- let meaning=coreSense?.[1]||def.vi||await translateText(cleanDefinition||base);
- if(!meaning)meaning=await translateText(base);
  let simpleQuery=((pos||g?.partOfSpeech)==='verb'?'to ':'')+base;
- let simpleMeaning=await translateText(simpleQuery);
- simpleMeaning=String(simpleMeaning||'').replace(/^để\s+/i,'').trim();
+ let vals=await Promise.all([
+  coreSense?.[1]||def.vi?Promise.resolve(coreSense?.[1]||def.vi):translateText(cleanDefinition||base),
+  translateText(simpleQuery)
+ ]);
+ let meaning=vals[0]||await translateText(base);
+ let simpleMeaning=String(vals[1]||'').replace(/^để\s+/i,'').trim();
  if(!simpleMeaning||simpleMeaning.toLowerCase()===String(base).toLowerCase()||simpleMeaning.length>70)simpleMeaning=meaning;
  let cards='',summary=[];
- let chatBlock=await chatStyleHTML(surface,base,groups,pos,sentence,simpleMeaning,meaning,got.data.phonetic);
+ let slotId=String(targetId).replace(/[^a-zA-Z0-9_-]/g,'_')+'-'+Date.now();
+ let chatBlock=chatStyleHTML(surface,base,groups,pos,sentence,simpleMeaning,meaning,got.data.phonetic,slotId);
  target.innerHTML=
   '<div class="dictWord">'+descape(titleWord(surface))+'</div>'+
   (got.data.phonetic?'<div class="phonetic">IPA: '+descape(got.data.phonetic)+'</div>':'')+
@@ -766,6 +785,7 @@ async function renderDictionary(surface,targetId,sentence){
   chatBlock+
   '<div class="muted" style="font-size:11px;margin-top:12px">Nguồn lexical: '+descape(got.data.source||'dictionary sources')+'</div>';
  bindDictionaryAudio(target);
+ hydrateChatStyle(slotId,base,groups,sentence,pos);
  document.getElementById('dictSaveWord').onclick=function(){st.saved[base]={w:base,m:simpleMeaning||meaning||''};save();renderSaved();this.textContent='✓ Đã lưu'};
 }
 window.lookupDictionary=function(raw,targetId='dictResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
