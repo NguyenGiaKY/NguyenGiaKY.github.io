@@ -497,3 +497,14 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
  .wsBandGrid{grid-template-columns:repeat(2,1fr)}.wsResultGrid{grid-template-columns:1fr}.wsResultTop{grid-template-columns:1fr}.wsResultTop>button:last-child{justify-self:start}.wsOverallBand{justify-self:start}
 }
 @media(max-width:560px){.wsBandGrid{grid-template-columns:1fr}.writingResult{padding:12px}.wsTaskPane,.wsWritingPane,.wsCoachPane{padding:10px}}
+
+/* Speaking recognition reliability */
+.spkLiveBox{margin-top:12px;border:1px solid #dce3ee;background:#f8fafc;border-radius:12px;padding:10px 12px}
+.spkLiveBox b{display:block;font-size:12px;color:#64748b;margin-bottom:5px}
+.spkLiveBox p{margin:0;min-height:24px;line-height:1.5;color:#1f2937}
+.spkRecognitionError{max-width:620px;margin:70px auto;border:1px solid #ffd5d0;background:#fff8f7;border-radius:18px;padding:28px;text-align:center}
+.spkErrorIcon{font-size:46px;margin-bottom:8px}
+.spkRecognitionError h2{margin:6px 0 10px}
+.spkRecognitionError p{color:#5f6b7a;line-height:1.55}
+.spkCorrectionList small{display:block;margin-top:3px;color:#667085}
+#spkSend:disabled{opacity:.65;cursor:wait}
