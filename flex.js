@@ -269,7 +269,8 @@ function openCheckpoint(t){
 function renderFlexHome(){
  const card=document.getElementById('todayCard');if(!card)return;
  let [phase,desc]=phaseInfo(),q=chooseQueue(fs.queueSize,false);
- const qBtn=n=>'<button class="btn '+(fs.queueSize===n?'primary':'')+'" data-qsize="'+n+'">'+(n===2?'Nhẹ':n===4?'Vừa':'Nhiều')+' • '+n+' task</button>';
+ const qBtn=n=>'<button class="btn qsizeBtn" data-qsize="'+n+'" aria-pressed="'+(fs.queueSize===n?'true':'false')+'">'+(n===2?'Nhẹ':n===4?'Vừa':'Nhiều')+' • '+n+' task</button>';
+
  card.innerHTML='<div class="flexHeroLine"><div><span class="phase">'+phase+'</span><h2>Study Queue linh hoạt</h2><p class="muted">'+desc+'</p></div></div>'+
  '<div class="noPressure"><b>Không có “trễ lịch”.</b> Task chưa xong hôm nay sẽ ở lại queue cho lần học tiếp theo. Bạn có thể học ít hôm nay và bù vào ngày khác mà không làm hỏng lộ trình.</div>'+
  '<div class="queueControls"><span>Chọn lượng học phù hợp hôm nay:</span>'+qBtn(2)+qBtn(4)+qBtn(6)+'<button class="btn" id="newQueue">Đổi gợi ý</button></div>'+
@@ -278,21 +279,41 @@ function renderFlexHome(){
    let v=latestScore(s),m=skillMeta[s];
    return '<div class="snapshotCard"><b>'+m.label+' '+m.target+'</b><strong>'+pctSkill(s)+'%</strong><span>'+(v===null?'Chưa nhập checkpoint':'Gần nhất: '+v+(m.metric==='/40'?'/40':' band'))+'</span></div>';
  }).join('')+'</div>';
+
+ const paintSelected=n=>{
+   card.querySelectorAll('[data-qsize]').forEach(btn=>{
+     btn.setAttribute('aria-pressed',String(+btn.dataset.qsize===n));
+   });
+ };
+
+ const renderQueue=items=>{
+   const queueEl=card.querySelector('.flexQueue');
+   if(!queueEl)return;
+   queueEl.innerHTML=items.map(t=>taskCard(t,true)).join('');
+   bindTaskButtons(queueEl);
+ };
+
  bindTaskButtons(card);
- card.querySelectorAll('[data-qsize]').forEach(b=>b.onclick=()=>{
-   let n=+b.dataset.qsize;
+ paintSelected(fs.queueSize);
+
+ card.querySelectorAll('[data-qsize]').forEach(btn=>btn.onclick=()=>{
+   const n=+btn.dataset.qsize;
    fs.queueSize=n;
    fs.queue=[];
-   saveFlex();
-   let nq=chooseQueue(n,true);
+   const nq=chooseQueue(n,true);
    fs.queue=nq.map(x=>x.id);
    saveFlex();
-   renderFlexHome();
+   paintSelected(n);
+   renderQueue(nq);
  });
+
  document.getElementById('newQueue').onclick=()=>{
    fs.queue=[];
-   chooseQueue(fs.queueSize,true);
-   renderFlexHome();
+   const nq=chooseQueue(fs.queueSize,true);
+   fs.queue=nq.map(x=>x.id);
+   saveFlex();
+   paintSelected(fs.queueSize);
+   renderQueue(nq);
  };
 }
 
