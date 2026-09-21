@@ -97,8 +97,22 @@
     ];
   }
 
-  function builderPanelHTML(q){
+  function builderPanelHTML(q,expanded){
     var steps=speakingBuilderSteps(q);
+    if(expanded){
+      return '<aside class="spkBuilder spkBuilderExpanded">'+
+        '<div class="spkBuilderTabs"><b>💡 Gợi ý từng bước</b><span>📘 Từ vựng hữu ích</span></div>'+
+        '<div class="spkBuilderReady"><strong>4/4 bước</strong><div class="spkBuilderSegments"><i></i><i></i><i></i><i></i></div></div>'+
+        '<div class="spkExpandedSteps">'+steps.map(function(s,i){
+          return '<div class="spkExpandedStep">'+
+            '<span class="spkBuilderNum">'+(i+1)+'</span>'+
+            '<div><div class="spkExpandedLabel"><b>'+esc(s.label)+'</b><small>'+(i===0?'Trả lời trực tiếp câu hỏi':i===1?'Giải thích lý do':i===2?'Đưa ra ví dụ cụ thể':'Kết thúc và nêu cảm nhận')+'</small></div>'+
+            '<p>'+esc(s.text)+'</p></div>'+
+          '</div>';
+        }).join("")+'</div>'+
+        '<div class="spkBuilderSuccess"><span>✓</span><div><b>Bạn đã sẵn sàng!</b><p>Hãy nói tự nhiên theo ý của bạn, rồi nhấn <strong>Chấm bài</strong> để nhận phản hồi từ AI.</p></div></div>'+
+      '</aside>';
+    }
     return '<aside class="spkBuilder">'+
       '<div class="spkBuilderHead"><div><span>💡 Gợi ý từng bước</span><b id="spkBuilderProgress">0/4 bước</b></div><small>Cấu trúc trả lời cho Speaking Builder</small></div>'+
       '<div class="spkBuilderBar"><i id="spkBuilderBarFill"></i></div>'+
@@ -197,24 +211,61 @@
   }
 
   function openRecorder() {
-    var q = current();
-    var modal = document.createElement("div");
-    modal.id = "spkRecordModal";
-    modal.className = "spkModal";
-    modal.innerHTML =
-      '<div class="spkModalBackdrop"></div>' +
-      '<div class="spkModalCard">' +
-        '<button id="spkModalClose" class="spkModalX">×</button>' +
-        '<div class="spkModalQuestion"><span class="spkPart">IELTS Part ' + q.part + '</span><h2>' + esc(q.q) + '</h2><p>Thử dùng <b>' + esc(q.word) + '</b> · ' + esc(q.ipa) + '</p></div>' +
-        '<div class="spkWaveBox"><canvas id="spkWave" width="900" height="120"></canvas><div class="spkWaveMeta"><span>Tối đa 3:00</span><b id="spkTime">0:00</b></div></div>' +
-        '<div class="spkLiveBox"><b>Hệ thống đang nghe:</b><p id="spkLiveTranscript">Đang nghe…</p></div>' +
-        '<div class="spkModalActions"><button id="spkCancel" class="spkCancelBtn">Huỷ</button><button id="spkSend" class="spkSendBtn">↑ Gửi</button></div>' +
+    renderRecordingPage();
+  }
+
+  function renderRecordingPage(){
+    var body=document.getElementById("lessonBody");
+    if(!body)return;
+    var q=current();
+
+    body.innerHTML=
+      '<div class="spkApp spkQuestionPage spkRecordingPage">'+
+        '<div class="spkTopbar spkRecordingTopbar">'+
+          '<button id="spkBackFromRecord" class="spkGhost">← Quay lại</button>'+
+          '<span class="spkPart">IELTS Part '+q.part+'</span>'+
+          '<span class="spkCount">Câu hỏi: '+(st.index+1)+' / '+questions.length+'</span>'+
+        '</div>'+
+        '<div class="spkBuilderLayout">'+
+          '<section class="spkRecordingCard">'+
+            '<div class="spkRecordingQuestion">'+
+              '<div class="spkQuestionLine"><span class="spkSpeakerIcon">🔊</span><h2>'+esc(q.q)+'</h2></div>'+
+              '<p>Hãy trả lời bằng tiếng Anh. Bạn có tối đa 3:00 để nói.</p>'+
+              '<div class="spkRecordLimit">◷ <span>Thời gian trả lời</span><b>Tối đa 3:00</b></div>'+
+            '</div>'+
+            '<div class="spkSpeakingAnswer">'+
+              '<div class="spkSpeakingAnswerHead"><b>Bài nói của bạn</b><span id="spkLiveCount">0 từ</span></div>'+
+              '<div id="spkLiveTranscript" class="spkSpeakingTranscript">Đang nghe…</div>'+
+            '</div>'+
+            '<div class="spkInlineRecorder">'+
+              '<button id="spkRecordPulse" class="spkRecordPulse" aria-label="Đang ghi âm">●</button>'+
+              '<span id="spkTime" class="spkRecordTime">0:00 / 3:00</span>'+
+              '<div class="spkWaveInline"><canvas id="spkWave" width="900" height="90"></canvas></div>'+
+              '<span class="spkVolume">🔊</span>'+
+            '</div>'+
+            '<div class="spkRecordingActions">'+
+              '<button id="spkRetryRecord" class="spkRecordAction secondary">↻ <span><b>Nói lại</b><small>Ghi âm lại bài nói</small></span></button>'+
+              '<button id="spkSaveRecord" class="spkRecordAction light">▱ <span><b>Lưu bài nói</b><small>Lưu để xem lại sau</small></span></button>'+
+              '<button id="spkSend" class="spkRecordAction grade">✦ <span><b>Chấm bài</b><small>AI sẽ đánh giá bài nói của bạn</small></span></button>'+
+            '</div>'+
+          '</section>'+
+          builderPanelHTML(q,true)+
+        '</div>'+
       '</div>';
 
-    document.body.appendChild(modal);
-    document.getElementById("spkModalClose").onclick = cancelRecorder;
-    document.getElementById("spkCancel").onclick = cancelRecorder;
-    document.getElementById("spkSend").onclick = sendRecorder;
+    document.getElementById("spkBackFromRecord").onclick=function(){
+      cleanup(false);
+      renderQuestion();
+    };
+    document.getElementById("spkRetryRecord").onclick=function(){
+      cleanup(false);
+      setTimeout(renderRecordingPage,80);
+    };
+    document.getElementById("spkSaveRecord").onclick=function(){
+      try{localStorage.setItem("speaking_saved_"+q.q,st.transcript||"");}catch(e){}
+      this.innerHTML='✓ <span><b>Đã lưu</b><small>Bài nói đã được lưu</small></span>';
+    };
+    document.getElementById("spkSend").onclick=sendRecorder;
     startRecorder();
   }
 
@@ -250,7 +301,7 @@
       st.timer = setInterval(function () {
         var sec = (Date.now() - st.startedAt) / 1000;
         var el = document.getElementById("spkTime");
-        if (el) el.textContent = fmt(sec);
+        if (el) el.textContent = fmt(sec) + " / 3:00";
         if (sec >= 180) sendRecorder();
       }, 200);
     } catch (e) {
@@ -408,6 +459,8 @@
         if(conf.length)st.confidence=conf.reduce(function(x,y){return x+y;},0)/conf.length;
         var live=document.getElementById("spkLiveTranscript");
         if(live)live.textContent=st.transcript||"Đang nghe…";
+        var countEl=document.getElementById("spkLiveCount");
+        if(countEl)countEl.textContent=wordList(st.transcript).length+" từ";
       };
 
       r.onerror=function(ev){st.recognitionError=ev&&ev.error?String(ev.error):"recognition-error";};
@@ -479,6 +532,7 @@
   function cancelRecorder() {
     try { if (st.recorder && st.recorder.state !== "inactive") st.recorder.stop(); } catch (e) {}
     cleanup(true);
+    renderQuestion();
   }
 
   async function sendRecorder() {
