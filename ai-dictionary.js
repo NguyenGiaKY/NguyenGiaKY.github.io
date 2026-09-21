@@ -68,7 +68,7 @@
       '',
       'Trả về JSON THUẦN, không markdown, theo schema:',
       '{"simple_meaning":"...","meaning_in_context":"...","general_meaning":"...","easy_explanation":"...","part_of_speech_in_context":"...","why_this_pos":"...","grammar_role":"...","grammar_pattern":"...","naturalness":"...","word_family":[{"form":"...","pos":"noun|verb|adjective|adverb|other","common":true,"simple_meaning":"...","meaning":"...","use":"...","position":"...","pattern":"...","example":"..."}],"missing_core_forms":["adjective"],"collocations":["..."],"common_mistakes":["..."],"ielts_examples":["...","..."]}',
-      'simple_meaning phải là nghĩa cực dễ hiểu như đang giải thích cho người học A2-B1, dùng từ Việt đơn giản trước rồi mới giải thích chính xác hơn. Ví dụ employer = người hoặc công ty thuê người làm và trả lương; employee = người làm việc cho công ty/chủ và nhận lương. Không dùng định nghĩa dịch máy khó hiểu nếu có cách nói đơn giản hơn. Word family phải kiểm tra noun/verb/adjective/adverb nếu thực sự tồn tại và phổ biến. Có thể thêm other POS nếu hữu ích. Không tạo dạng không có thật.'
+      'QUY TẮC ÁP DỤNG CHO MỌI TỪ, không chỉ ví dụ employer: simple_meaning phải là một nghĩa cực dễ hiểu, tự nhiên, tối đa khoảng 12 từ tiếng Việt, như đang giải thích cho người học A2-B1. Sau đó meaning/easy_explanation mới giải thích chính xác hơn. Không bê nguyên định nghĩa dịch máy khó hiểu nếu có cách nói đơn giản hơn. Ví dụ employer = người hoặc công ty thuê người làm và trả lương; employee = người làm việc cho công ty/chủ và nhận lương. Với từng mục trong word_family, simple_meaning cũng phải dễ hiểu trước, rồi mới tới meaning/use/position/pattern/example. Phải kiểm tra noun/verb/adjective/adverb nếu thực sự tồn tại và phổ biến; có thể thêm other POS nếu hữu ích. Không tạo dạng không có thật.'
     ].join('\n');
   }
   function listHTML(a){
@@ -95,7 +95,8 @@
       '<div class="aiGrid">'+
         '<b>💡 Nghĩa dễ hiểu</b><span><b>'+esc(obj.simple_meaning || obj.meaning_in_context || obj.general_meaning || '—')+'</b></span>'+ 
         '<b>Nghĩa chính xác hơn</b><span>'+esc(obj.meaning_in_context || obj.general_meaning || '—')+'</span>'+ 
-        '<b>Giải thích đơn giản</b><span>'+esc(obj.easy_explanation || '—')+'</span>'+
+        '<b>Giải thích đơn giản</b><span>'+esc(obj.easy_explanation || '—')+'</b></span>'+ 
+        '<b>Nghĩa chính xác hơn</b><span>'+esc(obj.meaning_in_context || obj.general_meaning || '—')+'</span>'+ 
         '<b>Loại từ trong câu</b><span>'+esc(obj.part_of_speech_in_context || 'Không có câu để xác định')+'</span>'+
         '<b>Vì sao?</b><span>'+esc(obj.why_this_pos || '—')+'</span>'+
         '<b>Vai trò ngữ pháp</b><span>'+esc(obj.grammar_role || '—')+'</span>'+
