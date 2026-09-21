@@ -19,7 +19,7 @@
   var st = {
     index:0, stream:null, recorder:null, chunks:[], blob:null, url:null,
     recognition:null, transcript:"", finalTranscript:"", interimTranscript:"", confidence:0,
-    recognitionEnded:true, recognitionWaiters:[], recognitionError:"",
+    recognitionEnded:true, recognitionWaiters:[], recognitionError:"", uncertainWords:[],
     startedAt:0, timer:null, audioCtx:null, analyser:null, source:null, raf:null,
     finishHandler:null, recording:false
   };
@@ -169,6 +169,105 @@
     });
   }
 
+  function cleanWord(w){
+    return String(w||"").toLowerCase().replace(/[^a-z']/g,"");
+  }
+
+  function collectUncertainWords(result){
+    if(!result||!result.length)return;
+    var best=result[0],bestText=best?String(best.transcript||"").trim():"";
+    if(!bestText)return;
+    var bestWords=bestText.split(/\s+/).map(cleanWord).filter(Boolean);
+    var altTexts=[];
+    for(var a=1;a<Math.min(result.length,3);a++){
+      var t=String(result[a].transcript||"").trim();
+      if(t)altTexts.push(t.split(/\s+/).map(cleanWord).filter(Boolean));
+    }
+    var conf=(best&&typeof best.confidence==="number")?best.confidence:0;
+    for(var i=0;i<bestWords.length;i++){
+      var w=bestWords[i];
+      if(w.length<3)continue;
+      var disagreement=0;
+      altTexts.forEach(function(arr){if(arr[i]&&arr[i]!==w)disagreement++;});
+      if(conf>0 && conf<.72)disagreement++;
+      if(disagreement){
+        if(!st.uncertainWords.some(function(x){return x.word===w;})){
+          st.uncertainWords.push({word:w,confidence:conf,reason:disagreement});
+        }
+      }
+    }
+    if(st.uncertainWords.length>8)st.uncertainWords=st.uncertainWords.slice(0,8);
+  }
+
+  async function fetchIPA(word){
+    try{
+      var res=await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/"+encodeURIComponent(word));
+      if(!res.ok)return "";
+      var data=await res.json();
+      var entry=Array.isArray(data)?data[0]:null;
+      if(!entry)return "";
+      if(entry.phonetic)return entry.phonetic;
+      var ph=(entry.phonetics||[]).find(function(x){return x&&x.text;});
+      return ph&&ph.text?ph.text:"";
+    }catch(e){return "";}
+  }
+
+  function speakPronWord(word){
+    try{
+      speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(word);
+      u.lang="en-GB";u.rate=.72;u.pitch=1;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  function fallbackPronHTML(){
+    if(!st.uncertainWords.length){
+      return '<div class="spkPronEmpty"><b>Chưa xác định được từ phát âm cần sửa.</b><p>Nhận dạng giọng nói không phát hiện từ nào có độ không chắc rõ ràng. Điều này không có nghĩa phát âm hoàn hảo.</p></div>';
+    }
+    return '<div class="spkPronNotice">⚠️ Đây là các từ <b>nhận dạng chưa chắc chắn</b>, chưa thể khẳng định là phát âm sai.</div>'+
+      '<div id="spkPronList">'+st.uncertainWords.slice(0,6).map(function(x,i){
+        return '<div class="spkPronItem" data-pron-word="'+esc(x.word)+'"><div class="spkPronWord"><b>'+esc(x.word)+'</b><span id="spkIpa-'+i+'">đang lấy IPA…</span></div><div class="spkPronActions"><button class="spkPronListen" data-word="'+esc(x.word)+'">🔊 Nghe mẫu</button></div><p>Chrome nghe từ này chưa ổn định. Hãy nghe mẫu, nói chậm lại và chú ý trọng âm.</p></div>';
+      }).join("")+'</div>';
+  }
+
+  async function hydrateFallbackPronunciation(){
+    var items=document.querySelectorAll(".spkPronItem[data-pron-word]");
+    items.forEach(function(item,i){
+      var word=item.getAttribute("data-pron-word");
+      fetchIPA(word).then(function(ipa){
+        var e=document.getElementById("spkIpa-"+i);
+        if(e)e.textContent=ipa||"IPA chưa có";
+      });
+    });
+    document.querySelectorAll(".spkPronListen").forEach(function(b){
+      b.onclick=function(){speakPronWord(this.getAttribute("data-word"));};
+    });
+  }
+
+  function renderAIPronunciation(list){
+    var box=document.getElementById("spkPronunciationFeedback");
+    if(!box)return;
+    if(!Array.isArray(list)||!list.length){
+      box.innerHTML=fallbackPronHTML();
+      hydrateFallbackPronunciation();
+      return;
+    }
+    box.innerHTML='<div class="spkPronNotice good">AI đã nghe audio và chỉ ra các điểm phát âm nên sửa.</div>'+
+      '<div class="spkPronList">'+list.slice(0,8).map(function(x){
+        return '<div class="spkPronItem">'+
+          '<div class="spkPronWord"><b>'+esc(x.word||"")+'</b><span>'+esc(x.ipa||"")+'</span></div>'+
+          (x.heard_as?'<p><b>AI nghe gần giống:</b> '+esc(x.heard_as)+'</p>':'')+
+          (x.issue_vi?'<p><b>Vấn đề:</b> '+esc(x.issue_vi)+'</p>':'')+
+          (x.tip_vi?'<p><b>Cách sửa:</b> '+esc(x.tip_vi)+'</p>':'')+
+          '<div class="spkPronActions"><button class="spkPronListen" data-word="'+esc(x.word||"")+'">🔊 Nghe mẫu</button></div>'+
+        '</div>';
+      }).join("")+'</div>';
+    document.querySelectorAll(".spkPronListen").forEach(function(b){
+      b.onclick=function(){speakPronWord(this.getAttribute("data-word"));};
+    });
+  }
+
   function startRecognition() {
     var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     st.finalTranscript="";
@@ -176,6 +275,7 @@
     st.transcript="";
     st.confidence=0;
     st.recognitionError="";
+    st.uncertainWords=[];
     st.recognitionEnded=!SR;
     if(!SR)return;
 
@@ -195,7 +295,7 @@
           var t=best?String(best.transcript||"").trim():"";
           if(!t)continue;
           if(best&&typeof best.confidence==="number"&&best.confidence>0)conf.push(best.confidence);
-          if(ev.results[i].isFinal)finals.push(t); else interims.push(t);
+          if(ev.results[i].isFinal){finals.push(t);collectUncertainWords(ev.results[i]);} else interims.push(t);
         }
         st.finalTranscript=finals.join(" ").trim();
         st.interimTranscript=interims.join(" ").trim();
@@ -457,6 +557,7 @@
           '<span class="spkMetricChip"><b>Mạch lạc</b> <strong id="spkCoherenceBand">' + s.coherenceBand.toFixed(1) + '</strong><small id="spkCoherencePct">' + s.coherence + '%</small></span>' +
           '<span class="spkMetricChip"><b>Phát âm</b> <strong id="spkPronBand">' + s.pronunciationBand.toFixed(1) + '</strong><small id="spkPronPct">' + s.pronunciation + '%</small></span>' +
         '</div>' +
+        '<div class="spkPronunciationCard"><div class="spkPronTitle"><div><span class="phase">PRONUNCIATION</span><h3>Sửa phát âm</h3></div><small>Word · IPA · lỗi âm/stress · cách sửa</small></div><div id="spkPronunciationFeedback">'+fallbackPronHTML()+'</div></div>' +
         '<div class="spkCoachBox"><div><span>Gợi ý</span><b id="spkBandBadge">' + s.band.toFixed(1) + '/9.0</b></div><p id="spkFeedbackText">Website đã chấm transcript của chính bạn: ' + s.words + ' từ, khoảng ' + s.wpm + ' từ/phút, mức bám câu hỏi khoảng ' + Math.round(s.relevance*100) + '%. Hãy trả lời trực tiếp hơn, phát triển một lý do/ví dụ và sửa các lỗi được đánh dấu.</p><div id="spkAIState" class="spkAIState">' + (useAI?'Đang thử AI để chấm sâu hơn từ audio/transcript thật…':'Điểm trên là ước lượng luyện tập từ transcript thật.') + '</div></div>' +
         '<div class="spkHighBand"><b>Câu trả lời band cao</b><p id="spkHighText">' + esc(sampleAnswer(q)) + '</p><button id="spkReadHigh" class="spkLinkBtn">🔊 Nghe câu mẫu</button></div>' +
         (st.url ? '<audio controls class="spkReplay" src="' + esc(st.url) + '"></audio>' : '') +
@@ -476,6 +577,7 @@
 
     var finish = document.getElementById("finish");
     if (finish && st.finishHandler) finish.onclick = st.finishHandler;
+    hydrateFallbackPronunciation();
 
     if (useAI) runAIEnhancement(q, transcript, s);
   }
@@ -507,6 +609,7 @@
     if(d.corrected)setText("spkCorrected",d.corrected);
     if(d.feedback_vi)setText("spkFeedbackText",d.feedback_vi);
     if(d.high_band)setText("spkHighText",d.high_band);
+    if(Array.isArray(d.pronunciation_feedback))renderAIPronunciation(d.pronunciation_feedback);
 
     var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,8):[];
     if(corrections.length){
@@ -557,6 +660,7 @@
         var textPrompt=prompt+" You do not have audio. Keep pronunciation_band at "+local.pronunciationBand.toFixed(1)+" and grade the other criteria from the transcript.";
         var traw=await ts.prompt(textPrompt),td=extractAIJSON(traw);
         td.pronunciation_band=local.pronunciationBand;
+        td.pronunciation_feedback=[];
         applyAIResult(td,transcript,local,"AI đã chấm transcript thật; phát âm vẫn là ước lượng từ nhận dạng giọng nói.");
         if(ts.destroy)ts.destroy();
         return;
