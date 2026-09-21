@@ -220,14 +220,23 @@
 
   async function startRecorder() {
     try {
-      st.stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      st.stream = await navigator.mediaDevices.getUserMedia({
+        audio:{
+          channelCount:1,
+          sampleRate:{ideal:48000},
+          sampleSize:{ideal:16},
+          echoCancellation:true,
+          noiseSuppression:true,
+          autoGainControl:true
+        }
+      });
       st.chunks = [];
       st.transcript = "";
       st.confidence = 0;
       st.startedAt = Date.now();
       st.recording = true;
 
-      var options = {};
+      var options = {audioBitsPerSecond:192000};
       if (window.MediaRecorder && MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
         options.mimeType = "audio/webm;codecs=opus";
       }
@@ -745,6 +754,22 @@
     return JSON.parse(text);
   }
 
+  function looksVietnamese(text){
+    text=String(text||"").trim();
+    if(!text)return false;
+    if(/[ăâđêôơưĂÂĐÊÔƠƯ]|[àáạảãèéẹẻẽìíịỉĩòóọỏõùúụủũỳýỵỷỹ]/i.test(text))return true;
+    var low=" "+text.toLowerCase()+" ";
+    var common=[" tôi "," bạn "," của "," và "," nhưng "," không "," một "," những "," thường "," chơi "," xem "," sau "," giờ "," học "," với "," vì "," là "," được "," giúp "];
+    var hits=0;common.forEach(function(w){if(low.indexOf(w)>=0)hits++;});
+    return hits>=2;
+  }
+
+  function ensureEnglishImprovement(candidate,transcript,corrections){
+    var t=String(candidate||"").trim();
+    if(!t||looksVietnamese(t))return sameIdeaHighBandFallback(transcript,corrections||[]);
+    return t;
+  }
+
   function applyAIResult(d,transcript,local,label){
     function setText(id,val){var e=document.getElementById(id);if(e&&val!==undefined&&val!==null)e.textContent=val;}
     var gb=Number(d.grammar_band),vb=Number(d.vocab_band),cb=Number(d.coherence_band),pb=Number(d.pronunciation_band),ob=Number(d.overall_band);
@@ -759,10 +784,11 @@
     setText("spkOverallBand",ob.toFixed(1));
     setText("spkBandBadge",ob.toFixed(1)+"/9.0");
     if(d.feedback_vi)setText("spkFeedbackText",d.feedback_vi);
-    if(d.high_band&&String(d.high_band).trim())setText("spkHighText",d.high_band);
 
     var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,10):[];
-    var corrected=d.corrected||applyCorrectionsText(transcript,corrections);
+    var corrected=ensureEnglishImprovement(d.corrected||applyCorrectionsText(transcript,corrections),transcript,corrections);
+    var highBand=ensureEnglishImprovement(d.high_band,transcript,corrections);
+    setText("spkHighText",highBand);
     var tr=document.getElementById("spkTranscriptMarked");
     if(tr)tr.innerHTML=inlineCorrectionHTML(transcript,corrections);
     setText("spkCorrected",corrected);
@@ -790,7 +816,7 @@
     var prompt=
       "You are an IELTS Speaking practice examiner. Grade ONLY the learner answer below against the exact question. Use Fluency and Coherence, Lexical Resource, Grammatical Range and Accuracy, and Pronunciation. Be strict about relevance. Do not reward answer length by itself. Question: "+q.q+
       ". Browser transcript: "+transcript+
-      '. IMPORTANT FOR high_band: preserve the learner\'s exact ideas and factual content. Do NOT add any new action, activity, reason, example, place, person, preference, frequency, event, opinion, or detail that is not explicitly present in the transcript. You may ONLY correct grammar, improve naturalness, reorganise the same ideas, use more precise vocabulary with the same meaning, and add cohesive devices that do not add new factual content. Return VALID JSON ONLY: {"overall_band":6.0,"grammar_band":6.0,"vocab_band":6.0,"coherence_band":6.0,"pronunciation_band":6.0,"corrected":"minimal corrected version preserving learner meaning","feedback_vi":"specific Vietnamese feedback referring to what the learner actually said","high_band":"a higher-band version using ONLY the learner\'s existing ideas and facts","corrections":[{"wrong":"exact learner wording","better":"correction","reason":"short Vietnamese reason"}]}. Use 0.5 band steps.';
+      '. LANGUAGE RULES: corrected MUST be English only. high_band MUST be English only. feedback_vi and correction reason fields may be Vietnamese. NEVER translate corrected or high_band into Vietnamese. IMPORTANT FOR high_band: preserve the learner\'s exact ideas and factual content. Do NOT add any new action, activity, reason, example, place, person, preference, frequency, event, opinion, or detail that is not explicitly present in the learner audio/transcript. You may ONLY correct grammar, improve naturalness, reorganise the same ideas, use more precise English vocabulary with the same meaning, and add cohesive devices that do not add new factual content. Return VALID JSON ONLY: {"overall_band":6.0,"grammar_band":6.0,"vocab_band":6.0,"coherence_band":6.0,"pronunciation_band":6.0,"corrected":"English-only corrected version preserving learner meaning","feedback_vi":"specific Vietnamese feedback referring to what the learner actually said","high_band":"English-only higher-band version using ONLY the learner\'s existing ideas and facts","corrections":[{"wrong":"exact learner wording","better":"English correction","reason":"short Vietnamese reason"}],"pronunciation_feedback":[{"word":"exact English word from learner audio","ipa":"/IPA/","heard_as":"what it sounded like if relevant","issue_vi":"specific sound/stress issue in Vietnamese","tip_vi":"specific pronunciation correction in Vietnamese"}]}. pronunciation_feedback must contain ONLY issues actually supported by the audio. Use 0.5 band steps.';
 
     try{
       if(st.blob){
