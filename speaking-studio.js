@@ -731,6 +731,97 @@
     return html;
   }
 
+  function speakingAnnotatedTranscriptHTML(text,corrections,fillers,pron){
+    text=String(text||"");
+    var ranges=[],used=[];
+    function addRange(phrase,kind,priority,title){
+      phrase=String(phrase||"").trim();
+      if(!phrase)return;
+      var low=text.toLowerCase(),needle=phrase.toLowerCase(),start=0,idx=-1;
+      while((idx=low.indexOf(needle,start))>=0){
+        var overlap=used.some(function(r){return idx<r.end&&idx+phrase.length>r.start;});
+        if(!overlap)break;
+        start=idx+Math.max(1,phrase.length);
+      }
+      if(idx<0)return;
+      var r={start:idx,end:idx+phrase.length,kind:kind,priority:priority||1,title:title||""};
+      used.push(r);ranges.push(r);
+    }
+    (corrections||[]).forEach(function(x){
+      addRange(x.wrong,"error",4,x.reason||"Cần sửa");
+    });
+    (pron||[]).forEach(function(x){
+      addRange(x.word,"pron",3,x.issue_vi||"Phát âm cần chú ý");
+    });
+    (fillers||[]).forEach(function(x){
+      addRange(typeof x==="string"?x:x.text,"filler",2,(x&&x.reason_vi)||"Filler");
+    });
+    ranges.sort(function(a,b){return a.start-b.start||b.priority-a.priority;});
+    var html="",pos=0;
+    ranges.forEach(function(r){
+      if(r.start<pos)return;
+      html+=esc(text.slice(pos,r.start));
+      html+='<span class="spkMark spkMark-'+r.kind+'" title="'+esc(r.title)+'">'+esc(text.slice(r.start,r.end))+'</span>';
+      pos=r.end;
+    });
+    html+=esc(text.slice(pos));
+    return html;
+  }
+
+  function speakingHighBandHTML(text,highlights){
+    text=String(text||"");
+    var used=[],ranges=[];
+    (Array.isArray(highlights)?highlights:[]).forEach(function(x){
+      var phrase=String(x&&x.phrase||"").trim();
+      if(!phrase)return;
+      var low=text.toLowerCase(),needle=phrase.toLowerCase(),start=0,idx=-1;
+      while((idx=low.indexOf(needle,start))>=0){
+        var overlap=used.some(function(r){return idx<r.end&&idx+phrase.length>r.start;});
+        if(!overlap)break;
+        start=idx+Math.max(1,phrase.length);
+      }
+      if(idx>=0){
+        var cat=String(x.category||"vocabulary").toLowerCase();
+        if(!/^(vocabulary|grammar|development|linking)$/.test(cat))cat="vocabulary";
+        var r={start:idx,end:idx+phrase.length,cat:cat};
+        used.push(r);ranges.push(r);
+      }
+    });
+    ranges.sort(function(a,b){return a.start-b.start;});
+    if(!ranges.length)return esc(text);
+    var html="",pos=0;
+    ranges.forEach(function(r){
+      html+=esc(text.slice(pos,r.start));
+      html+='<span class="spkHighMark spkHigh-'+r.cat+'">'+esc(text.slice(r.start,r.end))+'</span>';
+      pos=r.end;
+    });
+    html+=esc(text.slice(pos));
+    return html;
+  }
+
+  function speakResultText(id){
+    var el=document.getElementById(id);if(!el)return;
+    var txt=String(el.textContent||"").trim();if(!txt)return;
+    var u=new SpeechSynthesisUtterance(txt);
+    u.lang="en-GB";u.rate=.88;
+    try{speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+  }
+
+  function correctionDetailHTML(corrections){
+    var list=Array.isArray(corrections)?corrections:[];
+    if(!list.length)return "";
+    return '<details class="spkCorrectionDetails"><summary>Xem '+list.length+' lỗi AI đã xác định</summary><div>'+
+      list.slice(0,10).map(function(x){
+        var type=String(x.type||"other").replace("_"," ");
+        return '<div class="spkCorrectionDetail">'+
+          '<span class="spkCorrectionType">'+esc(type)+'</span>'+
+          '<div><del>'+esc(x.wrong||"")+'</del> <b>→</b> <ins>'+esc(x.better||"")+'</ins></div>'+
+          (x.reason?'<small>'+esc(x.reason)+'</small>':'')+
+        '</div>';
+      }).join("")+
+    '</div></details>';
+  }
+
   function pronunciationSummaryHTML(list){
     var arr=Array.isArray(list)&&list.length?list:st.uncertainWords;
     if(!arr||!arr.length)return '<span class="spkPronNone">Chưa xác định lỗi phát âm cụ thể.</span>';
@@ -749,19 +840,25 @@
     var localCorrected=applyCorrectionsText(transcript,localFix);
 
     body.innerHTML=
-      '<div class="spkApp spkOpenQuizResult">'+
-        '<div class="spkResultTop"><button id="spkBack" class="spkGhost">← Câu hỏi</button><span class="spkPart">IELTS Part '+q.part+'</span><button id="spkNextTop" class="spkGhost">Câu tiếp →</button></div>'+
+      '<div class="spkApp spkCoachResult">'+
+        '<div class="spkResultTop"><button id="spkBack" class="spkGhost">← Câu hỏi</button><span class="spkPart">IELTS Part '+q.part+' · AI Speaking Coach</span><button id="spkNextTop" class="spkGhost">Câu tiếp →</button></div>'+
 
-        '<div class="spkInlineReview">'+
-          '<div class="spkInlineHead"><span>Câu trả lời của bạn</span><b>Hoàn thành</b></div>'+
-          '<div class="spkAnswerMarked" id="spkTranscriptMarked">'+inlineCorrectionHTML(transcript,localFix)+'</div>'+
-          '<div class="spkPronInline"><span class="spkPronIcon">Aa Aa Aa</span><b> Phát âm cần chú ý:</b> <span id="spkPronInlineList">'+pronunciationSummaryHTML([])+'</span></div>'+
+        '<section class="spkAnswerAnalysis">'+
+          '<div class="spkAnswerAnalysisHead"><div><span>✓ Đã sử dụng câu trả lời thật của bạn</span><b>Câu trả lời của bạn</b></div><span class="spkDonePill">Hoàn thành</span></div>'+
+          '<div class="spkAnswerMarked spkTranscriptRich" id="spkTranscriptMarked">'+speakingAnnotatedTranscriptHTML(transcript,localFix,[],[])+'</div>'+
+          '<div class="spkTranscriptLegend"><span class="err">Sai / chưa tự nhiên</span><span class="filler">Filler</span><span class="pron">Phát âm cần chú ý</span></div>'+
+          '<div class="spkPronInline"><span class="spkPronIcon">Aa Aa Aa</span><b> Phát âm chưa chuẩn:</b> <span id="spkPronInlineList">'+pronunciationSummaryHTML([])+'</span></div>'+
           '<div id="spkDeliveryFeedback" class="spkDeliveryFeedback hidden"></div>'+
-          '<div class="spkRewriteLine"><b>Sửa lỗi:</b> <span id="spkCorrected">'+esc(localCorrected)+'</span></div>'+
-          '<div id="spkCorrections" class="spkHiddenCorrections"></div>'+
-        '</div>'+
+          '<div class="spkRewriteLine"><b>Sửa lỗi:</b> <span id="spkCorrected">'+esc(localCorrected)+'</span>'+
+            '<div class="spkMiniAudioActions">'+
+              (st.url?'<button id="spkPlayMine" class="spkIconBtn" title="Nghe lại bài của bạn">🔊 Bài của tôi</button>':'')+
+              '<button id="spkReadCorrected" class="spkIconBtn" title="Nghe bản sửa">🔊 Bản sửa</button>'+
+            '</div>'+
+          '</div>'+
+          '<div id="spkCorrections">'+correctionDetailHTML(localFix)+'</div>'+
+        '</section>'+
 
-        '<div class="spkScoreRow spkBandRow spkCompactBands">'+
+        '<div class="spkScoreRow spkBandRow spkScreenshotBands">'+
           '<span class="spkOverallChip"><b id="spkOverallBand">'+s.band.toFixed(1)+'</b></span>'+
           '<span class="spkMetricChip"><b>Ngữ pháp</b> <strong id="spkGrammarBand">'+s.grammarBand.toFixed(1)+'</strong></span>'+
           '<span class="spkMetricChip"><b>Từ vựng</b> <strong id="spkVocabBand">'+s.vocabBand.toFixed(1)+'</strong></span>'+
@@ -769,13 +866,25 @@
           '<span class="spkMetricChip"><b>Phát âm</b> <strong id="spkPronBand">'+s.pronunciationBand.toFixed(1)+'</strong></span>'+
         '</div>'+
 
-        '<div class="spkCoachBox spkOpenQuizTip"><div><span>Gợi ý</span><b id="spkBandBadge">'+s.band.toFixed(1)+'/9.0</b></div>'+
-          '<p id="spkFeedbackText">Website đã chấm transcript của chính bạn: '+s.words+' từ, khoảng '+s.wpm+' từ/phút. Hãy trả lời trực tiếp, sửa những chỗ màu đỏ và luyện lại các từ được đánh dấu phát âm.</p>'+
-          '<div id="spkAIState" class="spkAIState">'+(useAI?'Đang thử AI để chấm sâu hơn từ audio/transcript thật…':'Điểm trên là ước lượng luyện tập từ transcript thật.')+'</div>'+
-        '</div>'+
+        '<section class="spkCoachBox spkStructuredCoach">'+
+          '<div class="spkCoachHead"><div><span>Gợi ý</span><em>🤖 AI Coach</em></div><b id="spkBandBadge">'+s.band.toFixed(1)+'/9.0</b></div>'+
+          '<p id="spkFeedbackText" class="spkCoachSummary">Đang phân tích bài nói thật của bạn theo 4 tiêu chí IELTS Speaking…</p>'+
+          '<div class="spkCoachRows">'+
+            '<p><b>Grammar:</b> <span id="spkCoachGrammar">Đang phân tích cấu trúc câu và lỗi ngữ pháp quan trọng nhất.</span></p>'+
+            '<p><b>Vocab:</b> <span id="spkCoachVocab">Đang tìm collocation/từ vựng có thể nâng cấp.</span></p>'+
+            '<p><b>Phát triển ý:</b> <span id="spkCoachDevelop">Đang kiểm tra câu trả lời đã đủ lý do, ví dụ và kết quả chưa.</span></p>'+
+            '<p id="spkCoachPronRow" class="hidden"><b>Pronunciation:</b> <span id="spkCoachPron"></span></p>'+
+          '</div>'+
+          '<div id="spkStrengths" class="spkStrengths hidden"></div>'+
+          '<div id="spkAIState" class="spkAIState">'+(useAI?'OpenAI đang nghe trực tiếp audio để chấm và chữa…':'Điểm trên là ước lượng luyện tập từ transcript thật.')+'</div>'+
+        '</section>'+
 
-        '<div class="spkHighBand spkOpenQuizHigh"><b>Câu trả lời band cao hơn · giữ nguyên ý của bạn</b><p id="spkHighText">'+esc(sameIdeaHighBandFallback(transcript,localFix))+'</p><small class="spkSameIdeaNote">Chỉ nâng cách diễn đạt; không thêm hành động, lý do hay ví dụ mới.</small><button id="spkReadHigh" class="spkLinkBtn">🔊 Nghe câu mẫu</button></div>'+
-        (st.url?'<audio controls class="spkReplay spkOpenQuizAudio" src="'+esc(st.url)+'"></audio>':'')+
+        '<section class="spkHighBand spkBandUpgradeCard">'+
+          '<div class="spkHighHead"><div><span>Câu trả lời band cao hơn</span><small>Giữ nguyên core ideas của bạn</small></div><button id="spkReadHigh" class="spkIconBtn">🔊 Nghe mẫu</button></div>'+
+          '<p id="spkHighText">'+speakingHighBandHTML(sameIdeaHighBandFallback(transcript,localFix),[])+'</p>'+
+          '<div class="spkHighLegend"><span class="vocab">Vocabulary</span><span class="grammar">Grammar</span><span class="develop">Development</span><span class="link">Linking</span></div>'+
+        '</section>'+
+        (st.url?'<audio id="spkUserAudio" class="spkReplay spkHiddenAudio" src="'+esc(st.url)+'"></audio>':'')+
         '<div class="spkResultActions"><button id="spkRetry" class="btn">↻ Trả lời lại</button><button id="spkNext" class="btn primary">Câu tiếp theo →</button></div>'+
         '<div class="lessonActions"><button id="finish" class="btn green">Đã hoàn thành block</button></div>'+
       '</div>';
@@ -784,10 +893,12 @@
     document.getElementById("spkRetry").onclick=renderQuestion;
     document.getElementById("spkNextTop").onclick=nextQ;
     document.getElementById("spkNext").onclick=nextQ;
-    document.getElementById("spkReadHigh").onclick=function(){
-      var u=new SpeechSynthesisUtterance(document.getElementById("spkHighText").textContent);
-      u.lang="en-GB";u.rate=.88;
-      try{speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+    document.getElementById("spkReadHigh").onclick=function(){speakResultText("spkHighText");};
+    document.getElementById("spkReadCorrected").onclick=function(){speakResultText("spkCorrected");};
+    var playMine=document.getElementById("spkPlayMine");
+    if(playMine)playMine.onclick=function(){
+      var a=document.getElementById("spkUserAudio");if(!a)return;
+      try{a.currentTime=0;a.play();}catch(e){}
     };
     document.querySelectorAll(".spkPronFlag").forEach(function(el){
       el.onclick=function(){speakPronWord(this.getAttribute("data-word"));};
@@ -840,21 +951,45 @@
     setText("spkOverallBand",ob.toFixed(1));
     setText("spkBandBadge",ob.toFixed(1)+"/9.0");
     if(d.feedback_vi)setText("spkFeedbackText",d.feedback_vi);
+
     if(!st.progressRecorded&&typeof window.recordTaskPerformance==="function"){
       var correctionCount=Array.isArray(d.corrections)?d.corrections.length:0;
       window.recordTaskPerformance({kind:"speaking",band:ob,errors:correctionCount,note:"Speaking practice band "+ob.toFixed(1)});
       st.progressRecorded=true;
     }
 
-    var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,10):[];
+    var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,12):[];
+    var fillers=Array.isArray(d.fillers)?d.fillers.slice(0,10):[];
+    var pron=Array.isArray(d.pronunciation_feedback)?d.pronunciation_feedback.slice(0,8):[];
     var corrected=ensureEnglishImprovement(d.corrected||applyCorrectionsText(transcript,corrections),transcript,corrections);
     var highBand=ensureEnglishImprovement(d.high_band,transcript,corrections);
-    setText("spkHighText",highBand);
+
     var tr=document.getElementById("spkTranscriptMarked");
-    if(tr)tr.innerHTML=inlineCorrectionHTML(transcript,corrections);
+    if(tr)tr.innerHTML=speakingAnnotatedTranscriptHTML(transcript,corrections,fillers,pron);
     setText("spkCorrected",corrected);
 
-    var pron=Array.isArray(d.pronunciation_feedback)?d.pronunciation_feedback:[];
+    var correctionHolder=document.getElementById("spkCorrections");
+    if(correctionHolder)correctionHolder.innerHTML=correctionDetailHTML(corrections);
+
+    var high=document.getElementById("spkHighText");
+    if(high)high.innerHTML=speakingHighBandHTML(highBand,Array.isArray(d.high_band_highlights)?d.high_band_highlights:[]);
+
+    var coach=d.coach_feedback||{};
+    if(coach.grammar_vi)setText("spkCoachGrammar",coach.grammar_vi);
+    if(coach.vocab_vi)setText("spkCoachVocab",coach.vocab_vi);
+    if(coach.development_vi)setText("spkCoachDevelop",coach.development_vi);
+    if(coach.pronunciation_vi){
+      setText("spkCoachPron",coach.pronunciation_vi);
+      var pr=document.getElementById("spkCoachPronRow");if(pr)pr.classList.remove("hidden");
+    }
+
+    var strengths=Array.isArray(d.strengths_vi)?d.strengths_vi.filter(Boolean).slice(0,3):[];
+    var strengthsEl=document.getElementById("spkStrengths");
+    if(strengthsEl&&strengths.length){
+      strengthsEl.innerHTML='<b>✓ Điểm tốt:</b> '+strengths.map(function(x){return '<span>'+esc(x)+'</span>';}).join("");
+      strengthsEl.classList.remove("hidden");
+    }
+
     var pronHolder=document.getElementById("spkPronInlineList");
     if(pronHolder){
       pronHolder.innerHTML=pronunciationSummaryHTML(pron);
