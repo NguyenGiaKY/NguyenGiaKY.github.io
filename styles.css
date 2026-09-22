@@ -2132,3 +2132,146 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
     justify-content:flex-start;
   }
 }
+
+/* Speaking recorder redesign v3 */
+.spkRecorderPro{
+  margin-top:16px;
+  border:1px solid #dfe5ee;
+  border-radius:20px;
+  background:#f8fafc;
+  padding:14px;
+  box-shadow:0 10px 28px rgba(25,40,72,.06);
+}
+.spkRecorderProTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:2px 4px 10px;
+}
+.spkRecorderLive{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:850;
+  color:#334155;
+}
+.spkRecorderLive i{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#ef4444;
+  box-shadow:0 0 0 0 rgba(239,68,68,.36);
+  animation:spkRecorderPulse 1.4s infinite;
+}
+@keyframes spkRecorderPulse{
+  0%{box-shadow:0 0 0 0 rgba(239,68,68,.32)}
+  70%{box-shadow:0 0 0 7px rgba(239,68,68,0)}
+  100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+}
+.spkRecorderElapsed{
+  font-variant-numeric:tabular-nums;
+  font-size:13px;
+  color:#475569;
+}
+.spkWavePro{
+  height:104px;
+  border:1px solid #e1e6ef;
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(59,130,246,.05),transparent 58%),
+    #eef2f7;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+}
+.spkWavePro canvas{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.spkRecorderMeta{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  margin-top:8px;
+  color:#64748b;
+  font-size:11px;
+}
+.spkRecorderMeta span:last-child{
+  text-align:right;
+}
+.spkRecorderUtility{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:10px;
+}
+.spkRecorderUtility button{
+  border:0;
+  background:transparent;
+  color:#64748b;
+  border-radius:8px;
+  padding:6px 8px;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.spkRecorderUtility button:hover{
+  background:#eef2f7;
+  color:#3157d5;
+}
+.spkRecorderPrimary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:8px;
+}
+.spkRecorderPrimary button{
+  min-height:54px;
+  border-radius:14px;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.spkRecorderCancel{
+  border:1px solid #d7dee8;
+  background:#fff;
+  color:#1f2937;
+}
+.spkRecorderCancel:hover{
+  background:#f3f5f8;
+}
+.spkRecorderSend{
+  border:1px solid #111827;
+  background:#111;
+  color:#fff;
+  box-shadow:0 8px 18px rgba(17,24,39,.14);
+}
+.spkRecorderSend:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(17,24,39,.18);
+}
+.spkRecorderSend:disabled{
+  opacity:.62;
+  cursor:wait;
+  transform:none;
+}
+.spkMicError{
+  padding:24px 18px;
+  text-align:center;
+  color:#b42318;
+  background:#fff5f3;
+  border:1px solid #ffd1c8;
+  border-radius:14px;
+  font-weight:750;
+}
+@media(max-width:720px){
+  .spkWavePro{height:88px}
+  .spkRecorderMeta{align-items:flex-start;flex-direction:column}
+  .spkRecorderMeta span:last-child{text-align:left}
+  .spkRecorderPrimary{grid-template-columns:1fr}
+}
