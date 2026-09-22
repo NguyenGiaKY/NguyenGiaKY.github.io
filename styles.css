@@ -2353,3 +2353,117 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
     grid-template-columns:1fr;
   }
 }
+
+/* Production optimization pass */
+html{
+  scrollbar-gutter:stable;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+body{
+  overflow-x:hidden;
+}
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+button,
+[role="button"],
+.btn,
+.nav{
+  touch-action:manipulation;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible{
+  outline:3px solid rgba(49,87,213,.28);
+  outline-offset:2px;
+}
+img,
+svg,
+canvas{
+  max-width:100%;
+}
+.hero h1,
+.lessonTop,
+.spkQuestionLine h2,
+.mockHero h2{
+  text-wrap:balance;
+}
+.lesson{
+  max-width:100vw;
+}
+.lessonBody{
+  overscroll-behavior:contain;
+}
+.dictionary{
+  max-width:min(520px,calc(100vw - 20px));
+  max-height:calc(100vh - 20px);
+}
+.dictionary .dictBody{
+  overscroll-behavior:contain;
+}
+.overlay.open{
+  overscroll-behavior:contain;
+}
+.card,
+.panel,
+.spkRecordingCard,
+.spkBuilder,
+.readingStudio,
+.readingReview,
+.writingStudio,
+.writingResult{
+  min-width:0;
+}
+@media(max-width:900px){
+  .hero{
+    gap:14px;
+  }
+  .layout{
+    min-width:0;
+  }
+  .dictionary{
+    left:auto!important;
+    right:10px!important;
+    width:min(520px,calc(100vw - 20px))!important;
+  }
+}
+@media(max-width:640px){
+  .heroBrand{
+    min-width:0;
+  }
+  .heroBrand>div{
+    min-width:0;
+  }
+  .hero h1{
+    overflow-wrap:anywhere;
+  }
+  .dictionary{
+    top:10px!important;
+    right:8px!important;
+    bottom:auto!important;
+    width:calc(100vw - 16px)!important;
+    max-width:none!important;
+    max-height:calc(100vh - 20px)!important;
+  }
+  .dictButton{
+    right:10px;
+    bottom:10px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  *,
+  *::before,
+  *::after{
+    scroll-behavior:auto!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+}
