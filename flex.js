@@ -990,7 +990,7 @@ function overrideSearch(){
 }
 
 function cleanOldLabels(){
- document.title='IELTS Flexible Skill Builder';
+ document.title='NguyenGiaKy';
  const badge=document.querySelector('.hero .badge');if(badge)badge.textContent='IELTS Academic • Flexible Skill System';
 }
 window.renderToday=renderFlexHome;
