@@ -281,6 +281,9 @@
     var body=document.getElementById("lessonBody");if(!body)return;
     var raw=combinedEssay();
     var corr=result.corrections||[];
+    if(typeof window.recordTaskPerformance==="function"){
+      window.recordTaskPerformance({kind:"writing",band:Number(result.overall),errors:corr.length,note:"Writing practice band "+Number(result.overall).toFixed(1)});
+    }
     var corrHTML=corr.length?'<div class="wsCorrectionCards">'+corr.map(function(x,i){
       return '<div class="wsCorrectionItem">'+
         '<div class="wsCorrectionTop"><span>'+(i+1)+'</span><b>'+esc(x.type||"Language")+'</b></div>'+
