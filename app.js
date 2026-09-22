@@ -1126,7 +1126,7 @@ function renderContextDictionaryAI(d,base,sentence,slotId){
 
  const fallback=document.getElementById('dictFallback-'+slotId);
  if(fallback)fallback.remove();
- const saveBtn=document.getElementById('dictSaveWord');
+ const saveBtn=box.parentElement&&box.parentElement.querySelector('.dictActions .save');
  if(saveBtn&&d.meaning_vi)saveBtn.dataset.meaning=d.meaning_vi;
 }
 
@@ -1275,7 +1275,7 @@ async function renderDictionary(surface,targetId,sentence){
 
  bindDictionaryAudio(target);
  hydrateRecordedPronunciation(base);
- const saveBtn=document.getElementById('dictSaveWord');
+ const saveBtn=target.querySelector('.dictActions .save');
  if(saveBtn)saveBtn.onclick=function(){
    const m=this.dataset.meaning||simpleMeaning||meaning||'';
    st.saved[base]={w:base,m:m};save();renderSaved();this.textContent='✓ Đã lưu';
