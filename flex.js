@@ -456,6 +456,36 @@ function speakListeningWord(word){
  }catch(e){}
 }
 
+function bindListeningWarmupHotkeys(){
+ if(window.__lvHotkeysBound)return;
+ window.__lvHotkeysBound=true;
+ document.addEventListener('keydown',e=>{
+   const overlay=document.getElementById('lessonOverlay');
+   const wrap=document.querySelector('.listenVocabWarmup:not(.collapsed)');
+   if(!overlay||!overlay.classList.contains('open')||!wrap)return;
+
+   if(e.key==='Tab'){
+     e.preventDefault();
+     e.stopPropagation();
+     if(typeof e.stopImmediatePropagation==='function')e.stopImmediatePropagation();
+     if(typeof wrap._lvReplay==='function')wrap._lvReplay();
+     const input=wrap.querySelector('#lvInput');
+     if(input)requestAnimationFrame(()=>input.focus({preventScroll:true}));
+     return;
+   }
+
+   if(e.key==='Enter'){
+     const ae=document.activeElement;
+     if(ae&&ae.tagName==='TEXTAREA')return;
+     e.preventDefault();
+     e.stopPropagation();
+     if(typeof e.stopImmediatePropagation==='function')e.stopImmediatePropagation();
+     if(typeof wrap._lvAction==='function')wrap._lvAction();
+   }
+ },true);
+}
+bindListeningWarmupHotkeys();
+
 function injectListeningWarmup(t){
  const pack=listeningVocabByTask[t.id];
  if(!pack)return;
@@ -481,12 +511,15 @@ function injectListeningWarmup(t){
       '<input id="lvInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ từ bạn nghe · Tab = nghe lại · Enter = check">'+
       '<button id="lvCheck" class="btn primary" title="Phím Enter để check">Check · Enter</button>'+
     '</div>'+
+    '<div class="lvHotkeyHint"><kbd>Tab</kbd> nghe lại <span>•</span> <kbd>Enter</kbd> check / tiếp</div>'+
     '<div id="lvFeedback" class="lvFeedback"><span>Tip:</span> nghe 1–2 lần trước khi gõ. Không đoán theo nghĩa.</div>'+
     '<div class="lvProgress"><i style="width:'+Math.round(done/pack.words.length*100)+'%"></i></div>'+
     '<button id="lvSkip" class="lvSkip">Bỏ qua warm-up và vào task chính ↓</button>';
 
    const listen=document.getElementById('lvListen'),input=document.getElementById('lvInput'),check=document.getElementById('lvCheck');
-   listen.onclick=()=>speakListeningWord(item[0]);
+   wrap._lvReplay=()=>speakListeningWord(item[0]);
+   wrap._lvAction=()=>check.click();
+   listen.onclick=wrap._lvReplay;
    check.onclick=()=>{
       const got=input.value.trim().toLowerCase(),target=item[0].toLowerCase();
       if(!got)return;
@@ -496,9 +529,9 @@ function injectListeningWarmup(t){
         fs.listenVocab.mastered[item[0]]=(fs.listenVocab.mastered[item[0]]||0)+1;
         saveFlex();
         document.getElementById('lvFeedback').innerHTML='<div class="lvCorrect">✓ <b>'+item[0]+'</b> — '+item[1]+'</div><small>'+item[2]+'</small>';
-        input.disabled=true;check.textContent='Tiếp → · Enter';
+        input.readOnly=true;check.textContent='Tiếp → · Enter';
         check.onclick=()=>next();
-        setTimeout(()=>check.focus({preventScroll:true}),0);
+        requestAnimationFrame(()=>input.focus({preventScroll:true}));
       }else{
         fs.listenVocab.missed[item[0]]=(fs.listenVocab.missed[item[0]]||0)+1;
         saveFlex();
@@ -507,30 +540,17 @@ function injectListeningWarmup(t){
           input.select();
         }else{
           document.getElementById('lvFeedback').innerHTML='<div class="lvWrong">✕ '+got+' → <b>'+item[0]+'</b></div><div class="lvReveal">'+item[1]+'</div><small>'+item[2]+'</small>';
-          input.disabled=true;check.textContent='Tiếp → · Enter';
+          input.readOnly=true;check.textContent='Tiếp → · Enter';
           check.onclick=()=>next();
-          setTimeout(()=>check.focus({preventScroll:true}),0);
+          requestAnimationFrame(()=>input.focus({preventScroll:true}));
         }
       }
    };
-   input.onkeydown=e=>{
-      if(e.key==='Tab'){
-        e.preventDefault();
-        speakListeningWord(item[0]);
-        return;
-      }
-      if(e.key==='Enter'){
-        e.preventDefault();
-        check.click();
-      }
+   document.getElementById('lvSkip').onclick=()=>{
+      wrap.classList.add('collapsed');
+      wrap._lvAction=null;
+      wrap._lvReplay=null;
    };
-   wrap.onkeydown=e=>{
-      if(e.key==='Tab' && e.target!==input){
-        e.preventDefault();
-        speakListeningWord(item[0]);
-      }
-   };
-   document.getElementById('lvSkip').onclick=()=>wrap.classList.add('collapsed');
    setTimeout(()=>{
      speakListeningWord(item[0]);
      input.focus({preventScroll:true});
@@ -545,7 +565,15 @@ function injectListeningWarmup(t){
      wrap.innerHTML=
        '<div class="lvFinish"><div><span>✓</span><div><h3>Warm-up hoàn thành</h3><p>Bạn đúng '+correct+'/'+pack.words.length+'. Các từ sai đã được ghi vào review để gặp lại sau.</p></div></div>'+
        '<button id="lvFinishClose" class="btn primary">Vào task Listening ↓</button></div>';
-     document.getElementById('lvFinishClose').onclick=()=>wrap.classList.add('collapsed');
+     const finishBtn=document.getElementById('lvFinishClose');
+     wrap._lvReplay=null;
+     wrap._lvAction=()=>finishBtn.click();
+     finishBtn.onclick=()=>{
+       wrap.classList.add('collapsed');
+       wrap._lvAction=null;
+       wrap._lvReplay=null;
+     };
+     requestAnimationFrame(()=>finishBtn.focus({preventScroll:true}));
      return;
    }
    render();
