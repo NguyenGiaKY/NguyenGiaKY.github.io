@@ -2,16 +2,34 @@
   "functions": {
     "api/speaking-grade.js": {
       "maxDuration": 60
+    },
+    "api/writing-grade.js": {
+      "maxDuration": 60
+    },
+    "api/dictionary-explain.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
     {
       "source": "/api/speaking-grade",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
+        {"key": "Cache-Control", "value": "no-store"},
+        {"key": "X-Content-Type-Options", "value": "nosniff"}
+      ]
+    },
+    {
+      "source": "/api/writing-grade",
+      "headers": [
+        {"key": "Cache-Control", "value": "no-store"},
+        {"key": "X-Content-Type-Options", "value": "nosniff"}
+      ]
+    },
+    {
+      "source": "/api/dictionary-explain",
+      "headers": [
+        {"key": "Cache-Control", "value": "no-store"},
+        {"key": "X-Content-Type-Options", "value": "nosniff"}
       ]
     }
   ]
