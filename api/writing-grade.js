@@ -10,6 +10,8 @@ function cors(req,res){
   res.setHeader("Vary","Origin");
   res.setHeader("Access-Control-Allow-Methods","GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers","Content-Type");
+  res.setHeader("Cache-Control","no-store");
+  res.setHeader("X-Content-Type-Options","nosniff");
 }
 
 function extractJSON(text){
@@ -133,7 +135,7 @@ export default async function handler(req,res){
       body:JSON.stringify({
         model,
         input:prompt,
-        max_output_tokens:6500
+        max_output_tokens:4200
       })
     });
 
