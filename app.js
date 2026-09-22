@@ -561,6 +561,10 @@ function gradeListeningLesson(d,l){
  const script=document.getElementById('script');
  if(script)script.classList.remove('hidden');
  const btn=document.getElementById('checkListening');
+ if(btn&&!btn.dataset.progressRecorded&&typeof window.recordTaskPerformance==='function'){
+   window.recordTaskPerformance({kind:'listening',score:correctCount,total:total,errors:wrongCount+blankCount,note:wrongCount+' sai · '+blankCount+' bỏ trống'});
+   btn.dataset.progressRecorded='1';
+ }
  if(btn)btn.textContent='✓ Đã chấm — xem chữa từng câu';
 }
 
