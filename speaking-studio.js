@@ -145,6 +145,7 @@
   }
 
   function renderQuestion() {
+    st.progressRecorded=false;
     var body = document.getElementById("lessonBody");
     if (!body) return;
     var q = current();
@@ -839,6 +840,11 @@
     setText("spkOverallBand",ob.toFixed(1));
     setText("spkBandBadge",ob.toFixed(1)+"/9.0");
     if(d.feedback_vi)setText("spkFeedbackText",d.feedback_vi);
+    if(!st.progressRecorded&&typeof window.recordTaskPerformance==="function"){
+      var correctionCount=Array.isArray(d.corrections)?d.corrections.length:0;
+      window.recordTaskPerformance({kind:"speaking",band:ob,errors:correctionCount,note:"Speaking practice band "+ob.toFixed(1)});
+      st.progressRecorded=true;
+    }
 
     var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,10):[];
     var corrected=ensureEnglishImprovement(d.corrected||applyCorrectionsText(transcript,corrections),transcript,corrections);
