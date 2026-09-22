@@ -11,6 +11,8 @@ function cors(req, res) {
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
 }
 
 function extractJSON(text) {
@@ -33,7 +35,9 @@ export default async function handler(req, res) {
 
   const key = process.env.OPENAI_API_KEY;
   const primaryModel = process.env.OPENAI_AUDIO_MODEL || "gpt-audio-mini";
-  const fallbackModel = primaryModel === "gpt-audio" ? "gpt-audio-mini" : "gpt-audio";
+  // Keep the inexpensive model as the default. A fallback is opt-in via Vercel env
+  // so the site never silently upgrades to a more expensive audio model.
+  const fallbackModel = String(process.env.OPENAI_AUDIO_FALLBACK_MODEL || "").trim();
 
   if (req.method === "GET") {
     if (!key) return res.status(503).json({
@@ -281,7 +285,7 @@ export default async function handler(req, res) {
       const retryModel =
         attempt.resp.status === 404 ||
         /model|access|not found|does not exist/i.test(code + " " + msg);
-      if (retryModel && fallbackModel !== primaryModel) {
+      if (retryModel && fallbackModel && fallbackModel !== primaryModel) {
         const second = await callAudioModel(fallbackModel);
         if (second.resp.ok) attempt = second;
       }
