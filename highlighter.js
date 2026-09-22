@@ -309,6 +309,8 @@
   });
 
   document.addEventListener("keydown",e=>{
+    const ae=document.activeElement;
+    if(ae&&(/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)||ae.isContentEditable))return;
     if(!isStudySurface()||e.metaKey||e.ctrlKey||e.altKey)return;
     if(/^[1-7]$/.test(e.key)&&currentRange){
       const c=COLORS[Number(e.key)-1];
