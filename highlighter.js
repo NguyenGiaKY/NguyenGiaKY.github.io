@@ -192,6 +192,7 @@
     const overlay=document.getElementById("lessonOverlay");
     if(!body||!overlay?.classList.contains("open"))return;
     applying=true;
+    if(observer)observer.disconnect();
     try{
       unwrapHighlights();
       const list=records().slice().sort((a,b)=>{
@@ -208,6 +209,7 @@
       }
     }finally{
       applying=false;
+      if(observer&&body)observer.observe(body,{childList:true,subtree:true,characterData:true});
     }
   }
   function scheduleRestore(){
