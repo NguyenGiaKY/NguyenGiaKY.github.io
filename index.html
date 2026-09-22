@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#3157d5">
 <title>gkyyy’s IELTS Road to Success</title>
-<link rel="stylesheet" href="styles.css?v=20260922-5">
+<link rel="stylesheet" href="styles.css?v=20260922-6">
 </head>
 <body>
 <div id="app">
@@ -28,6 +28,7 @@
       <input id="search" class="search" placeholder="Tìm kỹ năng, module, bài học...">
       <nav>
         <button class="nav active" data-view="today">🧭 Study Queue</button>
+        <button class="nav" data-view="progress">📊 Progress Hub</button>
         <button class="nav" data-view="listening">🎧 Listening 8+</button>
         <button class="nav" data-view="reading">📖 Reading 8+</button>
         <button class="nav" data-view="writing">✍️ Writing 6.5+</button>
@@ -46,6 +47,7 @@
 
     <main>
       <section id="view-today" class="view active"><div id="todayCard" class="card panel"></div></section>
+      <section id="view-progress" class="view"><div id="progressHub" class="card panel"></div></section>
       <section id="view-listening" class="view"><div id="listeningModules" class="card panel"></div></section>
       <section id="view-reading" class="view"><div id="readingModules" class="card panel"></div></section>
       <section id="view-writing" class="view"><div id="writingModules" class="card panel"></div></section>
@@ -111,7 +113,7 @@
 </div>
 
 <script src="app.js?v=20260922-1"></script>
-<script src="flex.js?v=20260922-3"></script>
+<script src="flex.js?v=20260922-4"></script>
 <script src="enhance.js?v=20260921-4"></script>
 <script src="ai-config.js?v=20260922-1"></script>
 <script src="speaking-studio.js?v=20260921-13"></script>
