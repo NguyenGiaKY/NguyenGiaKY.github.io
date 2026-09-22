@@ -281,27 +281,52 @@
     var body=document.getElementById("lessonBody");if(!body)return;
     var raw=combinedEssay();
     var corr=result.corrections||[];
-    var corrHTML=corr.length?'<ul class="wsCorrectionList">'+corr.map(function(x){return '<li><del>'+esc(x.wrong||"")+'</del> → <b>'+esc(x.better||"")+'</b>'+(x.reason?'<small>'+esc(x.reason)+'</small>':'')+'</li>';}).join("")+'</ul>':'<p class="muted">Không phát hiện lỗi phổ biến rõ ràng bằng bộ kiểm tra cục bộ.</p>';
+    var corrHTML=corr.length?'<div class="wsCorrectionCards">'+corr.map(function(x,i){
+      return '<div class="wsCorrectionItem">'+
+        '<div class="wsCorrectionTop"><span>'+(i+1)+'</span><b>'+esc(x.type||"Language")+'</b></div>'+
+        '<div class="wsWrongBetter"><div><small>Bạn viết</small><del>'+esc(x.wrong||"")+'</del></div><div><small>Nên sửa</small><strong>'+esc(x.better||"")+'</strong></div></div>'+
+        (x.reason?'<p><b>Vì sao sai:</b> '+esc(x.reason)+'</p>':'')+
+        (x.rule?'<p class="wsFixRule"><b>Quy tắc / cách sửa:</b> '+esc(x.rule)+'</p>':'')+
+      '</div>';
+    }).join("")+'</div>':'<p class="muted">Không phát hiện lỗi ngôn ngữ rõ ràng trong phạm vi bộ chấm hiện tại.</p>';
+
+    var reqs=Array.isArray(result.task_requirements)?result.task_requirements:[];
+    var reqHTML=reqs.length?'<div class="wsRequirementList">'+reqs.map(function(x){
+      var s=String(x.status||"partial").toLowerCase();
+      var label=s==="met"?"✓ Đạt":s==="missing"?"✕ Thiếu":s==="incorrect"?"✕ Sai":"△ Chưa đủ";
+      return '<div class="wsRequirement '+esc(s)+'"><div><b>'+label+'</b><strong>'+esc(x.requirement||"Yêu cầu")+'</strong></div>'+
+        (x.evidence_vi?'<p>'+esc(x.evidence_vi)+'</p>':'')+
+        (x.fix_vi?'<small><b>Cách sửa:</b> '+esc(x.fix_vi)+'</small>':'')+'</div>';
+    }).join("")+'</div>':'<p class="muted">Bộ chấm cục bộ chưa phân tích chi tiết từng yêu cầu của đề.</p>';
+
+    var priorities=Array.isArray(result.priority_fixes)&&result.priority_fixes.length
+      ?result.priority_fixes
+      :["Kiểm tra lại yêu cầu đề trước khi viết.","Sửa các lỗi lặp ở phần Lỗi cần sửa.","Rewrite bài sau khi đọc feedback."];
+    var sourceText=result.source==="openai-text"
+      ?"✓ AI đã chấm dựa trên đề bài + bài viết của bạn"
+      :(result.ai_error?"⚠ AI chưa kết nối được — đang hiển thị chấm cục bộ":"Chấm luyện tập cục bộ");
 
     body.innerHTML=
       '<div class="writingResult">'+
         '<div class="wsResultTop"><button id="wsBackEdit" class="wsGhost">← Quay lại sửa bài</button><div class="wsOverallBand"><span>Estimated practice band</span><strong>'+Number(result.overall).toFixed(1)+'</strong><small>Không phải điểm IELTS chính thức</small></div><button id="wsRegrade" class="wsGhost">Chấm lại</button></div>'+
+        '<div class="wsAISource '+(result.source==="openai-text"?"active":"fallback")+'">'+esc(sourceText)+'</div>'+
         '<div class="wsBandGrid">'+
-          bandCard("Task Achievement",result.task,result.task_comment||"Main features, overview, data selection and comparisons.")+
+          bandCard("Task Achievement",result.task,result.task_comment||"Mức độ đáp ứng đúng yêu cầu đề, overview, main features và data.")+
           bandCard("Coherence & Cohesion",result.coherence,result.coherence_comment||"Paragraphing, progression and linking.")+
           bandCard("Lexical Resource",result.lexical,result.lexical_comment||"Range, precision and collocations.")+
           bandCard("Grammar",result.grammar,result.grammar_comment||"Range and accuracy of sentence structures.")+
         '</div>'+
         '<div class="wsResultGrid">'+
           '<section class="wsResultMain">'+
-            '<div class="wsResultCard"><h2>Bài của bạn</h2><div class="wsEssayText">'+esc(raw).replace(/\n/g,"<br>")+'</div></div>'+
-            '<div class="wsResultCard"><h2>Lỗi cần sửa</h2>'+corrHTML+'</div>'+
-            '<div class="wsResultCard good"><h2>Bản sửa</h2><div id="wsCorrectedEssay" class="wsEssayText">'+esc(result.corrected||correctedLocal(raw,corr)).replace(/\n/g,"<br>")+'</div></div>'+
-            '<div class="wsResultCard blue"><h2>Bản nâng cấp</h2><div id="wsImprovedEssay" class="wsEssayText">'+esc(result.improved||result.corrected||correctedLocal(raw,corr)).replace(/\n/g,"<br>")+'</div></div>'+
+            '<div class="wsResultCard"><h2>1. Yêu cầu đề bài</h2><p class="muted">AI đối chiếu trực tiếp bài của bạn với yêu cầu của task trước khi sửa grammar.</p>'+reqHTML+'</div>'+
+            '<div class="wsResultCard"><h2>2. Bài của bạn</h2><div class="wsEssayText">'+esc(raw).replace(/\n/g,"<br>")+'</div></div>'+
+            '<div class="wsResultCard"><h2>3. Lỗi cần sửa</h2><p class="muted">Mỗi lỗi gồm câu bạn viết → bản sửa → nguyên nhân → quy tắc để tránh lặp lại.</p>'+corrHTML+'</div>'+
+            '<div class="wsResultCard good"><h2>4. Bản sửa giữ nguyên ý của bạn</h2><div id="wsCorrectedEssay" class="wsEssayText">'+esc(result.corrected||correctedLocal(raw,corr)).replace(/\n/g,"<br>")+'</div></div>'+
+            '<div class="wsResultCard blue"><h2>5. Bản nâng cấp</h2><div id="wsImprovedEssay" class="wsEssayText">'+esc(result.improved||result.corrected||correctedLocal(raw,corr)).replace(/\n/g,"<br>")+'</div></div>'+
           '</section>'+
           '<aside class="wsResultAside">'+
-            '<div class="wsCoachCard"><h3>Nhận xét</h3><p id="wsDetailedFeedback">'+esc(result.feedback||"")+'</p></div>'+
-            '<div class="wsCoachCard"><h3>3 việc cần làm tiếp</h3><ol><li>Viết Overview trước khi đi vào số liệu.</li><li>Nhóm 2 sectors có pattern giống nhau.</li><li>Rewrite các câu bị sửa rồi mới viết bài mới.</li></ol></div>'+
+            '<div class="wsCoachCard"><h3>Nhận xét tổng thể</h3><p id="wsDetailedFeedback">'+esc(result.feedback||"")+'</p></div>'+
+            '<div class="wsCoachCard"><h3>Ưu tiên sửa tiếp</h3><ol>'+priorities.slice(0,5).map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ol></div>'+
             '<div class="wsCoachCard"><button id="wsCopyImproved" class="btn primary" style="width:100%">Copy bản nâng cấp</button></div>'+
           '</aside>'+
         '</div>'+
@@ -319,40 +344,65 @@
   }
 
   async function gradeWithAI(local){
-    if(!window.LanguageModel)return local;
+    var endpoint=window.WRITING_AI_ENDPOINT||"";
+    if(!endpoint){
+      local.ai_error="Chưa cấu hình Writing AI endpoint.";
+      return local;
+    }
     try{
-      var opts={expectedInputs:[{type:"text",languages:["en","vi"]}],expectedOutputs:[{type:"text",languages:["en","vi"]}]};
-      var av=await window.LanguageModel.availability(opts);
-      if(av==="unavailable")return local;
-      var session=await window.LanguageModel.create(opts);
-      var essay=combinedEssay();
-      var prompt=
-        "You are an IELTS Academic Writing Task 1 practice examiner. Grade this response using the four official-style criteria: Task Achievement, Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy. This is practice feedback, not an official IELTS score. Task: "+TASK.prompt+
-        " Data: Manufacturing 15,20,17,13; Retail 6,10,15,16; Agriculture 6,3,3,2; Healthcare 2,5,11,16 for 1960,1980,2000,2020 respectively. Learner response: "+essay+
-        '. Return VALID JSON ONLY with keys: overall, task, coherence, lexical, grammar (bands 0-9 in 0.5 steps), task_comment, coherence_comment, lexical_comment, grammar_comment, feedback (Vietnamese), corrected, improved, corrections. corrections must be an array of {"wrong":"exact learner wording","better":"natural correction","reason":"short Vietnamese explanation"}. corrected should preserve the learner ideas and fix errors. improved should be a stronger natural Band 7-ish version, not an overcomplicated Band 9 model.';
-      var raw=await session.prompt(prompt);
-      var t=String(raw||"").trim(),a=t.indexOf("{"),b=t.lastIndexOf("}");
-      if(a>=0&&b>a)t=t.slice(a,b+1);
-      var d=JSON.parse(t);
+      var dataContext=TASK.series.map(function(s){
+        return s.name+": "+TASK.years.map(function(y,i){return y+"="+s.values[i];}).join(", ");
+      }).join("; ");
+      var resp=await fetch(endpoint,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          taskType:"task1",
+          task:TASK.prompt,
+          dataContext:dataContext,
+          essay:combinedEssay()
+        })
+      });
+      var d=await resp.json().catch(function(){return {};});
+      if(!resp.ok)throw new Error(d.message||d.error||("HTTP "+resp.status));
+
       function band(x,f){x=Number(x);return isFinite(x)?clamp(Math.round(x*2)/2,0,9):f;}
+      var cf=d.criterion_feedback||{};
+      var errors=Array.isArray(d.errors)?d.errors:[];
       var out={
-        overall:band(d.overall,local.overall),
-        task:band(d.task,local.task),
-        coherence:band(d.coherence,local.coherence),
-        lexical:band(d.lexical,local.lexical),
-        grammar:band(d.grammar,local.grammar),
-        task_comment:d.task_comment||"",
-        coherence_comment:d.coherence_comment||"",
-        lexical_comment:d.lexical_comment||"",
-        grammar_comment:d.grammar_comment||"",
-        feedback:d.feedback||local.feedback,
-        corrected:d.corrected||correctedLocal(combinedEssay(),local.corrections),
-        improved:d.improved||"",
-        corrections:Array.isArray(d.corrections)?d.corrections:local.corrections
+        overall:band(d.overall_band,local.overall),
+        task:band(d.task_band,local.task),
+        coherence:band(d.coherence_band,local.coherence),
+        lexical:band(d.lexical_band,local.lexical),
+        grammar:band(d.grammar_band,local.grammar),
+        task_comment:(cf.task&&[cf.task.problem_vi,cf.task.fix_vi].filter(Boolean).join(" "))||"",
+        coherence_comment:(cf.coherence&&[cf.coherence.problem_vi,cf.coherence.fix_vi].filter(Boolean).join(" "))||"",
+        lexical_comment:(cf.lexical&&[cf.lexical.problem_vi,cf.lexical.fix_vi].filter(Boolean).join(" "))||"",
+        grammar_comment:(cf.grammar&&[cf.grammar.problem_vi,cf.grammar.fix_vi].filter(Boolean).join(" "))||"",
+        feedback:d.feedback_vi||local.feedback,
+        corrected:d.corrected_essay||correctedLocal(combinedEssay(),local.corrections),
+        improved:d.improved_essay||d.corrected_essay||"",
+        corrections:errors.length?errors.map(function(x){
+          return {
+            wrong:x.original||"",
+            better:x.correction||"",
+            reason:x.reason_vi||"",
+            rule:x.rule_vi||"",
+            type:x.type||"language"
+          };
+        }):local.corrections,
+        task_requirements:Array.isArray(d.task_requirements)?d.task_requirements:[],
+        priority_fixes:Array.isArray(d.priority_fixes)?d.priority_fixes:[],
+        criterion_feedback:cf,
+        source:d.source||"openai-text",
+        model:d.model||""
       };
-      if(session.destroy)session.destroy();
       return out;
-    }catch(e){return local;}
+    }catch(e){
+      local.ai_error=String(e&&e.message?e.message:e);
+      local.source="local";
+      return local;
+    }
   }
 
   async function gradeEssay(){
@@ -364,7 +414,7 @@
       return;
     }
     var body=document.getElementById("lessonBody");
-    if(body)body.innerHTML='<div class="wsProcessing"><div class="spkSpinner"></div><h2>Đang chấm và sửa bài…</h2><p>Kiểm tra Task Achievement, Coherence, Vocabulary và Grammar.</p></div>';
+    if(body)body.innerHTML='<div class="wsProcessing"><div class="spkSpinner"></div><h2>AI đang chấm và chữa bài…</h2><p>Đối chiếu yêu cầu đề → kiểm tra nội dung/data → tìm lỗi → hướng dẫn sửa → tạo bản corrected.</p></div>';
     var local=localAssessment();
     var result=await gradeWithAI(local);
     if(!result.corrected)result.corrected=correctedLocal(all,result.corrections);
