@@ -238,16 +238,21 @@
               '<div class="spkSpeakingAnswerHead"><b>Bài nói của bạn</b><span id="spkLiveCount">0 từ</span></div>'+
               '<div id="spkLiveTranscript" class="spkSpeakingTranscript">Đang nghe…</div>'+
             '</div>'+
-            '<div class="spkInlineRecorder">'+
-              '<button id="spkRecordPulse" class="spkRecordPulse" aria-label="Đang ghi âm">●</button>'+
-              '<span id="spkTime" class="spkRecordTime">0:00 / 3:00</span>'+
-              '<div class="spkWaveInline"><canvas id="spkWave" width="900" height="90"></canvas></div>'+
-              '<span class="spkVolume">🔊</span>'+
-            '</div>'+
-            '<div class="spkRecordingActions">'+
-              '<button id="spkRetryRecord" class="spkRecordAction secondary">↻ <span><b>Nói lại</b><small>Ghi âm lại bài nói</small></span></button>'+
-              '<button id="spkSaveRecord" class="spkRecordAction light">▱ <span><b>Lưu bài nói</b><small>Lưu để xem lại sau</small></span></button>'+
-              '<button id="spkSend" class="spkRecordAction grade">✦ <span><b>Chấm bài</b><small>AI sẽ đánh giá bài nói của bạn</small></span></button>'+
+            '<div class="spkRecorderPro">'+
+              '<div class="spkRecorderProTop">'+
+                '<div class="spkRecorderLive"><i></i><span id="spkRecordStatus">Đang ghi âm</span></div>'+
+                '<b id="spkTime" class="spkRecorderElapsed">0:00</b>'+
+              '</div>'+
+              '<div class="spkWavePro"><canvas id="spkWave" width="1200" height="120"></canvas></div>'+
+              '<div class="spkRecorderMeta"><span>Tối đa 3:00</span><span id="spkWaveHint">Nói tự nhiên, AI sẽ nghe trực tiếp audio của bạn</span></div>'+
+              '<div class="spkRecorderUtility">'+
+                '<button id="spkRetryRecord" type="button">↻ Thu lại</button>'+
+                '<button id="spkSaveRecord" type="button">▱ Lưu bài nói</button>'+
+              '</div>'+
+              '<div class="spkRecorderPrimary">'+
+                '<button id="spkCancelRecording" class="spkRecorderCancel" type="button">Hủy</button>'+
+                '<button id="spkSend" class="spkRecorderSend" type="button">↑ Gửi & chấm</button>'+
+              '</div>'+
             '</div>'+
           '</section>'+
           builderPanelHTML(q,true)+
@@ -255,6 +260,10 @@
       '</div>';
 
     document.getElementById("spkBackFromRecord").onclick=function(){
+      cleanup(false);
+      renderQuestion();
+    };
+    document.getElementById("spkCancelRecording").onclick=function(){
       cleanup(false);
       renderQuestion();
     };
@@ -302,11 +311,13 @@
       st.timer = setInterval(function () {
         var sec = (Date.now() - st.startedAt) / 1000;
         var el = document.getElementById("spkTime");
-        if (el) el.textContent = fmt(sec) + " / 3:00";
+        if (el) el.textContent = fmt(sec);
+        var status=document.getElementById("spkRecordStatus");
+        if(status&&sec>0)status.textContent="Đang ghi âm";
         if (sec >= 180) sendRecorder();
       }, 200);
     } catch (e) {
-      var box = document.querySelector(".spkWaveBox");
+      var box = document.querySelector(".spkRecorderPro");
       if (box) box.innerHTML = '<div class="spkMicError">Không mở được microphone. Hãy cho phép Microphone trong Chrome.</div>';
     }
   }
@@ -483,34 +494,88 @@
       var C = window.AudioContext || window.webkitAudioContext;
       st.audioCtx = new C();
       st.analyser = st.audioCtx.createAnalyser();
-      st.analyser.fftSize = 256;
+      st.analyser.fftSize = 512;
+      st.analyser.smoothingTimeConstant = .78;
       st.source = st.audioCtx.createMediaStreamSource(st.stream);
       st.source.connect(st.analyser);
 
       var data = new Uint8Array(st.analyser.frequencyBinCount);
       var canvas = document.getElementById("spkWave");
+      if(!canvas)return;
       var ctx = canvas.getContext("2d");
+      var history=new Array(54).fill(.08);
 
-      function draw() {
-        st.raf = requestAnimationFrame(draw);
-        st.analyser.getByteTimeDomainData(data);
-        var w = canvas.width, h = canvas.height;
-        ctx.clearRect(0,0,w,h);
-        ctx.strokeStyle = "#3b82f6";
-        ctx.lineWidth = 4;
+      function resize(){
+        var r=canvas.getBoundingClientRect();
+        var dpr=Math.min(window.devicePixelRatio||1,2);
+        var w=Math.max(320,Math.round(r.width*dpr));
+        var h=Math.max(70,Math.round(r.height*dpr));
+        if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+      }
+
+      function roundedBar(x,y,w,h,r){
+        var rr=Math.min(r,w/2,h/2);
         ctx.beginPath();
-        var step = w / (data.length - 1);
-        for (var i = 0; i < data.length; i++) {
-          var x = i * step;
-          var y = (data[i] / 255) * h;
-          if (i === 0) ctx.moveTo(x,y);
-          else ctx.lineTo(x,y);
+        ctx.moveTo(x+rr,y);
+        ctx.arcTo(x+w,y,x+w,y+h,rr);
+        ctx.arcTo(x+w,y+h,x,y+h,rr);
+        ctx.arcTo(x,y+h,x,y,rr);
+        ctx.arcTo(x,y,x+w,y,rr);
+        ctx.closePath();
+      }
+
+      function draw(){
+        st.raf=requestAnimationFrame(draw);
+        resize();
+        st.analyser.getByteFrequencyData(data);
+
+        var sum=0,peak=0;
+        for(var i=2;i<Math.min(data.length,90);i++){
+          var v=data[i]/255;
+          sum+=v;
+          if(v>peak)peak=v;
         }
+        var avg=sum/Math.max(1,Math.min(data.length,90)-2);
+        var level=Math.max(.06,Math.min(1,avg*1.7+peak*.28));
+        history.push(level);
+        if(history.length>54)history.shift();
+
+        var w=canvas.width,h=canvas.height,mid=h/2;
+        ctx.clearRect(0,0,w,h);
+
+        ctx.strokeStyle="rgba(59,130,246,.28)";
+        ctx.lineWidth=Math.max(1,window.devicePixelRatio||1);
+        ctx.setLineDash([5*(window.devicePixelRatio||1),5*(window.devicePixelRatio||1)]);
+        ctx.beginPath();
+        ctx.moveTo(0,mid);
+        ctx.lineTo(w,mid);
         ctx.stroke();
+        ctx.setLineDash([]);
+
+        var gap=w/(history.length+2);
+        var barW=Math.max(3,Math.min(8,gap*.42));
+        for(var j=0;j<history.length;j++){
+          var amp=history[j];
+          var shape=.55+.45*Math.sin((j/history.length)*Math.PI);
+          var bh=Math.max(8,amp*h*.74*shape);
+          var x=gap*(j+1)-barW/2;
+          var y=mid-bh/2;
+          var alpha=.48+.5*(j/history.length);
+          ctx.fillStyle="rgba(59,130,246,"+alpha.toFixed(2)+")";
+          roundedBar(x,y,barW,bh,barW/2);
+          ctx.fill();
+        }
+
+        var dotR=Math.max(3,Math.min(5,w/260));
+        ctx.fillStyle="#2563eb";
+        ctx.beginPath();
+        ctx.arc(w-gap*.55,mid,dotR,0,Math.PI*2);
+        ctx.fill();
       }
       draw();
     } catch (e) {}
   }
+
 
   function cleanup(removeModal) {
     clearInterval(st.timer);
@@ -541,7 +606,12 @@
     st.recording=false;
 
     var sendBtn=document.getElementById("spkSend");
-    if(sendBtn){sendBtn.disabled=true;sendBtn.textContent="Đang nhận bài nói…";}
+    if(sendBtn){
+      sendBtn.disabled=true;
+      sendBtn.textContent="Đang xử lý…";
+      var rs=document.getElementById("spkRecordStatus");if(rs)rs.textContent="Đang xử lý audio";
+      var hint=document.getElementById("spkWaveHint");if(hint)hint.textContent="Chuẩn bị gửi audio trực tiếp tới OpenAI";
+    }
 
     try{
       if(st.recognition&&!st.recognitionEnded){
