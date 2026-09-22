@@ -598,6 +598,7 @@ document.getElementById('lessonClose').onclick=()=>{stopListeningAudio(true);doc
 const dict=document.getElementById('dictionary'),hd=document.getElementById('dictHandle');
 const DCACHE_KEY='ielts_dict_v16_cache',TCACHE_KEY='ielts_dict_v12_translate',DPOS_KEY='ielts_dict_v11_window',DAI_KEY='ielts_dict_ai_v1_cache';
 let dcache={},tcache={},dictAICache={};
+const DICT_AI_INFLIGHT=new Map();
 try{dcache=JSON.parse(localStorage.getItem(DCACHE_KEY)||'{}')}catch(e){}
 try{tcache=JSON.parse(localStorage.getItem(TCACHE_KEY)||'{}')}catch(e){}
 try{dictAICache=JSON.parse(localStorage.getItem(DAI_KEY)||'{}')}catch(e){}
@@ -1147,25 +1148,44 @@ async function fetchContextDictionaryAI(surface,base,sentence,groups,pos,slotId)
  }
  box.innerHTML='<div class="dictAILoading"><span></span><div><b>Đang phân tích đúng nghĩa trong câu…</b><small>Kiểm tra loại từ, nghĩa, cấu trúc và IELTS usage.</small></div></div>';
  try{
-   const r=await fetch(endpoint,{
-     method:'POST',
-     headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({
-       word:surface,
-       base:base,
-       sentence:sentence||'',
-       lexical:dictLexicalHint(groups,pos)
-     })
-   });
-   const d=await r.json().catch(()=>({}));
-   if(!r.ok||d.error)throw new Error(d.message||d.error||('HTTP '+r.status));
-   dictAICache[key]=d;
-   let keys=Object.keys(dictAICache);if(keys.length>160)delete dictAICache[keys[0]];
-   try{localStorage.setItem(DAI_KEY,JSON.stringify(dictAICache))}catch(e){}
-   renderContextDictionaryAI(d,base,sentence,slotId);
+   let pending=DICT_AI_INFLIGHT.get(key);
+   if(!pending){
+     pending=(async function(){
+       const ctl=typeof AbortController!=='undefined'?new AbortController():null;
+       const timer=ctl?setTimeout(()=>ctl.abort(),22000):null;
+       try{
+         const r=await fetch(endpoint,{
+           method:'POST',
+           headers:{'Content-Type':'application/json'},
+           body:JSON.stringify({
+             word:surface,
+             base:base,
+             sentence:sentence||'',
+             lexical:dictLexicalHint(groups,pos)
+           }),
+           signal:ctl?ctl.signal:undefined
+         });
+         const d=await r.json().catch(()=>({}));
+         if(!r.ok||d.error)throw new Error(d.message||d.error||('HTTP '+r.status));
+         dictAICache[key]=d;
+         let keys=Object.keys(dictAICache);
+         while(keys.length>160){delete dictAICache[keys.shift()];}
+         try{localStorage.setItem(DAI_KEY,JSON.stringify(dictAICache))}catch(e){}
+         return d;
+       }finally{
+         if(timer)clearTimeout(timer);
+         DICT_AI_INFLIGHT.delete(key);
+       }
+     })();
+     DICT_AI_INFLIGHT.set(key,pending);
+   }
+   const d=await pending;
+   if(document.getElementById('dictAI-'+slotId))renderContextDictionaryAI(d,base,sentence,slotId);
    return d;
  }catch(e){
-   box.innerHTML='<div class="dictAIUnavailable"><b>Không tải được phân tích AI.</b><br>Phần từ điển cơ bản bên dưới vẫn dùng được.</div>';
+   if(document.getElementById('dictAI-'+slotId)){
+     box.innerHTML='<div class="dictAIUnavailable"><b>Không tải được phân tích AI.</b><br>Phần từ điển cơ bản bên dưới vẫn dùng được.</div>';
+   }
    return null;
  }
 }
