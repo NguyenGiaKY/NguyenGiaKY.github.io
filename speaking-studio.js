@@ -799,6 +799,37 @@
     return html;
   }
 
+  function speakingHighBandVietnameseHTML(text,highlights){
+    text=String(text||"");
+    var used=[],ranges=[];
+    (Array.isArray(highlights)?highlights:[]).forEach(function(x){
+      var phrase=String(x&&x.translation_vi||"").trim();
+      if(!phrase)return;
+      var low=text.toLowerCase(),needle=phrase.toLowerCase(),start=0,idx=-1;
+      while((idx=low.indexOf(needle,start))>=0){
+        var overlap=used.some(function(r){return idx<r.end&&idx+phrase.length>r.start;});
+        if(!overlap)break;
+        start=idx+Math.max(1,phrase.length);
+      }
+      if(idx>=0){
+        var cat=String(x.category||"vocabulary").toLowerCase();
+        if(!/^(vocabulary|grammar|development|linking)$/.test(cat))cat="vocabulary";
+        var r={start:idx,end:idx+phrase.length,cat:cat};
+        used.push(r);ranges.push(r);
+      }
+    });
+    ranges.sort(function(a,b){return a.start-b.start;});
+    if(!ranges.length)return esc(text);
+    var html="",pos=0;
+    ranges.forEach(function(r){
+      html+=esc(text.slice(pos,r.start));
+      html+='<span class="spkHighMark spkHigh-'+r.cat+'">'+esc(text.slice(r.start,r.end))+'</span>';
+      pos=r.end;
+    });
+    html+=esc(text.slice(pos));
+    return html;
+  }
+
   function speakResultText(id){
     var el=document.getElementById(id);if(!el)return;
     var txt=String((el.dataset&&el.dataset.clean)||el.textContent||"").trim();if(!txt)return;
@@ -880,8 +911,10 @@
         '</section>'+
 
         '<section class="spkHighBand spkBandUpgradeCard">'+
-          '<div class="spkHighHead"><div><span>Câu trả lời band cao hơn</span><small>Giữ nguyên core ideas của bạn</small></div><button id="spkReadHigh" class="spkIconBtn">🔊 Nghe mẫu</button></div>'+
-          '<p id="spkHighText">'+speakingHighBandHTML(sameIdeaHighBandFallback(transcript,localFix),[])+'</p>'+
+          '<div class="spkHighHead"><div><span>Câu trả lời band cao hơn</span><small>Giữ nguyên core ideas của bạn</small></div>'+
+            '<div class="spkHighActions"><button id="spkReadHigh" class="spkIconBtn">🔊 Đọc</button><button id="spkTranslateHigh" class="spkIconBtn" disabled>🌐 Dịch</button></div></div>'+
+          '<p id="spkHighText" data-clean="'+esc(sameIdeaHighBandFallback(transcript,localFix))+'">'+speakingHighBandHTML(sameIdeaHighBandFallback(transcript,localFix),[])+'</p>'+
+          '<div id="spkHighViWrap" class="spkHighTranslation hidden"><div class="spkHighTranslationLabel">Bản dịch tiếng Việt</div><p id="spkHighViText"></p></div>'+
           '<div class="spkHighLegend"><span class="vocab">Vocabulary</span><span class="grammar">Grammar</span><span class="develop">Development</span><span class="link">Linking</span></div>'+
         '</section>'+
         (st.url?'<audio id="spkUserAudio" class="spkReplay spkHiddenAudio" src="'+esc(st.url)+'"></audio>':'')+
@@ -894,6 +927,14 @@
     document.getElementById("spkNextTop").onclick=nextQ;
     document.getElementById("spkNext").onclick=nextQ;
     document.getElementById("spkReadHigh").onclick=function(){speakResultText("spkHighText");};
+    var translateHigh=document.getElementById("spkTranslateHigh");
+    if(translateHigh)translateHigh.onclick=function(){
+      var wrap=document.getElementById("spkHighViWrap");
+      if(!wrap)return;
+      wrap.classList.toggle("hidden");
+      this.classList.toggle("active",!wrap.classList.contains("hidden"));
+      this.textContent=wrap.classList.contains("hidden")?"🌐 Dịch":"🌐 Ẩn dịch";
+    };
     document.getElementById("spkReadCorrected").onclick=function(){speakResultText("spkCorrected");};
     var playMine=document.getElementById("spkPlayMine");
     if(playMine)playMine.onclick=function(){
@@ -975,8 +1016,20 @@
     var correctionHolder=document.getElementById("spkCorrections");
     if(correctionHolder)correctionHolder.innerHTML=correctionDetailHTML(corrections);
 
+    var highHighlights=Array.isArray(d.high_band_highlights)?d.high_band_highlights:[];
     var high=document.getElementById("spkHighText");
-    if(high)high.innerHTML=speakingHighBandHTML(highBand,Array.isArray(d.high_band_highlights)?d.high_band_highlights:[]);
+    if(high){
+      high.dataset.clean=highBand;
+      high.innerHTML=speakingHighBandHTML(highBand,highHighlights);
+    }
+    var highVi=String(d.high_band_translation_vi||"").trim();
+    var highViText=document.getElementById("spkHighViText");
+    if(highViText&&highVi)highViText.innerHTML=speakingHighBandVietnameseHTML(highVi,highHighlights);
+    var translateBtn=document.getElementById("spkTranslateHigh");
+    if(translateBtn){
+      translateBtn.disabled=!highVi;
+      translateBtn.title=highVi?"Hiện/ẩn bản dịch tiếng Việt":"AI chưa trả về bản dịch";
+    }
 
     var coach=d.coach_feedback||{};
     if(coach.grammar_vi)setText("spkCoachGrammar",coach.grammar_vi);
