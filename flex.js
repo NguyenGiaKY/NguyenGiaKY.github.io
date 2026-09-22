@@ -703,10 +703,8 @@ window.recordTaskPerformance=function(data){
  if(Number.isFinite(Number(data&&data.total)))h.total=Number(data.total);
  if(Number.isFinite(Number(data&&data.percent)))h.percent=Number(data.percent);
 
- if(!activeTaskSession||activeTaskSession.id!==id||!activeTaskSession.counted){
-   p.attempts+=1;
-   if(activeTaskSession&&activeTaskSession.id===id)activeTaskSession.counted=true;
- }
+ p.attempts+=1;
+ if(activeTaskSession&&activeTaskSession.id===id)activeTaskSession.counted=true;
  p.history.push(h);
  p.history=p.history.slice(-30);
  p.lastStudied=Date.now();
