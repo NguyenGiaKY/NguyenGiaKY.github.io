@@ -1390,3 +1390,117 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
   .lvListen,.lvTrainer .btn{width:100%}
   .lvFinish{align-items:stretch;flex-direction:column}
 }
+
+/* Unified grading & correction UI */
+.rsErrorDiagnosis{
+  border-radius:14px;
+  padding:13px 14px;
+  margin:10px 0;
+  border:1px solid #d9e1ee;
+  background:#fff;
+}
+.rsErrorDiagnosis.good{border-color:#bfe5cb;background:#f3fbf5}
+.rsErrorDiagnosis.bad{border-color:#ffd0c7;background:#fff6f4}
+.rsErrorDiagnosis h3{margin:0 0 7px;font-size:15px}
+.rsErrorDiagnosis p{margin:5px 0;line-height:1.5}
+.rsOptionAudit .mineWrong{
+  border-color:#f0a79a!important;
+  background:#fff3f0!important;
+}
+.rsFixRule{
+  margin-top:9px!important;
+  padding:9px 11px;
+  background:#f4f7ff;
+  border-left:3px solid #3157d5;
+  border-radius:0 9px 9px 0;
+}
+
+.skillGradeSummary{
+  margin:16px 0;
+  padding:15px 16px;
+  border:1px solid #cfe0ff;
+  border-radius:16px;
+  background:linear-gradient(135deg,#f7fbff,#eef4ff);
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:12px 20px;
+  align-items:center;
+}
+.skillGradeSummary>div:first-child{display:grid;gap:2px}
+.skillGradeSummary>div:first-child>span{
+  font-size:10px;font-weight:900;letter-spacing:.08em;color:#3157d5
+}
+.skillGradeSummary>div:first-child>strong{font-size:28px}
+.skillGradeSummary>div:first-child>small{color:#6d7888}
+.skillGradeStats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.skillGradeStats b{
+  padding:6px 9px;border-radius:999px;background:#fff;border:1px solid #dfe5ef;font-size:12px
+}
+.skillGradeStats .ok{color:#177245;border-color:#bfe3cc}
+.skillGradeStats .bad{color:#b42318;border-color:#ffd0c7}
+.skillGradeSummary>p{grid-column:1/-1;margin:0;color:#5f6b7a;line-height:1.45}
+
+.listenCorrection{
+  margin-top:10px!important;
+  border-radius:13px!important;
+  padding:12px!important;
+}
+.lcStatus{font-weight:900;margin-bottom:9px}
+.lcStatus.good{color:#177245}.lcStatus.bad{color:#b42318}
+.lcGrid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px
+}
+.lcGrid>div{
+  border:1px solid #e1e6ef;background:#fff;border-radius:10px;padding:9px 10px;display:grid;gap:3px
+}
+.lcGrid span{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#7a8798;font-weight:800}
+.lcGrid b{color:#27364f}
+.lcEvidence,.lcWhy,.lcRule{
+  margin-top:7px;padding:8px 10px;border-radius:9px;line-height:1.45;background:#fff
+}
+.lcEvidence{border-left:3px solid #3157d5}
+.lcWhy{border-left:3px solid #e06a52}
+.lcRule{border-left:3px solid #22a447;background:#f5fff8}
+
+.wsAISource{
+  width:max-content;max-width:100%;margin:10px auto 16px;padding:7px 11px;border-radius:999px;
+  font-size:12px;font-weight:800;border:1px solid #dce3ef;background:#fff;color:#687386
+}
+.wsAISource.active{border-color:#b9e2c7;background:#f1fbf4;color:#177245}
+.wsAISource.fallback{border-color:#f3d7a4;background:#fff9ed;color:#8a5b00}
+.wsRequirementList,.wsCorrectionCards{display:grid;gap:9px}
+.wsRequirement{
+  border:1px solid #e1e6ef;border-radius:12px;padding:11px 12px;background:#fff
+}
+.wsRequirement>div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.wsRequirement>div>b{font-size:11px;padding:4px 7px;border-radius:999px;background:#f3f4f6}
+.wsRequirement.met{border-color:#bfe5cb;background:#f7fff9}
+.wsRequirement.met>div>b{background:#e5f8eb;color:#177245}
+.wsRequirement.missing,.wsRequirement.incorrect{border-color:#ffd0c7;background:#fff8f6}
+.wsRequirement.missing>div>b,.wsRequirement.incorrect>div>b{background:#ffe8e3;color:#b42318}
+.wsRequirement.partial{border-color:#f0dfb9;background:#fffdf7}
+.wsRequirement.partial>div>b{background:#fff3d8;color:#8a5b00}
+.wsRequirement p{margin:7px 0 3px;color:#4b5563;line-height:1.45}
+.wsRequirement small{display:block;color:#657184;line-height:1.45}
+
+.wsCorrectionItem{
+  border:1px solid #e0e6f0;border-radius:13px;padding:12px;background:#fff
+}
+.wsCorrectionTop{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.wsCorrectionTop>span{
+  width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#eef2ff;color:#3157d5;font-weight:900
+}
+.wsCorrectionTop>b{text-transform:capitalize;color:#4a5870}
+.wsWrongBetter{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wsWrongBetter>div{display:grid;gap:4px;padding:9px 10px;border-radius:10px;background:#fafbfc;border:1px solid #edf0f4}
+.wsWrongBetter small{text-transform:uppercase;font-size:10px;color:#8993a4;font-weight:900;letter-spacing:.04em}
+.wsWrongBetter del{color:#b42318;text-decoration-thickness:2px}
+.wsWrongBetter strong{color:#177245}
+.wsCorrectionItem p{margin:8px 0 0;line-height:1.5;color:#4b5563}
+.wsFixRule{padding:8px 10px;border-left:3px solid #3157d5;background:#f6f8ff;border-radius:0 9px 9px 0}
+
+@media(max-width:700px){
+  .skillGradeSummary{grid-template-columns:1fr}
+  .skillGradeStats{justify-content:flex-start}
+  .lcGrid,.wsWrongBetter{grid-template-columns:1fr}
+}
