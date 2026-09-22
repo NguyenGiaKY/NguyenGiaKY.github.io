@@ -223,7 +223,7 @@ function lessonText(type,d){
   '</div>'+
   '<div id="script" class="passage hidden">'+l.script+'</div><h3>Questions • 10 câu thật</h3>';
   l.q.forEach((q,i)=>h+='<div class="q"><b>'+(i+1)+'. '+q[0]+'</b><input class="search lanswer" data-i="'+i+'" placeholder="Your answer"><div class="feedback hidden" id="l-fb-'+i+'"></div></div>');
-  return h+'<div class="checkRow"><button id="checkListening" class="btn primary">Check Listening</button></div>';
+  return h+'<div id="listeningGradeSummary"></div><div class="checkRow"><button id="checkListening" class="btn primary">Chấm & chữa Listening</button></div>';
  }
  if(type==='writing')return '<div class="timePlan"><div><b>0–10 phút</b>Analyse</div><div><b>10–20 phút</b>Outline</div><div><b>20–60 phút</b>Timed write</div><div><b>60–70 phút</b>Self-check</div><div><b>70–75 phút</b>Rewrite</div></div><div class="notice"><b>Prompt:</b> Some people think schools should focus mainly on academic subjects, while others believe practical life skills are equally important. Discuss both views and give your own opinion.</div><div class="production"><b>Outline</b><textarea placeholder="Position + Body 1 + Body 2 + examples..."></textarea></div><div class="production"><b>Essay</b><textarea id="writeArea" style="min-height:360px"></textarea></div><div class="rubric"><label><input type="checkbox"> Tôi trả lời đủ mọi phần của đề.</label><label><input type="checkbox"> Mỗi body có main idea rõ.</label><label><input type="checkbox"> Tôi đã kiểm S-V, tense, plural, article và punctuation.</label><label><input type="checkbox"> Tôi rewrite ít nhất 2 câu yếu.</label></div>';
  if(type==='speaking')return '<div class="timePlan"><div><b>0–10 phút</b>Part 1</div><div><b>10–25 phút</b>Part 2</div><div><b>25–35 phút</b>Part 3</div><div><b>35–45 phút</b>Repair</div></div><div class="notice"><b>Part 1:</b> What do you usually do after school? How often do you read in English? Do you prefer studying alone or with others?</div><div class="notice"><b>Part 2:</b> Describe a skill you would like to improve. Say what it is, why, how you will practise it and how it may help you.</div><div class="notice"><b>Part 3:</b> Why do some people struggle to study consistently? How has technology changed learning? Should schools teach time management?</div><div class="production"><b>5 lỗi cần sửa sau khi nghe lại</b><textarea></textarea></div>';
@@ -458,6 +458,112 @@ function initListeningPlayer(script){
  setListeningStatus('Sẵn sàng');
  updateListeningSeekUI(true);
 }
+
+function normalizeListeningText(s){
+ return String(s||'').toLowerCase()
+  .replace(/[’']/g,"'")
+  .replace(/\bp\.?\s*m\.?\b/g,'pm')
+  .replace(/\ba\.?\s*m\.?\b/g,'am')
+  .replace(/\bo[' ]?clock\b/g,'')
+  .replace(/[$,]/g,'')
+  .replace(/[^a-z0-9:\s-]/g,' ')
+  .replace(/\b(a|an|the)\b/g,' ')
+  .replace(/\s+/g,' ').trim();
+}
+function levenshtein(a,b){
+ a=String(a||'');b=String(b||'');
+ const m=a.length,n=b.length,dp=Array(n+1).fill(0).map((_,j)=>j);
+ for(let i=1;i<=m;i++){
+  let prev=dp[0];dp[0]=i;
+  for(let j=1;j<=n;j++){
+   const tmp=dp[j];
+   dp[j]=Math.min(dp[j]+1,dp[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));
+   prev=tmp;
+  }
+ }
+ return dp[n];
+}
+function listeningAnswerOK(given,correct){
+ const a=normalizeListeningText(given),b=normalizeListeningText(correct);
+ if(!a)return false;
+ if(a===b)return true;
+ const stripUnit=x=>x.replace(/\b(weeks?|room|dollars?|minutes?|hours?)\b/g,' ').replace(/\s+/g,' ').trim();
+ if(stripUnit(a)===stripUnit(b)&&stripUnit(a))return true;
+ return false;
+}
+function listeningErrorDiagnosis(given,correct){
+ const a=normalizeListeningText(given),b=normalizeListeningText(correct);
+ if(!a)return {type:'Bỏ trống',why:'Bạn không nhập đáp án nên không thể nhận điểm cho câu này.',fix:'Trước khi audio chạy, hãy dự đoán loại từ cần điền; cuối bài đừng để trống nếu bạn có evidence.'};
+ const d=levenshtein(a,b);
+ if(d>0&&d<=Math.max(2,Math.floor(b.length*.18)))return {
+  type:'Spelling',
+  why:'Bạn nghe gần đúng nhưng spelling chưa khớp với đáp án.',
+  fix:'Nghe lại riêng từ khóa, tách âm tiết rồi viết lại. Chú ý chữ đôi, âm cuối và dạng số nhiều.'
+ };
+ const singular=x=>x.replace(/s$/,'');
+ if(singular(a)===singular(b)&&a!==b)return {
+  type:'Singular / plural',
+  why:'Nội dung gần đúng nhưng dạng số ít/số nhiều khác đáp án.',
+  fix:'Nghe âm cuối /s/ hoặc /z/ và kiểm tra ngữ pháp của chỗ trống trước khi chốt đáp án.'
+ };
+ if(/[0-9:$]/.test(String(correct))||/\b(time|fee|discount|week|room|date|when|how many|how much)\b/i.test(correct+' ')){
+  return {
+   type:'Sai chi tiết số / thời gian',
+   why:'Bạn đã chọn hoặc ghi sai con số, thời gian, ngày hoặc chi tiết định lượng.',
+   fix:'Khi nghe số, viết nháp ngay và chờ speaker xác nhận hoặc sửa lại; đặc biệt chú ý distractor kiểu “not X, but Y”.'
+  };
+ }
+ const aw=a.split(' '),bw=b.split(' ');
+ if(bw.every(w=>aw.includes(w))&&aw.length>bw.length)return {
+  type:'Thừa từ',
+  why:'Đáp án chính có trong câu bạn viết nhưng bạn thêm từ không cần thiết.',
+  fix:'Giữ đúng word limit và chỉ ghi phần trả lời cần thiết, không chép cả cụm dài nếu đề chỉ cần một từ/cụm ngắn.'
+ };
+ return {
+  type:'Sai thông tin / distractor',
+  why:'Câu trả lời của bạn không khớp với chi tiết cuối cùng được audio xác nhận.',
+  fix:'Đừng chốt ngay ở keyword đầu tiên. Nghe tiếp các từ chuyển ý như but, actually, instead, rather than, not… để tránh distractor.'
+ };
+}
+function listeningEvidence(script,q){
+ const sentences=String(script||'').match(/[^.!?]+[.!?]?/g)||[script];
+ const stop=new Set(['what','when','where','which','does','do','did','are','is','the','a','an','can','how','many','much','students','course']);
+ const tokens=String(q[0]+' '+q[1]).toLowerCase().match(/[a-z0-9]+/g)||[];
+ const keys=tokens.filter(w=>w.length>2&&!stop.has(w));
+ let best=sentences[0]||'',score=-1;
+ sentences.forEach(s=>{
+  const low=s.toLowerCase();
+  let n=0;
+  keys.forEach(k=>{if(low.includes(k)||low.includes(k.slice(0,Math.max(4,k.length-1))))n++;});
+  if(n>score){score=n;best=s;}
+ });
+ return best.trim();
+}
+function gradeListeningLesson(d,l){
+ stopListeningAudio(true);
+ let correctCount=0,wrongCount=0,blankCount=0;
+ document.querySelectorAll('.lanswer').forEach(inp=>{
+  const j=+inp.dataset.i,q=l.q[j],given=inp.value.trim(),ok=listeningAnswerOK(given,q[1]);
+  const fb=document.getElementById('l-fb-'+j),diag=listeningErrorDiagnosis(given,q[1]),evidence=listeningEvidence(l.script,q);
+  if(ok)correctCount++;else if(!given)blankCount++;else wrongCount++;
+  fb.classList.remove('hidden');
+  fb.className='feedback listenCorrection '+(ok?'good':'bad');
+  fb.innerHTML=ok
+   ? '<div class="lcStatus good">✓ Đúng</div><div class="lcGrid"><div><span>Đáp án của bạn</span><b>'+descape(given)+'</b></div><div><span>Đáp án chuẩn</span><b>'+descape(q[1])+'</b></div></div><div class="lcEvidence"><b>Evidence trong audio:</b> '+descape(evidence)+'</div><div class="lcRule"><b>Vì sao đúng:</b> '+descape(q[2])+'</div>'
+   : '<div class="lcStatus bad">✕ '+descape(diag.type)+'</div><div class="lcGrid"><div><span>Đáp án của bạn</span><b>'+descape(given||'Bỏ trống')+'</b></div><div><span>Đáp án đúng</span><b>'+descape(q[1])+'</b></div></div><div class="lcEvidence"><b>Evidence trong audio:</b> '+descape(evidence)+'</div><div class="lcWhy"><b>Lỗi ở đâu:</b> '+descape(diag.why)+'</div><div class="lcRule"><b>Cách chữa:</b> '+descape(diag.fix)+'</div><div class="lcWhy"><b>Giải thích câu này:</b> '+descape(q[2])+'</div>';
+  if(!ok&&typeof mistake==='function')mistake(d,'listening',q[0],q[1],diag.type+': '+diag.fix+' Evidence: '+evidence);
+ });
+ const total=l.q.length,summary=document.getElementById('listeningGradeSummary');
+ if(summary){
+  const pct=Math.round(correctCount/total*100);
+  summary.innerHTML='<div class="skillGradeSummary"><div><span>LISTENING RESULT</span><strong>'+correctCount+'/'+total+'</strong><small>'+pct+'% chính xác</small></div><div class="skillGradeStats"><b class="ok">✓ '+correctCount+' đúng</b><b class="bad">✕ '+wrongCount+' sai</b><b>— '+blankCount+' bỏ trống</b></div><p>Chữa theo thứ tự: <b>đáp án của bạn → đáp án đúng → evidence → loại lỗi → cách sửa</b>. Các câu sai đã được đưa vào Review & Carry-over.</p></div>';
+ }
+ const script=document.getElementById('script');
+ if(script)script.classList.remove('hidden');
+ const btn=document.getElementById('checkListening');
+ if(btn)btn.textContent='✓ Đã chấm — xem chữa từng câu';
+}
+
 function openLesson(d,i){
  let s=slots(d)[i],type=s[1];
  document.getElementById('lessonOverlay').classList.add('open');document.body.style.overflow='hidden';
@@ -474,7 +580,7 @@ function openLesson(d,i){
   let l=listeningPack(d);
   initListeningPlayer(l.script);
   document.getElementById('showScript').onclick=()=>document.getElementById('script').classList.toggle('hidden');
-  document.getElementById('checkListening').onclick=()=>document.querySelectorAll('.lanswer').forEach(inp=>{let j=+inp.dataset.i,q=l.q[j],ok=inp.value.trim().toLowerCase()===q[1].toLowerCase(),fb=document.getElementById('l-fb-'+j);fb.classList.remove('hidden');fb.className='feedback '+(ok?'good':'bad');fb.innerHTML=ok?'✓ Correct':'✗ Correct: <b>'+q[1]+'</b><br>'+q[2];if(!ok&&typeof mistake==='function')mistake(d,'listening',q[0],q[1],q[2]);});
+  document.getElementById('checkListening').onclick=()=>gradeListeningLesson(d,l);
  }
  document.getElementById('finish').onclick=()=>{st.done[key(d,i)]=true;save();progress();renderDays();document.getElementById('finish').textContent='✓ Đã hoàn thành';};
 }
