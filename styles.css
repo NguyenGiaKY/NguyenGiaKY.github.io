@@ -1875,3 +1875,30 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
   .gkHighlighter.expanded .gkHLColors{grid-template-columns:repeat(4,1fr)}
   .gkHLHint{display:none!important}
 }
+
+/* Listening warm-up keyboard controls */
+.lvHotkeyHint{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:8px;
+  color:#6b778b;
+  font-size:11px;
+  font-weight:750;
+}
+.lvHotkeyHint kbd{
+  min-width:34px;
+  text-align:center;
+  padding:4px 7px;
+  border:1px solid #cfd8e7;
+  border-bottom-width:2px;
+  border-radius:7px;
+  background:#fff;
+  color:#344054;
+  font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  box-shadow:0 1px 0 rgba(0,0,0,.04);
+}
+.lvTrainer input[readonly]{
+  background:#f7f9fc;
+  color:#596579;
+}
