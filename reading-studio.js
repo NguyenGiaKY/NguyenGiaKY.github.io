@@ -76,7 +76,7 @@
   function toolsHTML(){
     return '<aside class="rsTools">' +
       '<div class="rsToolsTitle">Công cụ</div>'+
-      '<button id="rsHighlight" class="rsToolBtn">🖍<span>Highlight</span></button>'+
+      '<button id="rsHighlight" class="rsToolBtn">🎨<span>Highlight 7 màu</span></button>'+
       '<button id="rsNote" class="rsToolBtn">📝<span>Notes</span></button>'+
       '<button id="rsLookup" class="rsToolBtn">📖<span>Tra từ</span></button>'+
     '</aside>';
@@ -198,7 +198,10 @@
     document.getElementById("rsExit").onclick=function(){
       var close=document.getElementById("lessonClose");if(close)close.click();
     };
-    document.getElementById("rsHighlight").onclick=highlightSelection;
+    document.getElementById("rsHighlight").onclick=function(){
+      if(typeof window.openStudyHighlighter==="function")window.openStudyHighlighter();
+      else highlightSelection();
+    };
     document.getElementById("rsNote").onclick=toggleNotes;
     document.getElementById("rsLookup").onclick=lookupSelection;
     document.getElementById("rsNoteClose").onclick=toggleNotes;
