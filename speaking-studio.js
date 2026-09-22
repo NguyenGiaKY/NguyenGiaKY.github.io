@@ -117,8 +117,10 @@
       '<div class="spkBuilderHead"><div><span>💡 Gợi ý từng bước</span><b id="spkBuilderProgress">0/4 bước</b></div><small>Cấu trúc trả lời cho Speaking Builder</small></div>'+
       '<div class="spkBuilderBar"><i id="spkBuilderBarFill"></i></div>'+
       '<div class="spkBuilderSteps">'+steps.map(function(s,i){
-        return '<button class="spkBuilderStep" data-builder-step="'+i+'"><span class="spkBuilderNum">'+(i+1)+'</span><span class="spkBuilderLabel">'+esc(s.label)+'</span><span class="spkBuilderArrow">›</span></button>'+
-          '<div class="spkBuilderExample hidden" id="spkBuilderExample'+i+'"><b>'+esc(s.label)+'</b><p>'+esc(s.text)+'</p></div>';
+        return '<div class="spkBuilderStepGroup">'+
+          '<button class="spkBuilderStep" data-builder-step="'+i+'"><span class="spkBuilderNum">'+(i+1)+'</span><span class="spkBuilderLabel">'+esc(s.label)+'</span><span class="spkBuilderArrow">›</span></button>'+
+          '<div class="spkBuilderExample hidden" id="spkBuilderExample'+i+'"><p>'+esc(s.text)+'</p></div>'+
+        '</div>';
       }).join("")+'</div>'+
       '<div class="spkBuilderTip">Mẹo: dùng ý của <b>bạn</b>. Các câu trên chỉ là khung để bạn biết cách mở rộng câu trả lời.</div>'+
     '</aside>';
