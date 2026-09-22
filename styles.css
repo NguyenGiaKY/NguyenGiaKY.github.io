@@ -1243,3 +1243,150 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
  .mockExamTop{grid-template-columns:1fr auto}.mockExamSection{display:none}.mockExamClock{grid-column:2}
  .mockWritingGrid{grid-template-columns:1fr}.mockResultGrid{grid-template-columns:1fr}
 }
+
+/* Listening vocab warm-up inside tasks */
+.listenVocabBadge{
+  display:inline-block;
+  margin-left:7px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#eef8ff;
+  color:#1769aa;
+  font-size:11px;
+  font-weight:900;
+}
+.listenVocabMeta{
+  display:block;
+  margin-top:7px;
+  color:#6f7b8f;
+  font-size:11px;
+  line-height:1.35;
+}
+.listenVocabWarmup{
+  border:1px solid #cfe0ff;
+  background:linear-gradient(135deg,#f7fbff,#eef6ff);
+  border-radius:16px;
+  padding:16px;
+  margin:0 0 18px;
+}
+.listenVocabWarmup.collapsed{display:none}
+.lvHead{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:flex-start;
+}
+.lvHead h3{margin:5px 0 4px}
+.lvHead p{margin:0;color:#667085;line-height:1.5}
+.lvScore{
+  min-width:90px;
+  border:1px solid #d7e4f7;
+  background:#fff;
+  border-radius:12px;
+  padding:9px 11px;
+  text-align:center;
+}
+.lvScore b{display:block;font-size:20px;color:#3157d5}
+.lvScore span{font-size:11px;color:#7b8799}
+.lvSources{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:12px 0;
+}
+.lvSources a,.lvSources span{
+  font-size:11px;
+  font-weight:800;
+  text-decoration:none;
+  color:#3157d5;
+  background:#fff;
+  border:1px solid #d7e3f6;
+  border-radius:999px;
+  padding:5px 8px;
+}
+.lvTrainer{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+}
+.lvListen{
+  border:0;
+  background:#3157d5;
+  color:#fff;
+  border-radius:11px;
+  padding:10px 13px;
+  font-weight:900;
+}
+.lvTrainer input{
+  width:100%;
+  border:1px solid #cfd9e8;
+  background:#fff;
+  border-radius:11px;
+  padding:10px 12px;
+  outline:none;
+}
+.lvTrainer input:focus{border-color:#7695ef;box-shadow:0 0 0 3px rgba(49,87,213,.10)}
+.lvFeedback{
+  min-height:48px;
+  margin-top:10px;
+  border:1px solid #e0e7f2;
+  background:#fff;
+  border-radius:11px;
+  padding:10px 12px;
+  color:#5f6b7a;
+  line-height:1.45;
+}
+.lvFeedback small{display:block;margin-top:4px}
+.lvCorrect{color:#16813a}
+.lvWrong{color:#b42318}
+.lvReveal{margin-top:4px;color:#334155}
+.lvProgress{
+  height:6px;
+  background:#dfe7f3;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:10px;
+}
+.lvProgress i{
+  display:block;
+  height:100%;
+  background:#3157d5;
+  border-radius:999px;
+}
+.lvSkip{
+  border:0;
+  background:transparent;
+  color:#667085;
+  font-size:12px;
+  padding:8px 0 0;
+}
+.lvFinish{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.lvFinish>div{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.lvFinish>div>span{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:#22a447;
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+}
+.lvFinish h3{margin:0 0 3px}
+.lvFinish p{margin:0;color:#667085;line-height:1.45}
+@media(max-width:700px){
+  .lvHead{flex-direction:column}
+  .lvTrainer{grid-template-columns:1fr}
+  .lvListen,.lvTrainer .btn{width:100%}
+  .lvFinish{align-items:stretch;flex-direction:column}
+}
