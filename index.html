@@ -4,16 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#3157d5">
+<meta name="description" content="NguyenGiaKy IELTS study system: Listening, Reading, Writing, Speaking, mock tests, review and progress tracking.">
+<meta name="color-scheme" content="light">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="preconnect" href="https://nguyen-gia-ky-github-io-rvay.vercel.app" crossorigin>
+<link rel="dns-prefetch" href="//api.dictionaryapi.dev">
+<link rel="dns-prefetch" href="//translate.google.com">
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260922-1">
 <link rel="shortcut icon" href="favicon.svg?v=20260922-1">
 <title>NguyenGiaKy</title>
-<link rel="stylesheet" href="styles.css?v=20260923-6">
+<link rel="stylesheet" href="styles.css?v=20260923-7">
 </head>
 <body>
 <div id="app">
   <header class="hero">
     <div class="heroBrand">
-      <img class="heroLogo" src="favicon.svg?v=20260922-1" alt="GK">
+      <img class="heroLogo" src="favicon.svg?v=20260922-1" alt="GK" width="86" height="86">
       <div>
         <span class="badge">IELTS Academic • Flexible Skill System</span>
         <h1>NguyenGiaKy</h1>
@@ -30,7 +36,7 @@
 
   <div class="layout">
     <aside class="sidebar card">
-      <input id="search" class="search" placeholder="Tìm kỹ năng, module, bài học...">
+      <input id="search" class="search" type="search" autocomplete="off" aria-label="Tìm kỹ năng, module hoặc bài học" placeholder="Tìm kỹ năng, module, bài học...">
       <nav>
         <button class="nav active" data-view="today">🧭 Study Queue</button>
         <button class="nav" data-view="progress">📊 Progress Hub</button>
@@ -82,10 +88,10 @@
       </div></div></section>
       <section id="view-resources" class="view"><div class="card panel"><h2>Nguồn học</h2>
         <div class="resourceGrid">
-          <a href="https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test" target="_blank">IELTS Official Samples ↗</a>
-          <a href="https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests/academic" target="_blank">British Council Practice ↗</a>
-          <a href="https://youpass.vn/" target="_blank">YouPass ↗</a>
-          <a href="https://luyennguphap.com/" target="_blank">LuyenNguPhap ↗</a>
+          <a href="https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test" target="_blank" rel="noopener noreferrer">IELTS Official Samples ↗</a>
+          <a href="https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests/academic" target="_blank" rel="noopener noreferrer">British Council Practice ↗</a>
+          <a href="https://youpass.vn/" target="_blank" rel="noopener noreferrer">YouPass ↗</a>
+          <a href="https://luyennguphap.com/" target="_blank" rel="noopener noreferrer">LuyenNguPhap ↗</a>
         </div>
         <p class="muted">3 sách Improve Your Skills vẫn là giáo trình nền. Website tổ chức bài học theo Unit nhưng không public nguyên PDF lên GitHub.</p>
       </div></section>
@@ -93,38 +99,38 @@
   </div>
 </div>
 
-<button id="dictButton" class="dictButton">📖 Tra từ</button>
-<div id="dictionary" class="dictionary">
+<button id="dictButton" class="dictButton" type="button" aria-label="Mở từ điển">📖 Tra từ</button>
+<div id="dictionary" class="dictionary" role="dialog" aria-label="Quick Dictionary">
   <div id="dictHandle" class="dictHead">
     <b>Quick Dictionary</b>
     <div>
-      <button id="dictMin">−</button>
-      <button id="dictMax">□</button>
-      <button id="dictClose">×</button>
+      <button id="dictMin" type="button" aria-label="Thu nhỏ từ điển">−</button>
+      <button id="dictMax" type="button" aria-label="Phóng to từ điển">□</button>
+      <button id="dictClose" type="button" aria-label="Đóng từ điển">×</button>
     </div>
   </div>
   <div class="dictBody">
-    <div class="dictSearch"><input id="dictInput" placeholder="Nhập từ..."><button id="dictGo">Tra</button></div>
+    <div class="dictSearch"><input id="dictInput" autocomplete="off" aria-label="Nhập từ tiếng Anh" placeholder="Nhập từ..."><button id="dictGo" type="button">Tra</button></div>
     <small>Double-click một từ trong bài để xem đúng nghĩa trong câu đó: nghĩa ngữ cảnh → dịch câu → cấu trúc → collocations → word forms → lỗi dễ nhầm.</small>
     <div id="dictResult"></div>
   </div>
 </div>
 
-<div id="lessonOverlay" class="overlay">
+<div id="lessonOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="lessonTitle">
   <div class="lesson">
-    <div class="lessonTop"><div id="lessonTitle"></div><button id="lessonClose">×</button></div>
+    <div class="lessonTop"><div id="lessonTitle"></div><button id="lessonClose" type="button" aria-label="Đóng bài học">×</button></div>
     <div id="lessonBody" class="lessonBody"></div>
   </div>
 </div>
 
-<script src="app.js?v=20260923-1"></script>
+<script src="ai-config.js?v=20260923-1"></script>
+<script src="app.js?v=20260923-2"></script>
 <script src="flex.js?v=20260923-9"></script>
 <script src="enhance.js?v=20260921-4"></script>
-<script src="ai-config.js?v=20260922-2"></script>
 <script src="speaking-studio.js?v=20260923-5"></script>
 <script src="mock-test.js?v=20260922-1"></script>
 <script src="reading-studio.js?v=20260923-1"></script>
 <script src="highlighter.js?v=20260923-2"></script>
-<script src="writing-studio.js?v=20260922-2"></script>
+<script src="writing-studio.js?v=20260923-1"></script>
 </body>
 </html>
