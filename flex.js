@@ -584,6 +584,8 @@ function chooseQueue(n=4,reset=false){
 
 let activeTaskSession=null;
 
+function progressEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+
 function taskProgressRecord(id){
  if(!fs.taskProgress[id])fs.taskProgress[id]={attempts:0,completed:0,totalSeconds:0,lastStudied:0,history:[]};
  const p=fs.taskProgress[id];
@@ -742,10 +744,10 @@ function showTaskProgress(id){
     '<div class="tpPanelSection"><h3>Lịch sử task</h3>'+
       (hist.length?'<div class="tpTimeline">'+hist.map(function(h){
         const pct=taskPerformancePct(h);
-        return '<div class="tpTimelineItem"><span></span><div><b>'+formatTaskDate(h.at)+' · '+(h.kind==='completion'?'Hoàn thành':esc(h.kind))+'</b>'+
+        return '<div class="tpTimelineItem"><span></span><div><b>'+formatTaskDate(h.at)+' · '+(h.kind==='completion'?'Hoàn thành':progressEsc(h.kind))+'</b>'+
           '<strong>'+taskScoreLabel(h)+'</strong>'+
           (h.errors!==undefined?'<small>'+h.errors+' lỗi được ghi nhận</small>':'')+
-          (h.note?'<p>'+esc(h.note)+'</p>':'')+
+          (h.note?'<p>'+progressEsc(h.note)+'</p>':'')+
           (pct!==null?'<div class="tpHistoryBar"><i style="width:'+Math.round(pct)+'%"></i></div>':'')+
         '</div></div>';
       }).join('')+'</div>':'<p class="muted">Chưa có lịch sử. Mở task và bắt đầu học để hệ thống ghi tiến độ.</p>')+
@@ -837,6 +839,9 @@ function toggleDone(id){
    const p=taskProgressRecord(id);
    p.completed=Math.max(1,p.completed||0);
    if(!p.lastStudied)p.lastStudied=Date.now();
+   if(!p.history.length){
+     p.history.push({at:Date.now(),kind:'completion',note:'Đánh dấu hoàn thành'});
+   }
  }
  saveFlex();renderFlexHome();renderAllModules();renderCarry();renderProgressHub();updateHero();
 }
