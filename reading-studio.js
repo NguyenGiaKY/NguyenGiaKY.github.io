@@ -340,11 +340,53 @@
     return '<p>'+esc(text.slice(0,i))+'<mark class="rsEvidence">'+esc(evidence)+'</mark>'+esc(text.slice(i+evidence.length))+'</p>';
   }
 
+  function readingErrorDiagnosis(q,i){
+    var mine=RS.answers[i],correct=q[2];
+    if(mine===correct)return {
+      title:"Bạn xử lý đúng câu này",
+      why:"Đáp án bạn chọn khớp với evidence trong passage.",
+      fix:"Giữ thói quen: xác định keywords → tìm evidence → so sánh nghĩa trước khi chọn."
+    };
+    if(mine===undefined)return {
+      title:"Lỗi: bỏ trống câu hỏi",
+      why:"Bạn chưa đưa ra đáp án nên mất điểm dù passage có đủ evidence.",
+      fix:"Nếu còn phân vân ở cuối bài, quay lại câu này và loại các phương án không được passage hỗ trợ."
+    };
+    if(isTFNG(q)){
+      if(correct===2)return {
+        title:"Lỗi: suy diễn ngoài passage",
+        why:"Bạn đã chọn "+q[1][mine]+", nhưng passage không cung cấp đủ thông tin để khẳng định TRUE hoặc FALSE.",
+        fix:"Với NOT GIVEN, chỉ dùng thông tin được viết trong passage. Không dùng kiến thức đời sống hoặc điều 'có vẻ hợp lý'."
+      };
+      if(mine===2)return {
+        title:"Lỗi: bỏ sót evidence",
+        why:"Bạn chọn NOT GIVEN nhưng passage thực sự có thông tin trực tiếp để xác nhận hoặc bác bỏ statement.",
+        fix:"Tìm câu chứa keyword/paraphrase của statement rồi kiểm tra quan hệ: cùng nghĩa = TRUE; mâu thuẫn = FALSE."
+      };
+      if(correct===1&&mine===0)return {
+        title:"Lỗi: bỏ qua điểm mâu thuẫn",
+        why:"Bạn chọn TRUE nhưng evidence trong passage trái với statement.",
+        fix:"So từng thành phần của statement với passage, đặc biệt chú ý từ tuyệt đối, phủ định, số lượng và phạm vi."
+      };
+      if(correct===0&&mine===1)return {
+        title:"Lỗi: hiểu evidence thành mâu thuẫn",
+        why:"Bạn chọn FALSE nhưng passage thực tế truyền đạt cùng ý với statement bằng cách paraphrase.",
+        fix:"Đừng đòi hỏi từ giống hệt. So sánh nghĩa của cả câu và nhận diện synonym/paraphrase."
+      };
+    }
+    return {
+      title:"Lỗi: bị distractor dẫn hướng",
+      why:"Phương án '"+q[1][mine]+"' không được evidence hỗ trợ đầy đủ. Nó có thể chứa keyword giống passage nhưng sai ý, thiếu điều kiện hoặc chỉ đúng một phần.",
+      fix:"Với Multiple Choice: tìm evidence trước, tự diễn đạt câu trả lời, rồi mới đối chiếu các phương án và loại distractor."
+    };
+  }
+
   function reviewSteps(q,i,evidence){
     var correct=q[1][q[2]],mine=RS.answers[i]===undefined?"Bỏ qua":q[1][RS.answers[i]];
     var type=isTFNG(q)?"TRUE / FALSE / NOT GIVEN":"Multiple Choice";
     var keywords=keywordList(q);
     var outcome=RS.answers[i]===q[2]?"Đúng":"Sai";
+    var diagnosis=readingErrorDiagnosis(q,i);
     var tfngNote="";
     if(isTFNG(q)){
       if(q[2]===0)tfngNote="TRUE vì passage truyền đạt cùng ý với statement.";
@@ -355,16 +397,18 @@
     }
 
     return '<div class="rsReviewSteps">'+
-      '<div class="rsReviewStatus '+(outcome==="Đúng"?"good":"bad")+'"><span>'+outcome+'</span><b>Bạn chọn: '+esc(mine)+'</b><strong>Đáp án: '+esc(correct)+'</strong></div>'+
-      '<div class="rsStep"><h3>Bước 1 · Hiểu câu hỏi</h3><p>'+esc(q[0])+'</p><p class="muted">Dạng câu: <b>'+type+'</b></p></div>'+
+      '<div class="rsReviewStatus '+(outcome==="Đúng"?"good":"bad")+'"><span>'+outcome+'</span><b>Bạn chọn: '+esc(mine)+'</b><strong>Đáp án đúng: '+esc(correct)+'</strong></div>'+
+      '<div class="rsErrorDiagnosis '+(outcome==="Đúng"?"good":"bad")+'"><h3>'+esc(diagnosis.title)+'</h3><p><b>Vì sao:</b> '+esc(diagnosis.why)+'</p><p><b>Cách sửa:</b> '+esc(diagnosis.fix)+'</p></div>'+
+      '<div class="rsStep"><h3>Bước 1 · Hiểu yêu cầu câu hỏi</h3><p>'+esc(q[0])+'</p><p class="muted">Dạng câu: <b>'+type+'</b></p></div>'+
       '<div class="rsStep"><h3>Bước 2 · Xác định keywords</h3><div class="rsKeywordRow">'+keywords.map(function(k){return '<span>'+esc(k)+'</span>';}).join("")+'</div><p>Đừng chỉ tìm từ giống hệt; hãy tìm cả paraphrase và ý tương đương.</p></div>'+
-      '<div class="rsStep"><h3>Bước 3 · Tìm evidence trong passage</h3><blockquote>'+esc(evidence)+'</blockquote></div>'+
-      '<div class="rsStep"><h3>Bước 4 · So sánh ý</h3><p>'+esc(tfngNote)+'</p>'+
+      '<div class="rsStep"><h3>Bước 3 · Evidence từ bài đọc</h3><blockquote>'+esc(evidence)+'</blockquote></div>'+
+      '<div class="rsStep"><h3>Bước 4 · So sánh đáp án với evidence</h3><p>'+esc(tfngNote)+'</p>'+
         '<div class="rsOptionAudit">'+q[1].map(function(o,j){
-          return '<div class="'+(j===q[2]?'right':'')+'"><b>'+(j===q[2]?'✓':'×')+' '+esc(o)+'</b>'+(j===q[2]?'<span>Phù hợp với evidence</span>':'<span>Không phải đáp án tốt nhất</span>')+'</div>';
+          var mineClass=RS.answers[i]===j&&j!==q[2]?' mineWrong':'';
+          return '<div class="'+(j===q[2]?'right':'')+mineClass+'"><b>'+(j===q[2]?'✓':RS.answers[i]===j?'✕':'×')+' '+esc(o)+'</b>'+(j===q[2]?'<span>Được passage hỗ trợ</span>':RS.answers[i]===j?'<span>Đây là đáp án bạn chọn — không khớp đủ với evidence</span>':'<span>Không phải đáp án tốt nhất</span>')+'</div>';
         }).join("")+'</div>'+
       '</div>'+
-      '<div class="rsStep"><h3>Bước 5 · Kết luận</h3><p><b>'+esc(correct)+'</b> — '+esc(q[3])+'</p></div>'+
+      '<div class="rsStep"><h3>Bước 5 · Quy tắc rút ra</h3><p><b>'+esc(correct)+'</b> — '+esc(q[3])+'</p><p class="rsFixRule">'+esc(diagnosis.fix)+'</p></div>'+
     '</div>';
   }
 
