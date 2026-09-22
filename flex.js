@@ -875,7 +875,7 @@ function openCheckpoint(t){
  '<div class="lessonActions"><button class="btn primary" id="goScoreView">Nhập kết quả</button><button class="btn green" id="checkpointDone">✓ Hoàn thành checkpoint</button></div>';
  overlay.classList.add('open');document.body.style.overflow='hidden';
  document.getElementById('goScoreView').onclick=()=>{overlay.classList.remove('open');document.body.style.overflow='';if(typeof window.show==='function')window.show(skill);document.getElementById(skill+'ScoreInput')?.focus()};
- document.getElementById('checkpointDone').onclick=()=>{fs.done[t.id]=true;fs.queue=fs.queue.filter(x=>x!==t.id);saveFlex();document.getElementById('checkpointDone').textContent='✓ Đã hoàn thành';updateHero()};
+ document.getElementById('checkpointDone').onclick=()=>{fs.done[t.id]=true;fs.queue=fs.queue.filter(x=>x!==t.id);completeTaskSession(t.id,'Hoàn thành checkpoint');saveFlex();document.getElementById('checkpointDone').textContent='✓ Đã hoàn thành';renderProgressHub();updateHero()};
 }
 
 function renderFlexHome(){
@@ -952,7 +952,14 @@ function renderSkill(skill){
 function saveScore(skill){
  const input=document.getElementById(skill+'ScoreInput'),v=parseFloat(input.value),max=(skill==='listening'||skill==='reading')?40:9;
  if(Number.isNaN(v)||v<0||v>max)return;
- fs.scores[skill].push(v);if(fs.scores[skill].length>12)fs.scores[skill]=fs.scores[skill].slice(-12);saveFlex();renderSkill(skill);renderFlexHome();
+ fs.scores[skill].push(v);if(fs.scores[skill].length>12)fs.scores[skill]=fs.scores[skill].slice(-12);
+ const active=window.__activeFlexTaskId&&taskById(window.__activeFlexTaskId);
+ if(active&&active.day==='checkpoint'&&active.index===skill){
+   window.recordTaskPerformance(skill==='listening'||skill==='reading'
+     ?{kind:skill+' checkpoint',score:v,total:40,note:'Checkpoint '+v+'/40'}
+     :{kind:skill+' checkpoint',band:v,note:'Checkpoint band '+v});
+ }
+ saveFlex();renderSkill(skill);renderFlexHome();renderProgressHub();
 }
 function renderAllModules(){['listening','reading','writing','speaking','support'].forEach(renderSkill)}
 
