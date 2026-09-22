@@ -214,6 +214,7 @@ function lessonText(type,d){
       '<button id="pauseAudio" class="btn">⏸ Tạm dừng</button>'+
       '<button id="stopAudio" class="btn">⏹ Dừng</button>'+
       '<button id="showScript" class="btn">Transcript</button>'+
+      '<button id="listenHighlight" class="btn">🎨 Highlight</button>'+
     '</div>'+
     '<div class="listenSettings">'+
       '<label><span>Tốc độ</span><input id="listenRate" type="range" min="0.65" max="1.25" step="0.05" value="0.90"><b id="listenRateLabel">0.90×</b></label>'+
@@ -584,6 +585,8 @@ function openLesson(d,i){
   let l=listeningPack(d);
   initListeningPlayer(l.script);
   document.getElementById('showScript').onclick=()=>document.getElementById('script').classList.toggle('hidden');
+  const hlBtn=document.getElementById('listenHighlight');
+  if(hlBtn)hlBtn.onclick=()=>{if(typeof window.openStudyHighlighter==='function')window.openStudyHighlighter();};
   document.getElementById('checkListening').onclick=()=>gradeListeningLesson(d,l);
  }
  document.getElementById('finish').onclick=()=>{st.done[key(d,i)]=true;save();progress();renderDays();document.getElementById('finish').textContent='✓ Đã hoàn thành';};
