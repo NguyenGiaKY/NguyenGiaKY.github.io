@@ -14,7 +14,8 @@
     timer:null,
     currentReview:0,
     finishHandler:null,
-    note:""
+    note:"",
+    progressRecorded:false
   };
 
   function esc(s){
@@ -278,6 +279,10 @@
     RS.elapsed=Math.floor((Date.now()-RS.startTime)/1000);
     var s=scoreData(),body=document.getElementById("lessonBody");if(!body)return;
     var pct=Math.round((s.correct/s.total)*100);
+    if(!RS.progressRecorded&&typeof window.recordTaskPerformance==="function"){
+      window.recordTaskPerformance({kind:"reading",score:s.correct,total:s.total,errors:s.wrong+s.skip,note:s.wrong+" sai · "+s.skip+" bỏ trống"});
+      RS.progressRecorded=true;
+    }
     body.innerHTML=
       '<div class="rsResultPage">'+
         '<button id="rsResultClose" class="rsResultClose">×</button>'+
@@ -296,7 +301,7 @@
       '</div>';
 
     document.getElementById("rsResultClose").onclick=function(){document.getElementById("lessonClose").click();};
-    document.getElementById("rsRetry").onclick=function(){RS.answers={};RS.startTime=Date.now();RS.elapsed=0;renderTest();};
+    document.getElementById("rsRetry").onclick=function(){RS.answers={};RS.startTime=Date.now();RS.elapsed=0;RS.progressRecorded=false;renderTest();};
     document.getElementById("rsBackHome").onclick=function(){document.getElementById("lessonClose").click();};
     document.getElementById("rsExplainAll").onclick=function(){RS.currentReview=0;renderReview();};
     document.getElementById("rsStepFix").onclick=function(){
@@ -460,6 +465,7 @@
     RS.elapsed=0;
     RS.currentReview=0;
     RS.note="";
+    RS.progressRecorded=false;
     var oldFinish=document.getElementById("finish");
     RS.finishHandler=oldFinish&&oldFinish.onclick?oldFinish.onclick:null;
     renderTest();
