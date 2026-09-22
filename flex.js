@@ -8,6 +8,7 @@ fs.queue=fs.queue||[];
 fs.queueSize=[2,4,6].includes(Number(fs.queueSize))?Number(fs.queueSize):4;
 fs.scores=fs.scores||{listening:[],reading:[],writing:[],speaking:[]};
 fs.listenVocab=fs.listenVocab||{mastered:{},missed:{}};
+fs.taskProgress=fs.taskProgress||{};
 fs.phase=fs.phase||'foundation';
 const saveFlex=()=>localStorage.setItem(FLEX_KEY,JSON.stringify(fs));
 
@@ -580,15 +581,246 @@ function chooseQueue(n=4,reset=false){
  fs.queue=chosen.map(t=>t.id);saveFlex();return chosen;
 }
 
+
+let activeTaskSession=null;
+
+function taskProgressRecord(id){
+ if(!fs.taskProgress[id])fs.taskProgress[id]={attempts:0,completed:0,totalSeconds:0,lastStudied:0,history:[]};
+ const p=fs.taskProgress[id];
+ p.history=Array.isArray(p.history)?p.history:[];
+ p.attempts=Number(p.attempts)||0;
+ p.completed=Number(p.completed)||0;
+ p.totalSeconds=Number(p.totalSeconds)||0;
+ p.lastStudied=Number(p.lastStudied)||0;
+ return p;
+}
+
+function taskPerformancePct(h){
+ if(!h)return null;
+ if(Number.isFinite(Number(h.percent)))return Math.max(0,Math.min(100,Number(h.percent)));
+ if(Number.isFinite(Number(h.band)))return Math.max(0,Math.min(100,Number(h.band)/9*100));
+ if(Number.isFinite(Number(h.score))&&Number.isFinite(Number(h.total))&&Number(h.total)>0)return Math.max(0,Math.min(100,Number(h.score)/Number(h.total)*100));
+ return null;
+}
+
+function taskProgressSummary(t){
+ const p=taskProgressRecord(t.id);
+ const scored=p.history.filter(h=>taskPerformancePct(h)!==null);
+ const latest=scored.length?scored[scored.length-1]:null;
+ const best=scored.length?scored.reduce((a,h)=>taskPerformancePct(h)>taskPerformancePct(a)?h:a):null;
+ const latestPct=taskPerformancePct(latest),bestPct=taskPerformancePct(best);
+ const recent=scored.slice(-2).map(taskPerformancePct);
+ let mastery=0,status='not-started',label='Chưa học';
+
+ if(latestPct!==null){
+   mastery=Math.round(latestPct*.7+(bestPct||latestPct)*.3);
+   if(recent.length>=2&&recent.every(x=>x>=85)){status='mastered';label='Mastered';}
+   else if(latestPct<65){status='review';label='Cần ôn';}
+   else{status='learning';label='Đang tiến bộ';}
+ }else if(p.completed>0||fs.done[t.id]){
+   mastery=Math.min(78,55+Math.max(p.completed,1)*8);
+   status='complete';label='Đã hoàn thành';
+ }else if(p.attempts>0||p.totalSeconds>0){
+   mastery=Math.min(55,20+p.attempts*10);
+   status='learning';label='Đang học';
+ }
+
+ const errors=latest&&Number.isFinite(Number(latest.errors))?Number(latest.errors):null;
+ const nextReview=status==='review'
+   ?new Date((p.lastStudied||Date.now())+24*3600*1000)
+   :status==='learning'&&p.lastStudied?new Date(p.lastStudied+3*24*3600*1000):null;
+
+ return {p,latest,best,latestPct,bestPct,mastery,status,label,errors,nextReview};
+}
+
+function taskScoreLabel(h){
+ if(!h)return '—';
+ if(Number.isFinite(Number(h.band)))return Number(h.band).toFixed(1)+' / 9';
+ if(Number.isFinite(Number(h.score))&&Number.isFinite(Number(h.total)))return Number(h.score)+' / '+Number(h.total);
+ if(Number.isFinite(Number(h.percent)))return Math.round(Number(h.percent))+'%';
+ return h.note||'Đã hoàn thành';
+}
+
+function formatTaskDate(ts){
+ if(!ts)return 'Chưa học';
+ try{return new Date(ts).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return '—';}
+}
+
+function formatTaskTime(sec){
+ sec=Math.max(0,Math.round(Number(sec)||0));
+ const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);
+ return h?(h+'h '+m+'m'):(m+' phút');
+}
+
+function startTaskSession(id){
+ if(activeTaskSession&&activeTaskSession.id!==id)finishTaskTime(activeTaskSession.id);
+ activeTaskSession={id:id,start:Date.now(),counted:false};
+ window.__activeFlexTaskId=id;
+ const p=taskProgressRecord(id);
+ p.lastStudied=Date.now();
+ saveFlex();
+}
+
+function finishTaskTime(id){
+ if(!activeTaskSession||activeTaskSession.id!==id)return;
+ const p=taskProgressRecord(id);
+ p.totalSeconds+=Math.max(1,Math.round((Date.now()-activeTaskSession.start)/1000));
+ p.lastStudied=Date.now();
+ activeTaskSession.start=Date.now();
+ saveFlex();
+}
+
+function completeTaskSession(id,note){
+ const p=taskProgressRecord(id);
+ finishTaskTime(id);
+ if(!activeTaskSession||activeTaskSession.id!==id||!activeTaskSession.counted){
+   p.attempts+=1;
+   p.completed+=1;
+   p.history.push({at:Date.now(),kind:'completion',note:note||'Hoàn thành task'});
+   if(activeTaskSession&&activeTaskSession.id===id)activeTaskSession.counted=true;
+ }
+ p.lastStudied=Date.now();
+ p.history=p.history.slice(-30);
+ saveFlex();
+ renderProgressHub();
+}
+
+window.recordTaskPerformance=function(data){
+ const id=window.__activeFlexTaskId;
+ if(!id||!taskById(id))return;
+ const p=taskProgressRecord(id);
+ finishTaskTime(id);
+ const h={
+   at:Date.now(),
+   kind:String(data&&data.kind||taskById(id).skill||'practice'),
+   note:String(data&&data.note||''),
+   errors:Number.isFinite(Number(data&&data.errors))?Number(data.errors):undefined
+ };
+ if(Number.isFinite(Number(data&&data.band)))h.band=Number(data.band);
+ if(Number.isFinite(Number(data&&data.score)))h.score=Number(data.score);
+ if(Number.isFinite(Number(data&&data.total)))h.total=Number(data.total);
+ if(Number.isFinite(Number(data&&data.percent)))h.percent=Number(data.percent);
+
+ if(!activeTaskSession||activeTaskSession.id!==id||!activeTaskSession.counted){
+   p.attempts+=1;
+   if(activeTaskSession&&activeTaskSession.id===id)activeTaskSession.counted=true;
+ }
+ p.history.push(h);
+ p.history=p.history.slice(-30);
+ p.lastStudied=Date.now();
+ saveFlex();
+ renderFlexHome();
+ renderAllModules();
+ renderCarry();
+ renderProgressHub();
+};
+
+function showTaskProgress(id){
+ const t=taskById(id);if(!t)return;
+ const s=taskProgressSummary(t),p=s.p;
+ let overlay=document.getElementById('taskProgressOverlay');
+ if(!overlay){
+   overlay=document.createElement('div');
+   overlay.id='taskProgressOverlay';
+   overlay.className='taskProgressOverlay';
+   document.body.appendChild(overlay);
+ }
+ const hist=p.history.slice().reverse();
+ overlay.innerHTML=
+  '<div class="taskProgressBackdrop" data-progress-close></div>'+
+  '<section class="taskProgressPanel">'+
+    '<div class="tpPanelTop"><div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span><small>'+t.module+' · '+t.moduleTitle+'</small><h2>'+t.title+'</h2></div><button data-progress-close>×</button></div>'+
+    '<div class="tpHeroStats">'+
+      '<div><span>Mastery</span><strong>'+s.mastery+'%</strong><div class="tpBigBar"><i style="width:'+s.mastery+'%"></i></div></div>'+
+      '<div><span>Trạng thái</span><strong class="tpStatus '+s.status+'">'+s.label+'</strong></div>'+
+      '<div><span>Lần làm</span><strong>'+p.attempts+'</strong></div>'+
+      '<div><span>Lần gần nhất</span><strong>'+(s.latest?taskScoreLabel(s.latest):'—')+'</strong></div>'+
+      '<div><span>Tốt nhất</span><strong>'+(s.best?taskScoreLabel(s.best):'—')+'</strong></div>'+
+      '<div><span>Tổng thời gian</span><strong>'+formatTaskTime(p.totalSeconds)+'</strong></div>'+
+    '</div>'+
+    (s.nextReview?'<div class="tpReviewNotice">🔁 Nên ôn lại khoảng <b>'+formatTaskDate(s.nextReview.getTime())+'</b>.</div>':'')+
+    '<div class="tpPanelSection"><h3>Lịch sử task</h3>'+
+      (hist.length?'<div class="tpTimeline">'+hist.map(function(h){
+        const pct=taskPerformancePct(h);
+        return '<div class="tpTimelineItem"><span></span><div><b>'+formatTaskDate(h.at)+' · '+(h.kind==='completion'?'Hoàn thành':esc(h.kind))+'</b>'+
+          '<strong>'+taskScoreLabel(h)+'</strong>'+
+          (h.errors!==undefined?'<small>'+h.errors+' lỗi được ghi nhận</small>':'')+
+          (h.note?'<p>'+esc(h.note)+'</p>':'')+
+          (pct!==null?'<div class="tpHistoryBar"><i style="width:'+Math.round(pct)+'%"></i></div>':'')+
+        '</div></div>';
+      }).join('')+'</div>':'<p class="muted">Chưa có lịch sử. Mở task và bắt đầu học để hệ thống ghi tiến độ.</p>')+
+    '</div>'+
+    '<div class="tpPanelActions"><button id="tpOpenTask" class="btn primary">Tiếp tục học task</button><button data-progress-close class="btn">Đóng</button></div>'+
+  '</section>';
+
+ overlay.classList.add('open');
+ overlay.querySelectorAll('[data-progress-close]').forEach(b=>b.onclick=()=>overlay.classList.remove('open'));
+ document.getElementById('tpOpenTask').onclick=function(){overlay.classList.remove('open');openFlexTask(t);};
+}
+
+function progressTaskRow(t){
+ const s=taskProgressSummary(t),p=s.p;
+ return '<div class="progressTaskRow" data-progress-skill="'+t.skill+'">'+
+  '<div class="progressTaskMain"><div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span><small>'+t.module+'</small><h4>'+t.title+'</h4></div>'+
+   '<span class="tpStatus '+s.status+'">'+s.label+'</span></div>'+
+  '<div class="progressTaskBar"><i style="width:'+s.mastery+'%"></i></div>'+
+  '<div class="progressTaskMeta"><span><b>'+s.mastery+'%</b> mastery</span><span>'+p.attempts+' lần</span><span>Gần nhất: '+(s.latest?taskScoreLabel(s.latest):'—')+'</span><span>'+formatTaskDate(p.lastStudied)+'</span></div>'+
+  '<div class="progressTaskActions"><button class="btn primary" data-open="'+t.id+'">Học tiếp</button><button class="btn" data-progress="'+t.id+'">Xem chi tiết</button></div>'+
+ '</div>';
+}
+
+function renderProgressHub(){
+ const el=document.getElementById('progressHub');if(!el)return;
+ const tasks=allTasks();
+ const summaries=tasks.map(t=>({t:t,s:taskProgressSummary(t)}));
+ const started=summaries.filter(x=>x.s.status!=='not-started').length;
+ const mastered=summaries.filter(x=>x.s.status==='mastered').length;
+ const review=summaries.filter(x=>x.s.status==='review').length;
+ const activeSummaries=summaries.filter(x=>x.s.status!=='not-started');
+ const avg=activeSummaries.length?Math.round(activeSummaries.reduce((n,x)=>n+x.s.mastery,0)/activeSummaries.length):0;
+
+ const skillCards=['listening','reading','writing','speaking','support'].map(function(skill){
+   const a=summaries.filter(x=>x.t.skill===skill);
+   const active=a.filter(x=>x.s.status!=='not-started');
+   const pct=active.length?Math.round(active.reduce((n,x)=>n+x.s.mastery,0)/active.length):0;
+   const weak=a.filter(x=>x.s.status==='review').length;
+   return '<button class="progressSkillCard" data-progress-filter="'+skill+'"><span>'+skillMeta[skill].label+'</span><strong>'+pct+'%</strong><div><i style="width:'+pct+'%"></i></div><small>'+active.length+'/'+a.length+' đã học'+(weak?' · '+weak+' cần ôn':'')+'</small></button>';
+ }).join('');
+
+ el.innerHTML=
+  '<div class="progressHubHero"><div><span class="phase">TASK PROGRESS</span><h2>Progress Hub</h2><p>Mỗi task tự lưu số lần làm, điểm, thời gian và lịch sử. Mastery được tính từ kết quả thực tế; chỉ bấm “hoàn thành” sẽ không tự biến task thành Mastered.</p></div>'+
+   '<div class="progressOverall"><span>Mastery trung bình</span><strong>'+avg+'%</strong></div></div>'+
+  '<div class="progressSummaryGrid"><div><span>Đã bắt đầu</span><b>'+started+'/'+tasks.length+'</b></div><div><span>Mastered</span><b>'+mastered+'</b></div><div><span>Cần ôn</span><b>'+review+'</b></div><div><span>Chưa học</span><b>'+(tasks.length-started)+'</b></div></div>'+
+  '<div class="progressSkillGrid">'+skillCards+'</div>'+
+  '<div class="progressHubTools"><b>Tất cả task</b><div><button class="btn primary" data-progress-filter="all">Tất cả</button><button class="btn" data-progress-filter="review">Cần ôn</button><button class="btn" data-progress-filter="mastered">Mastered</button></div></div>'+
+  '<div id="progressTaskList" class="progressTaskList">'+tasks.map(progressTaskRow).join('')+'</div>';
+
+ bindTaskButtons(el);
+ el.querySelectorAll('[data-progress-filter]').forEach(function(btn){
+   btn.onclick=function(){
+     const filter=btn.dataset.progressFilter;
+     el.querySelectorAll('[data-progress-filter]').forEach(x=>x.classList.toggle('primary',x===btn));
+     el.querySelectorAll('.progressTaskRow').forEach(function(row){
+       const t=taskById(row.querySelector('[data-open]').dataset.open);
+       const s=taskProgressSummary(t);
+       row.style.display=filter==='all'||t.skill===filter||s.status===filter?'':'none';
+     });
+   };
+ });
+}
+
 function taskCard(t,queue=false){
- const vocab=listeningVocabByTask[t.id];
+ const vocab=listeningVocabByTask[t.id],ps=taskProgressSummary(t),p=ps.p;
  return '<div class="flexTask '+(fs.done[t.id]?'done':'')+'">'+
    '<div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span> <small>'+t.module+'</small>'+
    (vocab?'<span class="listenVocabBadge">🎧 Word drill · '+vocab.words.length+' từ</span>':'')+
    '<h4>'+t.title+'</h4><p>'+t.desc+'</p>'+
-   (vocab?'<small class="listenVocabMeta">'+listeningWordMeta(t.id)+'</small>':'')+'</div>'+
+   (vocab?'<small class="listenVocabMeta">'+listeningWordMeta(t.id)+'</small>':'')+
+   '<div class="taskMiniProgress"><div><span class="tpStatus '+ps.status+'">'+ps.label+'</span><small>'+p.attempts+' lần'+(ps.latest?' · gần nhất '+taskScoreLabel(ps.latest):'')+'</small><b>'+ps.mastery+'%</b></div><div class="tpMiniBar"><i style="width:'+ps.mastery+'%"></i></div></div>'+
+   '</div>'+
    '<div class="flexTaskActions">'+
-    '<button class="btn primary" data-open="'+t.id+'">Mở bài</button>'+
+    '<button class="btn primary" data-open="'+t.id+'">'+(ps.status==='not-started'?'Mở bài':'Tiếp tục')+'</button>'+
+    '<button class="btn" data-progress="'+t.id+'">Tiến độ</button>'+
     '<button class="btn '+(fs.done[t.id]?'green':'')+'" data-done="'+t.id+'">'+(fs.done[t.id]?'✓ Đã xong':'Đánh dấu hoàn thành')+'</button>'+
    '</div></div>';
 }
@@ -596,14 +828,21 @@ function taskCard(t,queue=false){
 function bindTaskButtons(root=document){
  root.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openFlexTask(taskById(b.dataset.open)));
  root.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>toggleDone(b.dataset.done));
+ root.querySelectorAll('[data-progress]').forEach(b=>b.onclick=()=>showTaskProgress(b.dataset.progress));
 }
 function toggleDone(id){
  fs.done[id]=!fs.done[id];
- if(fs.done[id])fs.queue=(fs.queue||[]).filter(x=>x!==id);
- saveFlex();renderFlexHome();renderAllModules();renderCarry();updateHero();
+ if(fs.done[id]){
+   fs.queue=(fs.queue||[]).filter(x=>x!==id);
+   const p=taskProgressRecord(id);
+   p.completed=Math.max(1,p.completed||0);
+   if(!p.lastStudied)p.lastStudied=Date.now();
+ }
+ saveFlex();renderFlexHome();renderAllModules();renderCarry();renderProgressHub();updateHero();
 }
 function openFlexTask(t){
  if(!t)return;
+ startTaskSession(t.id);
  if(t.day==='checkpoint'){openCheckpoint(t);return;}
  if(typeof window.openLesson==='function'){
   window.openLesson(t.day,t.index);
@@ -614,8 +853,11 @@ function openFlexTask(t){
     const oldFinish=finish.onclick;
     finish.onclick=function(e){
      if(oldFinish)oldFinish.call(this,e);
-     fs.done[t.id]=true;fs.queue=(fs.queue||[]).filter(x=>x!==t.id);saveFlex();
+     fs.done[t.id]=true;fs.queue=(fs.queue||[]).filter(x=>x!==t.id);
+     completeTaskSession(t.id,'Hoàn thành task từ lesson');
+     saveFlex();
      this.textContent='✓ Đã hoàn thành';
+     renderProgressHub();
      updateHero();
     };
    }
@@ -744,11 +986,14 @@ function cleanOldLabels(){
 window.renderToday=renderFlexHome;
 window.renderRoadmap=function(){};
 window.flexRenderHome=renderFlexHome;
+window.renderProgressHub=renderProgressHub;
+window.showTaskProgress=showTaskProgress;
 
 renderFlexHome();
 renderAllModules();
 renderCarry();
 renderSavedFlex();
+renderProgressHub();
 overrideSearch();
 updateHero();
 cleanOldLabels();
@@ -757,6 +1002,13 @@ cleanOldLabels();
 const close=document.getElementById('lessonClose');
 if(close){
  const old=close.onclick;
- close.onclick=function(e){if(old)old.call(this,e);setTimeout(()=>{renderFlexHome();renderAllModules();renderCarry();updateHero()},0)};
+ close.onclick=function(e){
+   const id=window.__activeFlexTaskId;
+   if(id)finishTaskTime(id);
+   activeTaskSession=null;
+   window.__activeFlexTaskId=null;
+   if(old)old.call(this,e);
+   setTimeout(()=>{renderFlexHome();renderAllModules();renderCarry();renderProgressHub();updateHero()},0);
+ };
 }
 })();
