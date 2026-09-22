@@ -9,6 +9,7 @@
     finishHandler:null,
     startTime:0,
     timer:null,
+    grading:false,
     draftKey:"ielts_writing_task1_jobs_v1",
     sections:{intro:"",overview:"",body1:"",body2:""}
   };
@@ -356,16 +357,24 @@
       var dataContext=TASK.series.map(function(s){
         return s.name+": "+TASK.years.map(function(y,i){return y+"="+s.values[i];}).join(", ");
       }).join("; ");
-      var resp=await fetch(endpoint,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          taskType:"task1",
-          task:TASK.prompt,
-          dataContext:dataContext,
-          essay:combinedEssay()
-        })
-      });
+      var ctl=typeof AbortController!=="undefined"?new AbortController():null;
+      var timeout=ctl?setTimeout(function(){ctl.abort();},45000):null;
+      var resp;
+      try{
+        resp=await fetch(endpoint,{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            taskType:"task1",
+            task:TASK.prompt,
+            dataContext:dataContext,
+            essay:combinedEssay()
+          }),
+          signal:ctl?ctl.signal:undefined
+        });
+      }finally{
+        if(timeout)clearTimeout(timeout);
+      }
       var d=await resp.json().catch(function(){return {};});
       if(!resp.ok)throw new Error(d.message||d.error||("HTTP "+resp.status));
 
@@ -409,6 +418,7 @@
   }
 
   async function gradeEssay(){
+    if(WS.grading)return;
     saveDraft();
     var all=combinedEssay();
     var quick=document.getElementById("wsQuickFeedback");
@@ -416,13 +426,18 @@
       if(quick)quick.textContent="Bài còn quá ngắn để chấm. Hãy viết ít nhất Introduction + Overview + một Body.";
       return;
     }
+    WS.grading=true;
     var body=document.getElementById("lessonBody");
     if(body)body.innerHTML='<div class="wsProcessing"><div class="spkSpinner"></div><h2>AI đang chấm và chữa bài…</h2><p>Đối chiếu yêu cầu đề → kiểm tra nội dung/data → tìm lỗi → hướng dẫn sửa → tạo bản corrected.</p></div>';
-    var local=localAssessment();
-    var result=await gradeWithAI(local);
-    if(!result.corrected)result.corrected=correctedLocal(all,result.corrections);
-    if(!result.improved)result.improved=result.corrected;
-    renderResult(result);
+    try{
+      var local=localAssessment();
+      var result=await gradeWithAI(local);
+      if(!result.corrected)result.corrected=correctedLocal(all,result.corrections);
+      if(!result.improved)result.improved=result.corrected;
+      renderResult(result);
+    }finally{
+      WS.grading=false;
+    }
   }
 
   function initWritingStudio(){
