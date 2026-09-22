@@ -1649,3 +1649,22 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
   .taskMiniProgress>div:first-child{grid-template-columns:auto 1fr}
   .taskMiniProgress>div:first-child>b{grid-column:2;text-align:right}
 }
+
+/* GK site brand */
+.heroBrand{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  min-width:0;
+}
+.heroLogo{
+  width:86px;
+  height:86px;
+  flex:0 0 86px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.18));
+}
+@media(max-width:760px){
+  .heroBrand{align-items:flex-start;gap:12px}
+  .heroLogo{width:58px;height:58px;flex-basis:58px;margin-top:4px}
+}
