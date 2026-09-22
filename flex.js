@@ -7,6 +7,7 @@ fs.done=fs.done||{};
 fs.queue=fs.queue||[];
 fs.queueSize=[2,4,6].includes(Number(fs.queueSize))?Number(fs.queueSize):4;
 fs.scores=fs.scores||{listening:[],reading:[],writing:[],speaking:[]};
+fs.listenVocab=fs.listenVocab||{mastered:{},missed:{}};
 fs.phase=fs.phase||'foundation';
 const saveFlex=()=>localStorage.setItem(FLEX_KEY,JSON.stringify(fs));
 
@@ -166,6 +167,370 @@ const skillMeta={
  support:{label:'Grammar & Vocabulary',target:'support',metric:'',goal:null}
 };
 
+const listeningVocabByTask={
+ L1a:{
+  categories:[
+   ['DAYS OF THE WEEK','https://study4.com/flashcards/lists/384/'],
+   ['MONTHS OF THE YEAR','https://study4.com/flashcards/lists/385/'],
+   ['TIME EXPRESSION','https://study4.com/flashcards/lists/399/'],
+   ['COUNTRY','https://study4.com/flashcards/lists/393/'],
+   ['LANGUAGES','https://study4.com/flashcards/lists/394/']
+  ],
+  words:[
+   ['Wednesday','thứ Tư','Âm đọc /ˈwenzdeɪ/ khác khá xa spelling.'],
+   ['February','tháng Hai','Chú ý cụm chữ br và âm tiết đầu.'],
+   ['fifteen','mười lăm','Phân biệt stress với fifty.'],
+   ['thirty','ba mươi','Phân biệt với thirteen.'],
+   ['quarter','một phần tư / 15 phút','Hay gặp trong cách nói giờ.'],
+   ['Australia','Úc','Tên quốc gia: nghe rõ các âm tiết giữa.'],
+   ['German','tiếng Đức / người Đức','Nghe ending -man rõ.'],
+   ['Thursday','thứ Năm','Chú ý âm /θ/ đầu.']
+  ]
+ },
+ L1b:{
+  categories:[
+   ['VERBS','https://study4.com/flashcards/lists/395/'],
+   ['ADJECTIVES','https://study4.com/flashcards/lists/396/'],
+   ['QUALITIES','https://study4.com/flashcards/lists/404/']
+  ],
+  words:[
+   ['arrive','đến','Âm đầu thường yếu trong connected speech.'],
+   ['collect','thu thập / lấy','Nghe rõ âm /k/ cuối.'],
+   ['available','có sẵn','Từ nhiều âm tiết, dễ bỏ sót giữa từ.'],
+   ['comfortable','thoải mái','Thường được nói nhanh còn khoảng 3 âm tiết.'],
+   ['reliable','đáng tin cậy','Chú ý stress ở âm tiết thứ hai.'],
+   ['flexible','linh hoạt','Ending -ible có âm yếu.'],
+   ['required','bắt buộc','Âm cuối /d/ có thể rất nhẹ.'],
+   ['optional','tùy chọn','Dễ xuất hiện trong form/note completion.']
+  ]
+ },
+ L1c:{
+  categories:[['OTHERS','https://study4.com/flashcards/lists/417/']],
+  words:[
+   ['receipt','biên lai','Chữ p không phát âm.'],
+   ['schedule','lịch trình','UK thường /ˈʃedjuːl/.'],
+   ['reference','tham chiếu / mã tham chiếu','Âm giữa thường bị rút gọn.'],
+   ['appointment','cuộc hẹn','Stress ở âm tiết thứ hai.'],
+   ['information','thông tin','Nghe đúng số âm tiết.'],
+   ['confirmation','xác nhận','Dễ nhầm với information.'],
+   ['entrance','lối vào','Chú ý /tr/ và ending.'],
+   ['membership','thành viên / tư cách thành viên','Âm /ʃɪp/ cuối.']
+  ]
+ },
+ L2a:{
+  categories:[
+   ['EDUCATION','https://study4.com/flashcards/lists/406/'],
+   ['WORKS','https://study4.com/flashcards/lists/414/']
+  ],
+  words:[
+   ['assignment','bài tập','Stress ở âm tiết thứ hai.'],
+   ['semester','học kỳ','Nghe rõ ending -ster.'],
+   ['lecture','bài giảng','UK /ˈlektʃə/.'],
+   ['tutorial','buổi hướng dẫn','Từ nhiều âm tiết.'],
+   ['enrolment','sự đăng ký học','Spelling dễ sai: enrolment/enrollment.'],
+   ['employer','người/công ty tuyển dụng','Phân biệt employer và employee.'],
+   ['salary','lương','Dễ nghe nhầm ending.'],
+   ['qualification','bằng cấp / trình độ','Stress ở -ca-.']
+  ]
+ },
+ L2b:{
+  categories:[
+   ['MONEY MATTERS','https://study4.com/flashcards/lists/390/'],
+   ['PLACES','https://study4.com/flashcards/lists/402/'],
+   ['IN THE CITY','https://study4.com/flashcards/lists/400/']
+  ],
+  words:[
+   ['deposit','tiền đặt cọc','Stress đầu hoặc giữa tùy loại từ; trong Listening thường là noun.'],
+   ['discount','giảm giá','Noun thường stress âm đầu.'],
+   ['receipt','biên lai','p câm.'],
+   ['currency','tiền tệ','Ending -cy.'],
+   ['intersection','giao lộ','Hay gặp chỉ đường.'],
+   ['pedestrian','người đi bộ','Từ dài, dễ mất âm tiết.'],
+   ['pharmacy','nhà thuốc','UK /ˈfɑːməsi/.'],
+   ['museum','bảo tàng','Stress âm tiết thứ hai.']
+  ]
+ },
+ L2c:{
+  categories:[
+   ['HOMES','https://study4.com/flashcards/lists/403/'],
+   ['HEALTH','https://study4.com/flashcards/lists/401/']
+  ],
+  words:[
+   ['accommodation','chỗ ở','Double c + double m, từ rất hay sai spelling.'],
+   ['apartment','căn hộ','Âm /t/ cuối cần nghe rõ.'],
+   ['furnished','có nội thất','Ending -ed đọc /t/.'],
+   ['electricity','điện','Stress ở -tri-.'],
+   ['appointment','cuộc hẹn','Hay gặp Section 1.'],
+   ['prescription','đơn thuốc','Cụm consonant khó.'],
+   ['symptom','triệu chứng','p gần như không nghe.'],
+   ['treatment','điều trị','Ending -ment.']
+  ]
+ },
+ L3a:{
+  categories:[
+   ['TRANSPORTATIONS','https://study4.com/flashcards/lists/415/'],
+   ['VEHICLES','https://study4.com/flashcards/lists/416/'],
+   ['TOURING','https://study4.com/flashcards/lists/410/']
+  ],
+  words:[
+   ['junction','ngã giao','Map language phổ biến.'],
+   ['roundabout','vòng xuyến','Từ ghép hay gặp chỉ đường.'],
+   ['platform','sân ga','Nghe rõ số platform đi kèm.'],
+   ['shuttle','xe trung chuyển','Âm /ʃ/ đầu.'],
+   ['vehicle','phương tiện','UK /ˈviːəkl/.'],
+   ['bicycle','xe đạp','Âm giữa rất nhẹ.'],
+   ['itinerary','lịch trình chuyến đi','Từ dài, stress dễ nhầm.'],
+   ['destination','điểm đến','Stress ở -na-.']
+  ]
+ },
+ L3b:{
+  categories:[
+   ['ARCHITECTURE','https://study4.com/flashcards/lists/405/'],
+   ['SHAPES','https://study4.com/flashcards/lists/397/']
+  ],
+  words:[
+   ['entrance','lối vào','Map keyword.'],
+   ['corridor','hành lang','Stress âm đầu trong UK.'],
+   ['staircase','cầu thang','Từ ghép.'],
+   ['rectangular','hình chữ nhật','Từ dài, cần nghe root rectangle.'],
+   ['circular','hình tròn','Ending -cular.'],
+   ['opposite','đối diện','Map instruction.'],
+   ['adjacent','liền kề','Academic/map synonym của next to.'],
+   ['boundary','ranh giới','Âm giữa dễ bị nuốt.']
+  ]
+ },
+ L3c:{
+  categories:[['PLACES','https://study4.com/flashcards/lists/402/']],
+  words:[
+   ['gallery','phòng trưng bày','Dễ nghe ending -lery.'],
+   ['cafeteria','căng tin','Stress gần cuối.'],
+   ['laboratory','phòng thí nghiệm','UK thường 4 âm tiết rõ.'],
+   ['reception','quầy lễ tân','Stress âm tiết thứ hai.'],
+   ['auditorium','hội trường','Từ dài trong map/campus.'],
+   ['courtyard','sân trong','Từ ghép.'],
+   ['warehouse','nhà kho','Âm house cuối.'],
+   ['facility','cơ sở / tiện ích','Stress -ci-.']
+  ]
+ },
+ L4a:{
+  categories:[
+   ['WORKS','https://study4.com/flashcards/lists/414/'],
+   ['QUALITIES','https://study4.com/flashcards/lists/404/']
+  ],
+  words:[
+   ['colleague','đồng nghiệp','Chú ý spelling -league.'],
+   ['supervisor','người giám sát','Stress đầu.'],
+   ['responsible','có trách nhiệm','Âm giữa dễ yếu.'],
+   ['efficient','hiệu quả','Phân biệt efficient/effective.'],
+   ['experienced','có kinh nghiệm','Ending -ed.'],
+   ['deadline','hạn chót','Từ ghép.'],
+   ['promotion','thăng chức / quảng bá','Stress -mo-.'],
+   ['temporary','tạm thời','Nhiều accent rút gọn âm tiết.']
+  ]
+ },
+ L4b:{
+  categories:[
+   ['HOBBIES','https://study4.com/flashcards/lists/407/'],
+   ['SPORTS','https://study4.com/flashcards/lists/412/'],
+   ['ARTS - MEDIA','https://study4.com/flashcards/lists/411/']
+  ],
+  words:[
+   ['photography','nhiếp ảnh','Stress khác photograph.'],
+   ['exhibition','triển lãm','Stress -bi-.'],
+   ['documentary','phim tài liệu','Ending có thể nghe rất nhanh.'],
+   ['tournament','giải đấu','UK /ˈtʊənəmənt/.'],
+   ['equipment','thiết bị','Danh từ không đếm được.'],
+   ['membership','thẻ/tư cách thành viên','Ending rõ.'],
+   ['performance','buổi biểu diễn / hiệu suất','Stress âm hai.'],
+   ['audience','khán giả','Hai đến ba âm tiết tùy accent.']
+  ]
+ },
+ L4c:{
+  categories:[['OTHERS','https://study4.com/flashcards/lists/417/']],
+  words:[
+   ['recommend','khuyên / đề xuất','Double m trong spelling.'],
+   ['prefer','thích hơn','Stress âm hai.'],
+   ['agree','đồng ý','Âm đầu yếu.'],
+   ['suggest','gợi ý','Âm /dʒ/ cuối.'],
+   ['alternative','phương án thay thế','Từ dài, stress đầu.'],
+   ['advantage','lợi thế','Stress âm hai.'],
+   ['disadvantage','bất lợi','Giữ đủ âm đầu dis-.'],
+   ['decision','quyết định','Ending /ʒən/.']
+  ]
+ },
+ L5a:{
+  categories:[
+   ['ENVIRONMENT','https://study4.com/flashcards/lists/409/'],
+   ['NATURE','https://study4.com/flashcards/lists/391/']
+  ],
+  words:[
+   ['environment','môi trường','Spelling dễ thiếu n.'],
+   ['habitat','môi trường sống','Stress đầu.'],
+   ['species','loài','Singular và plural giống nhau.'],
+   ['conservation','bảo tồn','Stress -va-.'],
+   ['biodiversity','đa dạng sinh học','Từ dài academic.'],
+   ['vegetation','thảm thực vật','Stress -ta-.'],
+   ['agriculture','nông nghiệp','Âm giữa rút gọn.'],
+   ['pollution','ô nhiễm','Stress âm hai.']
+  ]
+ },
+ L5b:{
+  categories:[
+   ['MATERIALS','https://study4.com/flashcards/lists/408/'],
+   ['WEATHER','https://study4.com/flashcards/lists/392/']
+  ],
+  words:[
+   ['aluminium','nhôm','UK pronunciation khác US aluminum.'],
+   ['concrete','bê tông','Noun stress đầu.'],
+   ['plastic','nhựa','Âm cuối /k/.'],
+   ['rubber','cao su','Âm /b/ đôi không đổi phát âm.'],
+   ['temperature','nhiệt độ','Thường rút còn 3–4 âm tiết.'],
+   ['humidity','độ ẩm','Stress -mi-.'],
+   ['forecast','dự báo','Stress đầu.'],
+   ['precipitation','lượng mưa','Từ dài academic.']
+  ]
+ },
+ L5c:{
+  categories:[
+   ['OCEANS','https://study4.com/flashcards/lists/389/'],
+   ['CONTINENTS','https://study4.com/flashcards/lists/388/'],
+   ['NATURE','https://study4.com/flashcards/lists/391/']
+  ],
+  words:[
+   ['Pacific','Thái Bình Dương','Stress âm hai.'],
+   ['Atlantic','Đại Tây Dương','Stress âm hai.'],
+   ['coastline','đường bờ biển','Từ ghép.'],
+   ['current','dòng hải lưu','Context quyết định nghĩa.'],
+   ['continent','châu lục','Stress đầu.'],
+   ['hemisphere','bán cầu','Từ dài geography.'],
+   ['erosion','xói mòn','Stress âm hai.'],
+   ['ecosystem','hệ sinh thái','Stress đầu.']
+  ]
+ },
+ L6b:{
+  categories:[['MIXED REVIEW','']],
+  words:[
+   ['accommodation','chỗ ở','Spelling trap.'],
+   ['Wednesday','thứ Tư','Sound–spelling mismatch.'],
+   ['environment','môi trường','Spelling trap.'],
+   ['receipt','biên lai','Silent p.'],
+   ['vehicle','phương tiện','Weak middle vowel.'],
+   ['February','tháng Hai','Spelling + pronunciation.'],
+   ['assignment','bài tập','Academic high-frequency.'],
+   ['pedestrian','người đi bộ','Map high-frequency.']
+  ]
+ },
+ L6c:{
+  categories:[['MIXED REVIEW','']],
+  words:[
+   ['qualification','bằng cấp','Long academic word.'],
+   ['itinerary','lịch trình','Travel spelling.'],
+   ['prescription','đơn thuốc','Health spelling.'],
+   ['exhibition','triển lãm','Arts spelling.'],
+   ['biodiversity','đa dạng sinh học','Lecture vocabulary.'],
+   ['temperature','nhiệt độ','Common lecture word.'],
+   ['supervisor','người giám sát','Work/education word.'],
+   ['intersection','giao lộ','Map vocabulary.']
+  ]
+ }
+};
+
+function listeningWordMeta(id){
+ const x=listeningVocabByTask[id];
+ if(!x)return '';
+ return x.categories.map(c=>c[0]).join(' • ');
+}
+
+function speakListeningWord(word){
+ try{
+   speechSynthesis.cancel();
+   const u=new SpeechSynthesisUtterance(word);
+   u.lang='en-GB';u.rate=.78;u.pitch=1;
+   const voices=speechSynthesis.getVoices();
+   u.voice=voices.find(v=>/en-GB/i.test(v.lang)&&/Google|Siri|Daniel|Serena|Kate|Premium|Enhanced/i.test(v.name))
+     ||voices.find(v=>/en-GB/i.test(v.lang))
+     ||voices.find(v=>/^en/i.test(v.lang))
+     ||null;
+   speechSynthesis.speak(u);
+ }catch(e){}
+}
+
+function injectListeningWarmup(t){
+ const pack=listeningVocabByTask[t.id];
+ if(!pack)return;
+ const body=document.getElementById('lessonBody');
+ if(!body||body.querySelector('.listenVocabWarmup'))return;
+
+ let index=0,attempts=0,correct=0,finished=false;
+ const wrap=document.createElement('section');
+ wrap.className='listenVocabWarmup';
+ body.insertBefore(wrap,body.firstChild);
+
+ const render=()=>{
+   const item=pack.words[index];
+   const done=index;
+   wrap.innerHTML=
+    '<div class="lvHead"><div><span class="phase">LISTENING WORD WARM-UP</span><h3>Nghe → Gõ → Sửa → Nhớ</h3><p>Không nhìn chữ trước khi nghe. Mục tiêu là nghe ra từ thật và viết đúng spelling trước khi vào task chính.</p></div>'+
+      '<div class="lvScore"><b>'+done+'/'+pack.words.length+'</b><span>'+correct+' đúng</span></div></div>'+
+    '<div class="lvSources">'+pack.categories.map(c=>c[1]
+      ?'<a href="'+c[1]+'" target="_blank" rel="noopener">'+c[0]+' ↗</a>'
+      :'<span>'+c[0]+'</span>').join('')+'</div>'+
+    '<div class="lvTrainer">'+
+      '<button id="lvListen" class="lvListen">🔊 Nghe từ</button>'+
+      '<input id="lvInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ chính xác từ bạn nghe...">'+
+      '<button id="lvCheck" class="btn primary">Check</button>'+
+    '</div>'+
+    '<div id="lvFeedback" class="lvFeedback"><span>Tip:</span> nghe 1–2 lần trước khi gõ. Không đoán theo nghĩa.</div>'+
+    '<div class="lvProgress"><i style="width:'+Math.round(done/pack.words.length*100)+'%"></i></div>'+
+    '<button id="lvSkip" class="lvSkip">Bỏ qua warm-up và vào task chính ↓</button>';
+
+   const listen=document.getElementById('lvListen'),input=document.getElementById('lvInput'),check=document.getElementById('lvCheck');
+   listen.onclick=()=>speakListeningWord(item[0]);
+   check.onclick=()=>{
+      const got=input.value.trim().toLowerCase(),target=item[0].toLowerCase();
+      if(!got)return;
+      attempts++;
+      if(got===target){
+        correct++;
+        fs.listenVocab.mastered[item[0]]=(fs.listenVocab.mastered[item[0]]||0)+1;
+        saveFlex();
+        document.getElementById('lvFeedback').innerHTML='<div class="lvCorrect">✓ <b>'+item[0]+'</b> — '+item[1]+'</div><small>'+item[2]+'</small>';
+        input.disabled=true;check.textContent='Tiếp →';
+        check.onclick=()=>next();
+      }else{
+        fs.listenVocab.missed[item[0]]=(fs.listenVocab.missed[item[0]]||0)+1;
+        saveFlex();
+        if(attempts<2){
+          document.getElementById('lvFeedback').innerHTML='<div class="lvWrong">Chưa đúng. Nghe lại rồi thử thêm 1 lần.</div>';
+          input.select();
+        }else{
+          document.getElementById('lvFeedback').innerHTML='<div class="lvWrong">✕ '+got+' → <b>'+item[0]+'</b></div><div class="lvReveal">'+item[1]+'</div><small>'+item[2]+'</small>';
+          input.disabled=true;check.textContent='Tiếp →';
+          check.onclick=()=>next();
+        }
+      }
+   };
+   input.onkeydown=e=>{if(e.key==='Enter')check.click();};
+   document.getElementById('lvSkip').onclick=()=>wrap.classList.add('collapsed');
+   setTimeout(()=>speakListeningWord(item[0]),250);
+ };
+
+ const next=()=>{
+   attempts=0;
+   index++;
+   if(index>=pack.words.length){
+     finished=true;
+     wrap.innerHTML=
+       '<div class="lvFinish"><div><span>✓</span><div><h3>Warm-up hoàn thành</h3><p>Bạn đúng '+correct+'/'+pack.words.length+'. Các từ sai đã được ghi vào review để gặp lại sau.</p></div></div>'+
+       '<button id="lvFinishClose" class="btn primary">Vào task Listening ↓</button></div>';
+     document.getElementById('lvFinishClose').onclick=()=>wrap.classList.add('collapsed');
+     return;
+   }
+   render();
+ };
+ render();
+}
+
 const allTasks=()=>Object.entries(modules).flatMap(([skill,ms])=>ms.flatMap(m=>m.tasks.map(t=>({skill,module:m.id,moduleTitle:m.title,id:t[0],title:t[1],desc:t[2],day:t[3],index:t[4]}))));
 const taskById=id=>allTasks().find(t=>t.id===id);
 const doneCountSkill=skill=>allTasks().filter(t=>t.skill===skill&&fs.done[t.id]).length;
@@ -216,8 +581,12 @@ function chooseQueue(n=4,reset=false){
 }
 
 function taskCard(t,queue=false){
+ const vocab=listeningVocabByTask[t.id];
  return '<div class="flexTask '+(fs.done[t.id]?'done':'')+'">'+
-   '<div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span> <small>'+t.module+'</small><h4>'+t.title+'</h4><p>'+t.desc+'</p></div>'+
+   '<div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span> <small>'+t.module+'</small>'+
+   (vocab?'<span class="listenVocabBadge">🎧 Word drill · '+vocab.words.length+' từ</span>':'')+
+   '<h4>'+t.title+'</h4><p>'+t.desc+'</p>'+
+   (vocab?'<small class="listenVocabMeta">'+listeningWordMeta(t.id)+'</small>':'')+'</div>'+
    '<div class="flexTaskActions">'+
     '<button class="btn primary" data-open="'+t.id+'">Mở bài</button>'+
     '<button class="btn '+(fs.done[t.id]?'green':'')+'" data-done="'+t.id+'">'+(fs.done[t.id]?'✓ Đã xong':'Đánh dấu hoàn thành')+'</button>'+
@@ -239,6 +608,7 @@ function openFlexTask(t){
  if(typeof window.openLesson==='function'){
   window.openLesson(t.day,t.index);
   setTimeout(()=>{
+   if(t.skill==='listening')injectListeningWarmup(t);
    const finish=document.getElementById('finish');
    if(finish){
     const oldFinish=finish.onclick;
