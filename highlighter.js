@@ -225,13 +225,7 @@
     const list=records();
     const next=[];
     for(const old of list){
-      if(old.sig!==recBase.sig||old.end<=recBase.start||old.start>=recBase.end){next.push(old);continue;}
-      if(old.start<recBase.start){
-        next.push({...old,id:old.id+"a",end:recBase.start,quote:"",before:"",after:""});
-      }
-      if(old.end>recBase.end){
-        next.push({...old,id:old.id+"b",start:recBase.end,quote:"",before:"",after:""});
-      }
+      if(old.sig!==recBase.sig||old.end<=recBase.start||old.start>=recBase.end)next.push(old);
     }
     next.push({
       ...recBase,
