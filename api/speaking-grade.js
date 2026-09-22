@@ -121,9 +121,10 @@ export default async function handler(req, res) {
       "- Preserve meaningful grammar mistakes the learner actually made.",
       "- Do not translate the transcript into Vietnamese.",
       "",
-      "CORRECTIONS:",
+      "CORRECTIONS AND ANNOTATION:",
       "- Identify exact mistakes from the learner's spoken answer.",
-      "- For each correction: quote the exact wrong wording, give a natural English correction, and explain the reason briefly in Vietnamese.",
+      "- For each correction: quote the exact wrong wording, give a natural English correction, explain the reason briefly in Vietnamese, classify it as grammar|vocabulary|fluency|word_choice|other, and mark severity as major|minor.",
+      "- Also identify obvious filler/discourse words that weaken this specific answer (for example repeated um/uh/you know), but do not mark natural discourse markers as errors when they are used appropriately.",
       "- Do not invent errors that are not present.",
       "",
       "CORRECTED ANSWER:",
@@ -153,10 +154,19 @@ export default async function handler(req, res) {
       "- Give specific Vietnamese feedback on intonation, stress, rhythm, linking, and pace.",
       "- Avoid generic advice such as 'practice more' or 'speak more naturally'.",
       "",
-      "GENERAL FEEDBACK:",
+      "COACH FEEDBACK:",
       "- feedback_vi must be concise, specific, and written in Vietnamese.",
-      "- Mention the most important strength, weakness, and what to improve next.",
+      "- coach_feedback.grammar_vi: explain the most important grammar pattern to fix, quoting the learner when useful.",
+      "- coach_feedback.vocab_vi: explain one concrete lexical/collocation upgrade grounded in the learner's wording.",
+      "- coach_feedback.development_vi: tell the learner exactly how to develop this answer for the question without inventing an unrelated story.",
+      "- coach_feedback.pronunciation_vi: summarise the most important pronunciation/delivery priority actually supported by the audio.",
+      "- strengths_vi: 1-3 short Vietnamese strengths supported by the answer.",
       "- Do not put corrected or high_band answers in Vietnamese.",
+      "",
+      "HIGH-BAND HIGHLIGHTS:",
+      "- high_band_highlights must contain exact substrings copied from high_band.",
+      "- category must be vocabulary|grammar|development|linking.",
+      "- Include only genuinely useful upgrades; 2-6 items is enough.",
       "",
       "OUTPUT:",
       "- Return VALID JSON ONLY.",
@@ -177,7 +187,31 @@ export default async function handler(req, res) {
           {
             wrong: "exact wording from learner",
             better: "natural English correction",
-            reason: "Giải thích ngắn gọn bằng tiếng Việt."
+            reason: "Giải thích ngắn gọn bằng tiếng Việt.",
+            type: "grammar|vocabulary|fluency|word_choice|other",
+            severity: "major|minor"
+          }
+        ],
+        fillers: [
+          {
+            text: "exact filler wording from transcript",
+            reason_vi: "Vì sao nên giảm hoặc bỏ trong câu này."
+          }
+        ],
+        strengths_vi: [
+          "Điểm mạnh cụ thể 1",
+          "Điểm mạnh cụ thể 2"
+        ],
+        coach_feedback: {
+          grammar_vi: "Lỗi grammar quan trọng nhất + cách sửa.",
+          vocab_vi: "Nâng cấp từ/collocation cụ thể.",
+          development_vi: "Cách phát triển câu trả lời sát câu hỏi.",
+          pronunciation_vi: "Ưu tiên phát âm/delivery quan trọng nhất."
+        },
+        high_band_highlights: [
+          {
+            phrase: "exact substring from high_band",
+            category: "vocabulary|grammar|development|linking"
           }
         ],
         pronunciation_feedback: [
@@ -207,6 +241,7 @@ export default async function handler(req, res) {
       "- high_band may naturally DEVELOP an existing idea, but must not replace it.",
       "- Never invent pronunciation mistakes.",
       "- Never give pronunciation feedback based only on spelling.",
+      "- fillers, corrections, and high_band_highlights must use exact text spans so the UI can annotate them reliably.",
       "- Prefer natural IELTS Speaking English."
     ].filter(Boolean).join("\n");
 
