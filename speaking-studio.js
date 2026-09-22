@@ -801,7 +801,7 @@
 
   function speakResultText(id){
     var el=document.getElementById(id);if(!el)return;
-    var txt=String(el.textContent||"").trim();if(!txt)return;
+    var txt=String((el.dataset&&el.dataset.clean)||el.textContent||"").trim();if(!txt)return;
     var u=new SpeechSynthesisUtterance(txt);
     u.lang="en-GB";u.rate=.88;
     try{speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
@@ -849,7 +849,7 @@
           '<div class="spkTranscriptLegend"><span class="err">Sai / chưa tự nhiên</span><span class="filler">Filler</span><span class="pron">Phát âm cần chú ý</span></div>'+
           '<div class="spkPronInline"><span class="spkPronIcon">Aa Aa Aa</span><b> Phát âm chưa chuẩn:</b> <span id="spkPronInlineList">'+pronunciationSummaryHTML([])+'</span></div>'+
           '<div id="spkDeliveryFeedback" class="spkDeliveryFeedback hidden"></div>'+
-          '<div class="spkRewriteLine"><b>Sửa lỗi:</b> <span id="spkCorrected">'+esc(localCorrected)+'</span>'+
+          '<div class="spkRewriteLine"><b>Sửa lỗi:</b> <span id="spkCorrected" data-clean="'+esc(localCorrected)+'">'+inlineCorrectionHTML(transcript,localFix)+'</span>'+
             '<div class="spkMiniAudioActions">'+
               (st.url?'<button id="spkPlayMine" class="spkIconBtn" title="Nghe lại bài của bạn">🔊 Bài của tôi</button>':'')+
               '<button id="spkReadCorrected" class="spkIconBtn" title="Nghe bản sửa">🔊 Bản sửa</button>'+
@@ -966,7 +966,11 @@
 
     var tr=document.getElementById("spkTranscriptMarked");
     if(tr)tr.innerHTML=speakingAnnotatedTranscriptHTML(transcript,corrections,fillers,pron);
-    setText("spkCorrected",corrected);
+    var correctedEl=document.getElementById("spkCorrected");
+    if(correctedEl){
+      correctedEl.dataset.clean=corrected;
+      correctedEl.innerHTML=inlineCorrectionHTML(transcript,corrections);
+    }
 
     var correctionHolder=document.getElementById("spkCorrections");
     if(correctionHolder)correctionHolder.innerHTML=correctionDetailHTML(corrections);
