@@ -1668,3 +1668,74 @@ button,input,textarea{font:inherit}button{cursor:pointer}.hero{margin:16px;max-w
   .heroBrand{align-items:flex-start;gap:12px}
   .heroLogo{width:58px;height:58px;flex-basis:58px;margin-top:4px}
 }
+
+/* Context-first Dictionary v2 */
+.dictHeaderLine{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:4px}
+.dictMetaLine{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:4px}
+.dictMetaLine .phonetic{font-size:14px}
+.dictBase{font-size:11px;color:#778397;background:#f5f7fa;border:1px solid #e4e8ef;border-radius:999px;padding:3px 7px}
+.dictFallback{margin-top:12px}
+.dictMeaningLead{
+  display:grid;gap:3px;padding:12px 13px;border-radius:13px;
+  background:#f7f9ff;border:1px solid #d7e1fb
+}
+.dictMeaningLead span{font-size:10px;letter-spacing:.07em;font-weight:900;color:#63759b}
+.dictMeaningLead strong{font-size:20px;line-height:1.3;color:#17213a}
+.dictLocalDetails{margin-top:10px;border:1px solid #e1e6ef;border-radius:11px;padding:8px 10px;background:#fff}
+.dictLocalDetails summary{cursor:pointer;font-weight:800;color:#536078}
+.dictPrimary{
+  margin-top:12px;padding:14px;border-radius:15px;border:1px solid #cbdcff;
+  background:linear-gradient(135deg,#f8fbff,#eef4ff)
+}
+.dictSectionKicker{font-size:10px;letter-spacing:.08em;font-weight:900;color:#3157d5;margin-bottom:5px}
+.dictMeaningRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dictMeaningRow>strong{font-size:23px;line-height:1.25;color:#17213a}
+.dictEnglishMeaning{margin:6px 0 0;color:#5d687a;font-size:13px}
+.dictContextFocus{margin-top:12px;background:#fff;border:1px solid #dfe6f2;border-radius:12px;padding:11px}
+.dictContextEN{font-weight:800;line-height:1.55;color:#19243c}
+.dictContextVI{margin-top:5px;color:#3157d5;font-weight:750;line-height:1.5}
+.dictContextFocus p{margin:8px 0 0;line-height:1.5;color:#4d596d;font-size:13px}
+.dictLearningSection{margin-top:14px;padding-top:1px}
+.dictLearningSection h3{font-size:16px;margin:0 0 8px}
+.dictChipGrid{display:flex;flex-wrap:wrap;gap:7px}
+.dictChipGrid>span{
+  display:inline-block;padding:7px 9px;border:1px solid #dfe5ee;border-radius:10px;background:#fff;
+  font-size:12px;line-height:1.35;color:#516078
+}
+.dictChipGrid>span b{color:#25344e}
+.dictPatternList{display:grid;gap:7px}
+.dictPatternItem{border:1px solid #dce4f2;border-radius:11px;padding:9px 10px;background:#fff}
+.dictPatternItem code{font-weight:850;color:#3157d5;font-size:13px}
+.dictPatternItem p{margin:5px 0 0;line-height:1.4;font-size:12px;color:#4f5d72}
+.dictPatternItem small{display:block;margin-top:5px;color:#6d798b;line-height:1.4}
+.dictTrap{border:1px solid #f1d6a9;background:#fffaf0;border-radius:12px;padding:11px}
+.dictTrap>div{border-top:1px solid #f2e2c6;padding-top:7px;margin-top:7px}
+.dictTrap>div:first-of-type{border-top:0;padding-top:0}
+.dictTrap p{margin:3px 0 0;color:#67583e;font-size:12px;line-height:1.4}
+.dictIELTSNote,.dictMemory{
+  margin-top:12px;border-radius:12px;padding:10px 11px;line-height:1.45
+}
+.dictIELTSNote{background:#f0f7ff;border:1px solid #cfe3ff}
+.dictMemory{background:#fff8df;border:1px solid #f2dda0}
+.dictIELTSNote p,.dictMemory p{margin:4px 0 0;font-size:13px;color:#4f5b6c}
+.dictOtherMeanings,.dictSourceDetails{
+  margin-top:13px;border-top:1px solid #e3e7ee;padding-top:10px
+}
+.dictOtherMeanings summary,.dictSourceDetails summary{cursor:pointer;font-weight:850;color:#526078}
+.dictOtherMeanings>div{padding:7px 0;border-bottom:1px dashed #e4e8ef;line-height:1.4}
+.dictSourceList{margin-top:8px}
+.dictSourcePOS{border:1px solid #e7eaf0;border-radius:10px;padding:8px 9px;margin:6px 0;background:#fbfcfe}
+.dictSourcePOS>p{margin:4px 0;font-size:11px;color:#6f7a8d;line-height:1.35}
+.dictAIStamp{margin-top:10px;font-size:10px;color:#66806f;font-weight:800}
+.dictAILoading{
+  display:flex;gap:10px;align-items:center;margin-top:12px;padding:11px;border:1px solid #d9e3f6;border-radius:12px;background:#f8faff
+}
+.dictAILoading>span{width:18px;height:18px;border:2px solid #cbd7ef;border-top-color:#3157d5;border-radius:50%;animation:dictSpin .8s linear infinite}
+.dictAILoading>div{display:grid;gap:2px}
+.dictAILoading small{color:#7a8798}
+.dictAIUnavailable{margin-top:12px;padding:10px 11px;border:1px solid #ead9bb;border-radius:11px;background:#fffbf2;color:#755c30;font-size:12px;line-height:1.45}
+@keyframes dictSpin{to{transform:rotate(360deg)}}
+@media(max-width:700px){
+  .dictMeaningRow>strong{font-size:20px}
+  .dictPrimary{padding:11px}
+}
