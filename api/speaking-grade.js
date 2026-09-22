@@ -163,10 +163,13 @@ export default async function handler(req, res) {
       "- strengths_vi: 1-3 short Vietnamese strengths supported by the answer.",
       "- Do not put corrected or high_band answers in Vietnamese.",
       "",
-      "HIGH-BAND HIGHLIGHTS:",
-      "- high_band_highlights must contain exact substrings copied from high_band.",
+      "HIGH-BAND ANSWER + TRANSLATION + HIGHLIGHTS:",
+      "- high_band_translation_vi must be a natural Vietnamese translation of high_band, preserving the same meaning and sentence flow.",
+      "- high_band_highlights must identify the most useful phrases/words to learn from the high-band answer.",
+      "- Each high_band_highlights item must contain phrase copied EXACTLY from high_band and translation_vi copied EXACTLY from high_band_translation_vi.",
       "- category must be vocabulary|grammar|development|linking.",
-      "- Include only genuinely useful upgrades; 2-6 items is enough.",
+      "- Choose 3-7 genuinely useful focus phrases. Prefer collocations, strong sentence frames, linking language, and useful development phrases; do not highlight random function words.",
+      "- The English phrase and Vietnamese translation phrase should correspond to each other so the UI can mark the same learning point in both languages.",
       "",
       "OUTPUT:",
       "- Return VALID JSON ONLY.",
@@ -183,6 +186,7 @@ export default async function handler(req, res) {
         corrected: "English-only minimally corrected version preserving the learner's meaning.",
         feedback_vi: "Specific Vietnamese feedback about this answer.",
         high_band: "English-only higher-band answer that naturally develops the learner's existing ideas without changing the core idea.",
+        high_band_translation_vi: "Bản dịch tiếng Việt tự nhiên, sát nghĩa của toàn bộ high_band.",
         corrections: [
           {
             wrong: "exact wording from learner",
@@ -211,6 +215,7 @@ export default async function handler(req, res) {
         high_band_highlights: [
           {
             phrase: "exact substring from high_band",
+            translation_vi: "cụm tương ứng, copied exactly from high_band_translation_vi",
             category: "vocabulary|grammar|development|linking"
           }
         ],
@@ -237,11 +242,12 @@ export default async function handler(req, res) {
       "- AUDIO is primary evidence; transcript is secondary.",
       "- corrected = ENGLISH ONLY.",
       "- high_band = ENGLISH ONLY.",
+      "- high_band_translation_vi = VIETNAMESE ONLY.",
       "- Preserve the learner's core idea.",
       "- high_band may naturally DEVELOP an existing idea, but must not replace it.",
       "- Never invent pronunciation mistakes.",
       "- Never give pronunciation feedback based only on spelling.",
-      "- fillers, corrections, and high_band_highlights must use exact text spans so the UI can annotate them reliably.",
+      "- fillers, corrections, and both English/Vietnamese fields in high_band_highlights must use exact text spans so the UI can annotate them reliably.",
       "- Prefer natural IELTS Speaking English."
     ].filter(Boolean).join("\n");
 
