@@ -477,9 +477,9 @@ function injectListeningWarmup(t){
       ?'<a href="'+c[1]+'" target="_blank" rel="noopener">'+c[0]+' ↗</a>'
       :'<span>'+c[0]+'</span>').join('')+'</div>'+
     '<div class="lvTrainer">'+
-      '<button id="lvListen" class="lvListen">🔊 Nghe từ</button>'+
-      '<input id="lvInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ chính xác từ bạn nghe...">'+
-      '<button id="lvCheck" class="btn primary">Check</button>'+
+      '<button id="lvListen" class="lvListen" title="Phím Tab để nghe lại">🔊 Nghe lại · Tab</button>'+
+      '<input id="lvInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ từ bạn nghe · Tab = nghe lại · Enter = check">'+
+      '<button id="lvCheck" class="btn primary" title="Phím Enter để check">Check · Enter</button>'+
     '</div>'+
     '<div id="lvFeedback" class="lvFeedback"><span>Tip:</span> nghe 1–2 lần trước khi gõ. Không đoán theo nghĩa.</div>'+
     '<div class="lvProgress"><i style="width:'+Math.round(done/pack.words.length*100)+'%"></i></div>'+
@@ -496,8 +496,9 @@ function injectListeningWarmup(t){
         fs.listenVocab.mastered[item[0]]=(fs.listenVocab.mastered[item[0]]||0)+1;
         saveFlex();
         document.getElementById('lvFeedback').innerHTML='<div class="lvCorrect">✓ <b>'+item[0]+'</b> — '+item[1]+'</div><small>'+item[2]+'</small>';
-        input.disabled=true;check.textContent='Tiếp →';
+        input.disabled=true;check.textContent='Tiếp → · Enter';
         check.onclick=()=>next();
+        setTimeout(()=>check.focus({preventScroll:true}),0);
       }else{
         fs.listenVocab.missed[item[0]]=(fs.listenVocab.missed[item[0]]||0)+1;
         saveFlex();
@@ -506,14 +507,34 @@ function injectListeningWarmup(t){
           input.select();
         }else{
           document.getElementById('lvFeedback').innerHTML='<div class="lvWrong">✕ '+got+' → <b>'+item[0]+'</b></div><div class="lvReveal">'+item[1]+'</div><small>'+item[2]+'</small>';
-          input.disabled=true;check.textContent='Tiếp →';
+          input.disabled=true;check.textContent='Tiếp → · Enter';
           check.onclick=()=>next();
+          setTimeout(()=>check.focus({preventScroll:true}),0);
         }
       }
    };
-   input.onkeydown=e=>{if(e.key==='Enter')check.click();};
+   input.onkeydown=e=>{
+      if(e.key==='Tab'){
+        e.preventDefault();
+        speakListeningWord(item[0]);
+        return;
+      }
+      if(e.key==='Enter'){
+        e.preventDefault();
+        check.click();
+      }
+   };
+   wrap.onkeydown=e=>{
+      if(e.key==='Tab' && e.target!==input){
+        e.preventDefault();
+        speakListeningWord(item[0]);
+      }
+   };
    document.getElementById('lvSkip').onclick=()=>wrap.classList.add('collapsed');
-   setTimeout(()=>speakListeningWord(item[0]),250);
+   setTimeout(()=>{
+     speakListeningWord(item[0]);
+     input.focus({preventScroll:true});
+   },250);
  };
 
  const next=()=>{
