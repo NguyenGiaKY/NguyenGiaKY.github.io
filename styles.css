@@ -2942,3 +2942,135 @@ canvas{
   .errPackStart{grid-template-columns:1fr}
   .errPackStart small,.errPackStart .errPackError{grid-column:auto}
 }
+
+/* Daily Vocabulary Lab */
+#view-vocab .panel{padding:0;overflow:hidden;background:transparent;border:0;box-shadow:none}
+.vocabHero{
+  display:flex;justify-content:space-between;gap:24px;align-items:flex-start;
+  padding:22px 24px;border:1px solid #d8e4ff;border-radius:20px;
+  background:linear-gradient(135deg,#f7faff,#eef4ff);box-shadow:0 10px 30px rgba(38,69,133,.06);
+}
+.vocabHero h2{margin:7px 0 6px;font-size:28px;color:#17233f}
+.vocabHero p{margin:0;max-width:760px;color:#627087;line-height:1.55}
+.vocabHeroStat{
+  min-width:125px;display:grid;justify-items:end;padding:12px 14px;
+  border:1px solid #dce5f4;border-radius:16px;background:#fff
+}
+.vocabHeroStat b{font-size:30px;color:#3157d5;line-height:1}
+.vocabHeroStat span{font-weight:900;color:#2f3e58;margin-top:4px}
+.vocabHeroStat small{color:#8490a2;margin-top:3px}
+.vocabDayList{display:grid;gap:14px;margin-top:14px}
+.vocabDayCard{
+  border:1px solid #dfe5ee;border-radius:18px;background:#fff;
+  box-shadow:0 8px 26px rgba(24,39,75,.045);overflow:hidden
+}
+.vocabDayHeader{
+  width:100%;border:0;background:#fff;padding:16px 18px;display:flex;
+  justify-content:space-between;gap:20px;align-items:center;text-align:left;cursor:pointer
+}
+.vocabDayHeader:hover{background:#fbfcff}
+.vocabDayHeader h3{margin:7px 0 3px;color:#1d2a43;font-size:19px}
+.vocabDayHeader p{margin:0;color:#7a879a;font-size:12px;line-height:1.45}
+.vocabDatePill{
+  display:inline-flex;border-radius:999px;background:#eaf1ff;color:#3157d5;
+  padding:5px 9px;font-size:10px;font-weight:900;letter-spacing:.02em
+}
+.vocabDayProgress{min-width:145px;display:grid;justify-items:end;gap:2px}
+.vocabDayProgress b{font-size:20px;color:#3157d5}
+.vocabDayProgress span{font-size:10px;color:#8792a3}
+.vocabDayProgress i{
+  width:130px;height:6px;border-radius:999px;background:#e8edf5;overflow:hidden;margin-top:4px
+}
+.vocabDayProgress em{display:block;height:100%;background:#3157d5;border-radius:999px}
+.vocabDayBody{display:none;border-top:1px solid #edf0f5;padding:16px 18px 20px;background:#fcfdff}
+.vocabDayCard.open .vocabDayBody{display:block}
+.vocabWordShelf{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
+.vocabDayWord{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border:1px solid #e1e6ee;border-radius:11px;background:#fff;padding:9px 10px
+}
+.vocabDayWord>div{display:grid;gap:2px;min-width:0}
+.vocabDayWord b{color:#25334d}
+.vocabDayWord span{font-size:11px;color:#718095;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vocabDayWord button,.vocabSpeakModel{
+  border:1px solid #dce4f0;background:#f8faff;border-radius:8px;padding:6px 8px;
+  cursor:pointer;color:#3157d5;font-weight:800;white-space:nowrap
+}
+.vocabPracticeIntro{
+  margin:14px 0 10px;padding:11px 12px;border-radius:12px;background:#f2f7ff;
+  border:1px solid #d7e6ff;display:grid;gap:3px
+}
+.vocabPracticeIntro b{color:#264f91}.vocabPracticeIntro span{font-size:11px;color:#68778d}
+.vocabPracticeBlock{
+  margin-top:10px;border:1px solid #e1e7f0;border-radius:15px;background:#fff;padding:14px
+}
+.vocabPracticeHead{display:flex;gap:10px;align-items:center;margin-bottom:11px}
+.vocabPracticeHead>span{
+  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  background:#3157d5;color:#fff;font-weight:900;font-size:11px
+}
+.vocabPracticeHead>div{display:grid;gap:2px}
+.vocabPracticeHead b{color:#22314b}.vocabPracticeHead small{color:#7b8798}
+.vocabRecallList{display:grid;gap:8px}
+.vocabRecallItem{
+  display:grid;grid-template-columns:minmax(220px,1fr) minmax(240px,1.3fr);gap:12px;
+  align-items:center;border:1px solid #e7eaf0;border-radius:11px;padding:10px;background:#fbfcfe
+}
+.vocabRecallItem.passed{border-color:#a9dfb7;background:#f5fff7}
+.vocabRecallItem.failed{border-color:#f1b4ac;background:#fff8f7}
+.vocabRecallPrompt{display:flex;gap:9px;align-items:center}
+.vocabRecallPrompt small{
+  width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#edf2fa;color:#60708a;font-weight:900
+}
+.vocabRecallPrompt strong{color:#334155;line-height:1.4}
+.vocabRecallAction{display:grid;grid-template-columns:1fr auto;gap:7px}
+.vocabRecallAction input,.vocabWritingInput{
+  width:100%;border:1px solid #d8e0ec;border-radius:10px;padding:10px 11px;background:#fff;color:#1f2937;outline:none
+}
+.vocabRecallAction input:focus,.vocabWritingInput:focus{border-color:#86a7f2;box-shadow:0 0 0 3px rgba(49,87,213,.09)}
+.vocabMiniFeedback{grid-column:2;font-size:10px;color:#6b778a}
+.vocabUseCaseHint{
+  display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:8px 10px;border-radius:10px;background:#fffaf0;border:1px solid #f2dfae
+}
+.vocabUseCaseHint b{font-size:11px;color:#795b19}
+.vocabUseCaseHint span{font-size:10px;padding:4px 7px;border-radius:999px;background:#fff;color:#715f3b;border:1px solid #eedfbf}
+.vocabSpeakGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.vocabSpeakCard{
+  border:1px solid #e3e8ef;border-radius:12px;padding:11px;background:#fbfcff
+}
+.vocabSpeakCard.passed{border-color:#a8dfb7;background:#f4fff7}
+.vocabSpeakCard.failed{border-color:#efb5ad;background:#fff8f7}
+.vocabSpeakCardTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.vocabSpeakCardTop>div{display:grid;gap:2px}
+.vocabSpeakCardTop b{font-size:17px;color:#263650}.vocabSpeakCardTop small{color:#7b8797}
+.vocabSourceContext{
+  margin:8px 0;padding:8px 9px;border-radius:9px;background:#fff;border:1px solid #e2e7ee;
+  color:#627087;font-size:11px;line-height:1.5
+}
+.vocabSourceContext mark{background:#ffe783;border-radius:3px;padding:0 2px}
+.vocabSpeakCue{font-size:12px;line-height:1.5;color:#506078}
+.vocabSpeechTranscript{margin-top:8px;font-size:11px;line-height:1.45;color:#637087;min-height:16px}
+.vocabWritingTask{border:1px solid #e7eaf0;border-radius:12px;padding:12px;background:#fbfcfe}
+.vocabWritingTask>p{margin:0 0 8px;color:#4c5a70;line-height:1.5}
+.vocabTargetChips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.vocabTargetChips span{padding:5px 8px;border-radius:999px;background:#eaf1ff;color:#3157d5;font-size:11px;font-weight:900}
+.vocabWritingInput{resize:vertical;min-height:120px;line-height:1.55}
+.vocabWritingBottom{display:flex;align-items:center;gap:10px;margin-top:9px}
+.vocabWritingFeedback{font-size:11px;color:#617086}
+.vocabWritingTask.passed{border-color:#a8dfb7;background:#f5fff7}
+.vocabWritingTask.failed{border-color:#efb5ad;background:#fff8f7}
+.vocabEmpty{padding:28px;border:1px dashed #cbd5e1;border-radius:16px;text-align:center;background:#fff;color:#64748b}
+.vocabEmpty b{color:#27364f}.vocabEmpty p{margin:6px 0 0}
+
+@media(max-width:800px){
+  .vocabHero{display:grid}.vocabHeroStat{justify-items:start}
+  .vocabDayHeader{align-items:flex-start}
+  .vocabRecallItem{grid-template-columns:1fr}
+  .vocabMiniFeedback{grid-column:1}
+  .vocabSpeakGrid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .vocabDayHeader{display:grid}
+  .vocabDayProgress{justify-items:start}
+  .vocabWritingBottom{align-items:flex-start;flex-direction:column}
+}
