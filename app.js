@@ -33,8 +33,12 @@ function mistake(day,type,prompt,correct,explain,meta){
 }
 function master(id){let m=st.mistakes.find(x=>x.id===id);if(m)m.mastered=true;save();renderReview()}
 function renderReview(){
- let list=document.getElementById('reviewList');if(!list)return;let now=cd(),a=st.mistakes.filter(m=>!m.mastered);
- list.innerHTML=a.length?a.map(m=>'<div class="reviewItem '+(m.due.includes(now)?'due':'')+'"><b>'+m.p+'</b><div class="muted">'+m.type+' • Day '+m.day+' • ôn Day '+m.due.join(', ')+'</div><div><b>Đáp án:</b> '+m.c+'</div><div>'+m.e+'</div><button class="btn" onclick="master(\''+m.id+'\')">✓ Đã nhớ</button></div>').join(''):'<p class="muted">Chưa có lỗi cần ôn. Khi bạn làm sai Grammar/Reading/Listening, câu đó sẽ tự vào lịch +1, +3, +7 ngày.</p>';
+ let list=document.getElementById('reviewList');if(!list)return;
+ if(typeof window.renderErrorCenter==='function')window.renderErrorCenter();
+ let items=[];try{items=JSON.parse(localStorage.getItem('gkyyy_error_center_v2')||'{}').items||[]}catch(e){}
+ const active=items.filter(x=>!x.mastered),due=active.filter(x=>!x.nextReviewAt||x.nextReviewAt<=Date.now());
+ list.innerHTML='<div class="reviewItem"><b>'+due.length+' lỗi đến lượt ôn</b><p>'+active.length+' lỗi đang luyện. Mỗi lỗi cần làm bài tập và thử lại qua nhiều ngày để được đánh dấu đã nhớ.</p><button type="button" class="btn primary" id="reviewGoErrorLab">Mở Error Lab để luyện</button></div>';
+ document.getElementById('reviewGoErrorLab').onclick=()=>{show('errors');if(typeof window.renderErrorCenter==='function')window.renderErrorCenter();};
 }
 function initErrorNotes(){
  document.querySelectorAll('.error').forEach(t=>{t.value=st.errorNotes[t.dataset.key]||'';t.oninput=e=>{st.errorNotes[e.target.dataset.key]=e.target.value;save()}});
