@@ -2720,3 +2720,52 @@ canvas{
   .errRepairDone{align-items:flex-start;flex-direction:column}
   .errRepairDone span{text-align:left}
 }
+
+/* Error Lab learning methods */
+.errHeroActions{
+  flex:0 0 auto;
+  display:grid;
+  gap:8px;
+  justify-items:end;
+}
+.errHeroActions .btn{
+  width:100%;
+  min-height:39px;
+  border-radius:11px;
+  font-size:11px;
+  font-weight:900;
+}
+.errHeroActions .btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.errMethodRow{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:12px 0 14px;
+}
+.errMethodRow>div{
+  border:1px solid #e2e7ef;
+  border-radius:12px;
+  background:#fff;
+  padding:10px 11px;
+  display:grid;
+  gap:4px;
+}
+.errMethodRow b{
+  color:#283954;
+  font-size:11px;
+}
+.errMethodRow span{
+  color:#7a8798;
+  font-size:10px;
+  line-height:1.4;
+}
+@media(max-width:900px){
+  .errHeroActions{justify-items:stretch;width:100%}
+  .errMethodRow{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .errMethodRow{grid-template-columns:1fr}
+}
