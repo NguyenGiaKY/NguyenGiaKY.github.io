@@ -23,6 +23,7 @@
     ? location.origin+"/api/dictionary-explain"
     : "";
   window.DICTIONARY_AI_ENDPOINT=dictionarySaved||dictionarySameOrigin||dictionaryVercel;
+  window.VOCAB_AI_ENDPOINT=window.DICTIONARY_AI_ENDPOINT;
 
   var errorDrillSaved="";
   try{errorDrillSaved=localStorage.getItem("error_drill_ai_endpoint")||"";}catch(e){}
