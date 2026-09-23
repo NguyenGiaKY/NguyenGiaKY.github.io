@@ -665,6 +665,18 @@ const CORE={
  ,run:{s:[['verb','chạy; vận hành; kéo dài/diễn ra','to move quickly, operate, or continue for a period of time','The course runs for eight weeks.'],['noun','lần chạy; quãng chạy; chuỗi','an act or period of running, or a continuous series','a short run']]}
  ,habit:{s:[['noun','thói quen','something you do regularly','Reading every day is a useful habit.']]}
  ,habits:{s:[['noun','thói quen','things you do regularly','Good study habits help me learn English.']]}
+ ,access:{s:[['noun','khả năng tiếp cận; cơ hội sử dụng hoặc tham gia','the opportunity or ability to use or reach something','Online courses improve access to education.'],['verb','truy cập; tiếp cận để sử dụng','to find, enter or use something','Students can access the lessons online.']]}
+ ,accessible:{s:[['adjective','dễ tiếp cận; có thể sử dụng được','easy to reach, use or understand','Online lessons are accessible to more students.']]}
+ ,flexibility:{s:[['noun','sự linh hoạt','the ability to change or adapt as needed','A flexible schedule gives learners more flexibility.']]}
+ ,flexible:{s:[['adjective','linh hoạt; có thể thay đổi cho phù hợp','able to change or adapt','Online courses often have flexible schedules.']]}
+ ,responsibility:{s:[['noun','trách nhiệm; bổn phận','a duty or something you are expected to do','Students have a responsibility to prepare.']]}
+ ,responsibilities:{s:[['noun','những trách nhiệm; những việc phải lo liệu','duties or things you are expected to do','Some learners have family responsibilities.']]}
+ ,participation:{s:[['noun','sự tham gia','the act of taking part in an activity','Regular feedback can encourage participation.']]}
+ ,interaction:{s:[['noun','sự tương tác','communication or activity between people','Discussion groups support interaction between learners.']]}
+ ,motivation:{s:[['noun','động lực','the reason or desire to do something','Clear goals can improve motivation.']]}
+ ,feedback:{s:[['noun','phản hồi; nhận xét giúp cải thiện','information or advice about a person’s work','Students receive feedback on their writing.']]}
+ ,outcome:{s:[['noun','kết quả','the result of an action or process','The learning outcome depends on practice.']]}
+ ,outcomes:{s:[['noun','những kết quả','the results of an action or process','Learning outcomes depend on several factors.']]}
 
 
 };
@@ -804,6 +816,10 @@ async function fetchData(surface,sentence){
 }
 function inferPOS(surface,base,sentence,groups){
  let w=dclean(surface),A=around(surface,sentence),prev=A.prev,next=A.next,set=new Set(groups.map(g=>g.partOfSpeech)),fixed=FIXED[w];
+ if(w==='access'&&set.has('noun')&&set.has('verb')){
+  if(['improve','improves','improved','better','wider','greater','equal','the','an','their','our'].includes(prev)||next==='to')return'noun';
+  if(['students','people','learners','users','they','we','you','i'].includes(prev)||['can','could','may','to'].includes(prev))return'verb';
+ }
  if(w==='another')return next?'determiner':'pronoun';
  if(w==='in'){if(['come','go','walk','step','get'].includes(prev)&&!next)return'adverb';return set.has('preposition')?'preposition':(set.has('adverb')?'adverb':'preposition')}
  if(w==='read'){if(['a','an','the','this','that','another','good','great','interesting','quick'].includes(prev)&&set.has('noun'))return'noun';if(prev==='well'&&set.has('adjective'))return'adjective';return set.has('verb')?'verb':(set.has('noun')?'noun':'verb')}
@@ -1079,15 +1095,28 @@ async function chatStyleExamples(base,groups,sentence,pos){
 
 
 function aiPOSLabel(pos){return POSVI[String(pos||'').toLowerCase()]||pos||'—';}
-function quickDictionaryHTML(base,sentence,meaning,definition,coreSense){
+function quickContextNote(base,sentence,pos){
+ const s=String(sentence||'').toLowerCase();
+ if(!s)return'';
+ if(base==='access'){
+  if(pos==='verb')return'Ở đây, access là truy cập hoặc sử dụng một tài liệu/dịch vụ, như access a course = truy cập một khóa học.';
+  if(/\b(improve|improves|improved|better|wider|greater|equal)\s+access\b/.test(s))return'Ở đây, improve access nghĩa là giúp nhiều người có cơ hội tiếp cận hơn; access là danh từ, không phải động từ “truy cập”.';
+  if(/\baccess\s+to\b/.test(s))return'Ở đây, access to + danh từ nói về cơ hội hoặc khả năng tiếp cận thứ đó.';
+ }
+ if(base==='flexibility'&&/\bflexibility\b/.test(s))return'Ở đây, flexibility nói về khả năng thay đổi thời gian hoặc cách học cho phù hợp.';
+ return'';
+}
+function quickDictionaryHTML(base,sentence,meaning,definition,coreSense,pos){
  const english=String(definition?.definition||coreSense?.[2]||'').trim();
  const example=String(coreSense?.[3]||definition?.example||'').trim();
  const safeMeaning=String(meaning||'').trim();
+ const note=quickContextNote(base,sentence,pos);
  return '<section class="dictQuickAnswer">'+
-   '<p><b>'+descape(base)+'</b> = <strong>'+descape(safeMeaning||'Chưa có nghĩa tiếng Việt đáng tin cậy')+'</strong></p>'+
+   (safeMeaning?'<p><b>'+descape(base)+'</b>: <strong>'+descape(safeMeaning)+'</strong></p>':'<p>Chưa tra được nghĩa của <b>'+descape(base)+'</b> lúc này. Bạn có thể mở Cambridge để đối chiếu.</p>')+
+   (note?'<p class="dictQuickNote">'+descape(note)+'</p>':'')+
    (sentence?'<div class="dictQuickContext"><small>Trong bài của bạn</small><p>'+highlightWord(String(sentence).slice(0,250),base)+'</p></div>':'')+
-   (english?'<p class="dictQuickEnglish"><b>Hiểu đơn giản:</b> '+descape(english.slice(0,170))+'</p>':'')+
-   (example&&example!==sentence?'<p class="dictQuickExample"><b>Ví dụ:</b> '+descape(example.slice(0,180))+'</p>':'')+
+   (english&&!note&&safeMeaning?'<p class="dictQuickEnglish"><b>English:</b> '+descape(english.slice(0,135))+'</p>':'')+
+   (example&&!sentence?'<p class="dictQuickExample"><b>Ví dụ:</b> '+descape(example.slice(0,160))+'</p>':'')+
  '</section>';
 }
 
@@ -1173,6 +1202,7 @@ async function renderDictionary(surface,targetId,sentence){
  if(/^habits?$/i.test(base))simpleMeaning='thói quen';
  else if(window.cleanSavedMeaning)simpleMeaning=window.cleanSavedMeaning(base,simpleMeaning);
  let currentPOS=pos||g?.partOfSpeech||'';
+ if(currentPOS==='unknown')currentPOS='';
 
  target.innerHTML=
   '<div class="dictHeaderLine"><div><div class="dictWord">'+descape(titleWord(surface))+'</div>'+
@@ -1187,8 +1217,8 @@ async function renderDictionary(surface,targetId,sentence){
     '<button class="save" id="dictSaveWord" data-meaning="'+descape(simpleMeaning)+'">⭐ Lưu ôn</button>'+
     '<a target="_blank" rel="noopener" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a>'+
   '</div>'+
-  quickDictionaryHTML(base,sentence,simpleMeaning,def,coreSense)+
-  '<small class="dictQuickSource">Nghĩa tham khảo từ từ điển; học sâu sau khi lưu từ.</small>';
+  quickDictionaryHTML(base,sentence,simpleMeaning,def,coreSense,currentPOS)+
+  '<small class="dictQuickSource">Lưu từ để luyện ngữ cảnh, cụm từ, nói và viết.</small>';
 
  bindDictionaryAudio(target);
  hydrateRecordedPronunciation(base);
