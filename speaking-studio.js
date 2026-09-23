@@ -1074,6 +1074,33 @@
     var corrections=Array.isArray(d.corrections)?d.corrections.slice(0,12):[];
     var fillers=Array.isArray(d.fillers)?d.fillers.slice(0,10):[];
     var pron=Array.isArray(d.pronunciation_feedback)?d.pronunciation_feedback.slice(0,8):[];
+    if(typeof window.recordLearningError==="function"){
+      var cq=current();
+      corrections.forEach(function(x){
+        window.recordLearningError({
+          skill:"speaking",
+          task:"Speaking Part "+(cq.part||""),
+          question:cq.q||"",
+          userAnswer:x.wrong||"",
+          correctAnswer:x.better||"",
+          why:x.reason||"",
+          rule:(d.coach_feedback&&d.coach_feedback.grammar_vi)||"",
+          errorType:x.type||"Speaking"
+        });
+      });
+      pron.forEach(function(x){
+        window.recordLearningError({
+          skill:"speaking",
+          task:"Speaking Part "+(cq.part||""),
+          question:cq.q||"",
+          userAnswer:x.heard_as||x.word||"",
+          correctAnswer:x.word||"",
+          why:x.issue_vi||"",
+          rule:x.tip_vi||"",
+          errorType:"Pronunciation"
+        });
+      });
+    }
     var corrected=ensureEnglishImprovement(d.corrected||applyCorrectionsText(transcript,corrections),transcript,corrections);
     var highBand=ensureEnglishImprovement(d.high_band,transcript,corrections);
 
