@@ -20,7 +20,7 @@ const COMMON_PHRASES={
 };
 function offTopic(s){
   s=String(s||'');
-  return /bài hát|ca sĩ|đĩa (đơn|mở rộng|đầu tay)|thu âm|phòng thu|stay high|truth serum|queen of the clouds|recorded by|soundtrack|film (released|starring)/i.test(s);
+  return /(?:bài hát|album|đĩa đơn).{0,85}(?:của |do .*trình bày|phát hành|thu âm)|(?:ca sĩ|nghệ sĩ).{0,60}(?:phát hành|trình bày)|\b(?:song|album|single)\b.{0,85}\b(?:released|recorded|performed by|sung by)\b|\b(?:released|recorded)\b.{0,85}\b(?:song|album|single)\b|stay high.{0,45}tove lo|truth serum.{0,45}tove lo|queen of the clouds.{0,45}tove lo/i.test(s);
 }
 function goodMeaning(word,meaning){return offTopic(meaning)||String(meaning||'').length>170?(COMMON_MEANINGS[norm(word)]||''):String(meaning||'').trim();}
 window.cleanSavedMeaning=goodMeaning;
