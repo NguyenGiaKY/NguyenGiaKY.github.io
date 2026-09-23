@@ -15,6 +15,7 @@
 <title>NguyenGiaKy</title>
 <link rel="stylesheet" href="styles.css?v=20260923-7">
 <link rel="stylesheet" href="learning-updates.css?v=20260923-4">
+<link rel="stylesheet" href="dictionary-rich.css?v=20260923-1">
 </head>
 <body>
 <div id="app">
@@ -71,7 +72,7 @@
       <section id="view-grammar" class="view"><div class="card panel"><h2>Grammar Library</h2><div id="grammarList" class="grid2"></div></div></section>
       <section id="view-vocab" class="view"><div class="card panel"><div id="savedWords"></div></div></section>
       <section id="view-dictionary" class="view"><div class="card panel"><h2>Tra từ nhanh</h2>
-<p class="muted">Nháy đúp bất kỳ từ tiếng Anh nào trong bài đọc để xem nghĩa theo ngữ cảnh, phát âm và ví dụ. Tra từ không dùng AI; lưu lại để luyện sâu ở Saved Vocabulary.</p>
+<p class="muted">Nháy đúp một từ để xem nghĩa, ví dụ, collocations, word family và cấu trúc IELTS. Tra từ miễn phí không gọi API AI; nút Hỏi ChatGPT sao chép câu hỏi rồi mở ChatGPT trong tab khác.</p>
 <div class="dictSearch" style="max-width:700px"><input id="dictPageInput" class="search" placeholder="Ví dụ: in, another, read, routine..."><button class="btn primary" id="dictPageGo">Tra từ</button></div>
 <div id="dictPageResult" style="margin-top:12px"></div>
 </div></section>
@@ -109,7 +110,7 @@
   </div>
   <div class="dictBody">
     <div class="dictSearch"><input id="dictInput" autocomplete="off" aria-label="Nhập từ tiếng Anh" placeholder="Nhập từ..."><button id="dictGo" type="button">Tra</button></div>
-    <small>Xem nghĩa theo câu rồi đọc tiếp. Muốn luyện dùng từ, bấm ⭐ Lưu ôn.</small>
+    <small>Xem nghĩa, ví dụ và cấu trúc theo ngữ cảnh. Bấm ⭐ Lưu từ để luyện sâu hơn.</small>
     <div id="dictResult"></div>
   </div>
 </div>
@@ -122,7 +123,8 @@
 </div>
 
 <script src="ai-config.js?v=20260923-3"></script>
-<script src="app.js?v=20260923-13"></script>
+<script src="app.js?v=20260923-14"></script>
+<script src="dictionary-rich.js?v=20260923-1"></script>
 <script src="flex.js?v=20260923-9"></script>
 <script src="enhance.js?v=20260921-4"></script>
 <script src="speaking-studio.js?v=20260923-6"></script>
