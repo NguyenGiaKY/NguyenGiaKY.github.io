@@ -20,9 +20,9 @@ const COMMON_PHRASES={
 };
 function offTopic(s){
   s=String(s||'');
-  return s.length>170||/bài hát|ca sĩ|album|đĩa (đơn|mở rộng|đầu tay)|thu âm|phòng thu|thụy điển|stay high|truth serum|queen of the clouds|singer|recorded by|soundtrack|film (released|starring)/i.test(s);
+  return /bài hát|ca sĩ|đĩa (đơn|mở rộng|đầu tay)|thu âm|phòng thu|stay high|truth serum|queen of the clouds|recorded by|soundtrack|film (released|starring)/i.test(s);
 }
-function goodMeaning(word,meaning){return offTopic(meaning)?(COMMON_MEANINGS[norm(word)]||''):String(meaning||'').trim();}
+function goodMeaning(word,meaning){return offTopic(meaning)||String(meaning||'').length>170?(COMMON_MEANINGS[norm(word)]||''):String(meaning||'').trim();}
 window.cleanSavedMeaning=goodMeaning;
 window.isOffTopicSavedText=offTopic;
 function reEsc(s){return String(s||"").replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&");}
@@ -36,6 +36,7 @@ function dayKey(ts){
   const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
   return y+"-"+m+"-"+day;
 }
+function afterDays(days){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+days);return d.getTime();}
 function formatDay(k){
   if(k==="legacy")return "Từ đã lưu trước khi bật chia theo ngày";
   const p=k.split("-").map(Number),d=new Date(p[0],p[1]-1,p[2]);
@@ -85,6 +86,22 @@ function wordCard(word){
   const key=norm(word),known=COMMON_PHRASES[key]||{paraphrases:[],collocations:[]};
   return lab.cards[key]||(lab.cards[key]={paraphrases:known.paraphrases.slice(),collocations:known.collocations.slice(),rounds:0,reviewAt:0});
 }
+function applySuggestion(word,d){
+  if(!word||!d||typeof d!=='object')return false;
+  const app=loadApp(),saved=Object.values(app.saved||{}).find(x=>norm(x?.w)===norm(word));
+  if(!saved)return false;
+  const item=wordCard(word);
+  const para=(Array.isArray(d.paraphrases)?d.paraphrases:[]).map(x=>String(x?.phrase||'').trim()).filter(x=>x&&!offTopic(x)).slice(0,5);
+  if(!para.length&&d.meaning_en_simple&&!offTopic(d.meaning_en_simple)&&norm(d.meaning_en_simple)!==norm(word))para.push(String(d.meaning_en_simple).trim());
+  const coll=(Array.isArray(d.collocations)?d.collocations:[]).map(x=>String(x?.phrase||'').trim()).filter(x=>x&&!offTopic(x)).slice(0,5);
+  let changed=false;
+  if(para.length&&!item.paraphrases?.length){item.paraphrases=para;changed=true;}
+  if(coll.length&&!item.collocations?.length){item.collocations=coll;changed=true;}
+  if(d.meaning_vi&&!offTopic(d.meaning_vi)&&!item.meaningVi){item.meaningVi=String(d.meaning_vi).trim();changed=true;}
+  if(changed){saveLab();if(document.querySelector('.vocabPhraseCard'))render();}
+  return changed;
+}
+window.applyVocabularySuggestion=applySuggestion;
 function same(a,b){return norm(a).replace(/[’]/g,"'")===norm(b).replace(/[’]/g,"'");}
 function dueCard(card){return !!(card.paraphrases?.length&&card.collocations?.length&&card.rounds<4&&(!card.reviewAt||card.reviewAt<=Date.now()));}
 function collocationPrompt(word,phrase){
@@ -182,7 +199,7 @@ function renderDay(k,arr){
     '</button>'+
     '<div class="vocabDayBody">'+
       '<div class="vocabWordShelf">'+arr.map(wordRow).join("")+'</div>'+
-       '<div class="vocabPracticeIntro"><b>Ôn bộ từ của ngày này</b><span>Recall từ → paraphrase & collocation → nói → viết. Gợi ý cụm dùng AI khi bạn bấm nút; bài kiểm tra chạy trên trình duyệt.</span></div>'+
+       '<div class="vocabPracticeIntro"><b>Ôn bộ từ của ngày này</b><span>Nhớ nghĩa → luyện paraphrase và collocation → nói → viết. Từ mới được gợi ý cụm sau khi tra và lưu; bạn có thể sửa gợi ý.</span></div>'+
        recallHTML(k,arr)+phraseHTML(k,arr)+speakingHTML(k,arr)+writingHTML(k,arr)+
     '</div>'+
   '</section>';
@@ -265,19 +282,27 @@ function checkPhrase(btn){
   const ok=!!(value.trim()&&expected.some(x=>same(value,x)));
   const feedback=row.querySelector('.vocabPhraseFeedback'),field=isPara?'paraphrase':'collocation',done=dayState(k);
   row.classList.toggle('passed',ok);row.classList.toggle('failed',!ok);
-  feedback.textContent=ok?'✓ Đúng.':value.trim()?'Chưa khớp. Một đáp án phù hợp: '+expected[0]+' — kiểm tra nghĩa và thử lại.':'Nhập đáp án trước khi kiểm tra.';
-  if(!ok)return;
+  const today=dayKey(Date.now());
+  feedback.textContent=ok?(item.todayPass?.[today]?.needsRetest?'✓ Đã sửa được. Ngày mai thử lại từ đầu, không nhìn gợi ý.':'✓ Đúng.'):value.trim()?'Chưa khớp. Một đáp án phù hợp: '+expected[0]+' — kiểm tra nghĩa và thử lại.':'Nhập đáp án trước khi kiểm tra.';
+  if(!ok){
+    if(value.trim()){
+      item.todayPass=item.todayPass||{};
+      item.todayPass[today]=item.todayPass[today]||{};
+      item.todayPass[today].needsRetest=true;saveLab();
+    }
+    return;
+  }
   done[field][norm(word)]=true;
   item.todayPass=item.todayPass||{};
-  const today=dayKey(Date.now());item.todayPass[today]=item.todayPass[today]||{};item.todayPass[today][field]=true;
-  if(item.todayPass[today].paraphrase&&item.todayPass[today].collocation&&dueCard(item)){
+  item.todayPass[today]=item.todayPass[today]||{};item.todayPass[today][field]=true;
+  if(item.todayPass[today].paraphrase&&item.todayPass[today].collocation&&dueCard(item)&&!item.todayPass[today].needsRetest){
     item.rounds=Math.min(4,(item.rounds||0)+1);
-    item.reviewAt=item.rounds<4?Date.now()+[1,3,7][item.rounds-1]*86400000:0;
+    item.reviewAt=item.rounds<4?afterDays([1,3,7][item.rounds-1]):0;
   }
   saveLab();updateDayProgress(k);
   const status=card.querySelector('.vocabPhraseHead span');
   if(status&&item.todayPass[today].paraphrase&&item.todayPass[today].collocation)
-    status.textContent=item.rounds>=4?'✓ Đã qua 4 lượt':'✓ Hôm nay · ôn lại '+new Date(item.reviewAt).toLocaleDateString('vi-VN');
+    status.textContent=item.todayPass[today].needsRetest?'Đã sửa lỗi · mai thử lại không nhìn đáp án':item.rounds>=4?'✓ Đã qua 4 lượt':'✓ Hôm nay · ôn lại '+new Date(item.reviewAt).toLocaleDateString('vi-VN');
 }
 function updateDayProgress(k){
   const groups=wordsByDay(),arr=groups[k]||[],p=progressOf(k,arr),card=document.querySelector('[data-vocab-day="'+CSS.escape(k)+'"]');
