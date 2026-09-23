@@ -345,7 +345,7 @@ function startSpeech(btn){
       const used=norm(latest).includes(norm(word)),longEnough=latest.split(/\s+/).filter(Boolean).length>=5;
       const ok=used&&longEnough;
       card?.classList.toggle("passed",ok);card?.classList.toggle("failed",!ok);
-      if(out)out.textContent=ok?"✓ Tốt. Bạn đã dùng “"+word+"” trong một câu hoàn chỉnh.":used?"Có từ mục tiêu rồi, nhưng hãy nói một câu dài hơn (ít nhất khoảng 5 từ).":"Chưa nghe thấy “"+word+"”. Hãy nói lại một câu có chính từ đó.";
+      if(out)out.textContent=ok?"✓ Đã phát hiện từ “"+word+"” trong câu nói. Bước này chưa chấm ngữ pháp hay cách dùng từ.":used?"Có từ mục tiêu rồi, nhưng hãy nói một câu dài hơn (ít nhất khoảng 5 từ).":"Chưa nghe thấy “"+word+"”. Hãy nói lại một câu có chính từ đó.";
       if(ok){dayState(k).speaking[norm(word)]=true;saveLab();updateDayProgress(k);}
     };
     r.onerror=()=>{btn.disabled=false;btn.textContent="🎙️ Nói lại";if(out)out.textContent="Không nhận rõ giọng. Hãy nói chậm hơn và thử lại.";};
@@ -360,7 +360,7 @@ function checkWriting(btn){
   const ok=tokens.length>=20&&sentences>=2&&used.length>=need;
   box?.classList.toggle("passed",ok);box?.classList.toggle("failed",!ok);
   if(fb)fb.textContent=ok
-    ?"✓ Đạt: "+tokens.length+" từ · "+sentences+" câu · đã dùng "+used.length+" từ mục tiêu."
+    ?"✓ Đã hoàn thành bài viết: "+tokens.length+" từ · "+sentences+" câu · có "+used.length+" từ mục tiêu. Chưa chấm ngữ pháp hoặc cách dùng từ."
     :"Chưa đạt: hiện có "+tokens.length+"/20 từ · "+sentences+"/2 câu · "+used.length+"/"+need+" từ mục tiêu.";
   const d=dayState(k);d.writingText=text;
   if(ok)d.writing=true;saveLab();if(ok)updateDayProgress(k);
