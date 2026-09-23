@@ -29,6 +29,11 @@
 .dictQuickAnswer strong{color:#2452be;font-size:1.1rem}.dictQuickContext{border-left:3px solid #9db6f3;padding:2px 0 2px 12px;margin:12px 0;background:#fff}
 .dictQuickContext small,.vocabStudyContext small,.vocabStudyExample small{font-size:.72rem;font-weight:800;letter-spacing:.07em;color:#536b9b}
 .dictQuickContext p,.vocabStudyContext p{margin:5px 0}.dictQuickEnglish,.dictQuickExample{font-size:.92rem;color:#42536d}.dictQuickSource{display:block;margin-top:9px;color:#64748b}
+.dictQuickNote{color:#25436d;font-size:.95rem;line-height:1.5}
+.dictionary:not(.max):not(.min){height:min(440px,calc(100vh - 90px));min-height:290px}
+.dictionary .dictQuickAnswer{padding:14px;margin-top:10px}
+.dictionary .dictWord{font-size:1.65rem;margin-top:8px}
+.dictionary .dictQuickContext{margin:9px 0 2px}
 
 .vocabWordSelected{border-color:#3157d5!important;background:#eef3ff!important}
 .vocabPickWord{border:0;background:transparent;text-align:left;cursor:pointer;display:grid;gap:4px;color:inherit;padding:0;min-width:0;flex:1}
