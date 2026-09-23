@@ -86,6 +86,107 @@ function similarity(a,b){
   const A=new Set(a.split(/\s+/)),B=new Set(b.split(/\s+/));let hit=0;A.forEach(x=>{if(B.has(x))hit++;});
   return hit/Math.max(A.size,B.size);
 }
+function tokenDiff(wrong,correct){
+  const W=String(wrong||"").trim().split(/\s+/).filter(Boolean);
+  const C=String(correct||"").trim().split(/\s+/).filter(Boolean);
+  let p=0;while(p<W.length&&p<C.length&&norm(W[p])===norm(C[p]))p++;
+  let sw=W.length-1,sc=C.length-1;
+  while(sw>=p&&sc>=p&&norm(W[sw])===norm(C[sc])){sw--;sc--;}
+  let wrongChunk=W.slice(p,sw+1).join(" "),correctChunk=C.slice(p,sc+1).join(" ");
+  if(!correctChunk)correctChunk=String(correct||"").trim();
+  if(!wrongChunk)wrongChunk=String(wrong||"").trim();
+  return {
+    before:C.slice(0,p).join(" "),
+    after:C.slice(sc+1).join(" "),
+    wrongChunk,correctChunk
+  };
+}
+function diffLineHTML(it){
+  const d=tokenDiff(it.userAnswer,it.correctAnswer);
+  const before=d.before?esc(d.before)+" ":"",after=d.after?" "+esc(d.after):"";
+  return '<div class="errDiffBox">'+
+    '<div><small>Chỗ gây lỗi</small><p>'+before+'<mark class="errOldChunk">'+esc(d.wrongChunk||"—")+'</mark>'+after+'</p></div>'+
+    '<div><small>Cần đổi thành</small><p>'+before+'<mark class="errNewChunk">'+esc(d.correctChunk||it.correctAnswer||"—")+'</mark>'+after+'</p></div>'+
+  '</div>';
+}
+function deterministicSwap(id){
+  return String(id||"").split("").reduce((n,ch)=>n+ch.charCodeAt(0),0)%2===0;
+}
+function optionPair(it){
+  const right=String(it.correctAnswer||"").trim(),wrong=String(it.userAnswer||"").trim();
+  if(!wrong||norm(wrong)===norm(right))return [right,"Không có thay đổi"];
+  return deterministicSwap(it.id)?[right,wrong]:[wrong,right];
+}
+function preventionOptions(it){
+  let right=String(it.rule||"").trim();
+  const defaults={
+    grammar:"Xác định dấu hiệu ngữ pháp + chủ ngữ trước, rồi mới chọn dạng đúng.",
+    reading:"Tìm evidence trong passage và đối chiếu paraphrase trước khi chọn.",
+    listening:"Dự đoán loại đáp án, nghe đúng từ khóa rồi kiểm tra spelling / plural / number.",
+    writing:"Sửa theo cả cấu trúc câu và collocation, không chỉ thay một từ riêng lẻ.",
+    speaking:"Ưu tiên câu rõ và đúng trước; sau đó mới mở rộng và nâng cấp từ vựng."
+  };
+  if(!right)right=defaults[it.skill]||"Đối chiếu đúng yêu cầu rồi kiểm tra lại điểm vừa sai.";
+  const traps={
+    grammar:["Chọn theo từ đứng gần chỗ trống nhất.","Dịch từ tiếng Việt sang rồi chọn dạng nghe có vẻ đúng."],
+    reading:["Chọn đáp án có nhiều từ giống câu hỏi nhất.","Dùng kiến thức bên ngoài bài để đoán đáp án."],
+    listening:["Viết ngay từ đầu tiên nghe thấy và không cần kiểm tra lại.","Chỉ nghe nghĩa chung; spelling và số nhiều không quan trọng."],
+    writing:["Cứ dùng từ khó hơn thì band sẽ tăng dù collocation chưa đúng.","Chỉ sửa từ bị sai, không cần xem cấu trúc cả câu."],
+    speaking:["Cố nói câu thật dài dù grammar không chắc.","Chỉ cần thay từ vựng khó hơn, không cần sửa cách diễn đạt."]
+  };
+  let arr=[right].concat(traps[it.skill]||["Đoán theo cảm giác.","Nhìn đáp án rồi học thuộc nguyên câu."]);
+  if(deterministicSwap(it.id))arr=[arr[1],arr[0],arr[2]];
+  else arr=[arr[2],arr[1],arr[0]];
+  return {right,options:arr};
+}
+function targetedDrillHTML(it){
+  const d=tokenDiff(it.userAnswer,it.correctAnswer);
+  if(it.skill==="listening"){
+    return '<div class="errTargetPrompt"><b>🎧 Dictation repair</b><p>Nghe đúng từ/cụm này rồi gõ lại chính xác. Mục tiêu: sửa lỗi nghe + spelling.</p>'+
+      '<button class="btn errPlayTarget" data-id="'+esc(it.id)+'">🔊 Nghe</button>'+
+      '<input class="errTargetInput" autocomplete="off" placeholder="Gõ chính xác từ/cụm vừa nghe..."></div>';
+  }
+  if(it.skill==="reading"){
+    return '<div class="errTargetPrompt"><b>🔎 Evidence-first drill</b>'+
+      '<p class="errEvidenceMini">'+esc(it.evidence||it.why||"Đọc lại evidence/giải thích rồi chọn đáp án được hỗ trợ trực tiếp.")+'</p>'+
+      '<div class="errChoiceGrid">'+optionPair(it).map(x=>'<button class="errChoice errTargetChoice" data-id="'+esc(it.id)+'" data-value="'+esc(x)+'">'+esc(x)+'</button>').join("")+'</div></div>';
+  }
+  const before=d.before?esc(d.before)+" ":"",after=d.after?" "+esc(d.after):"";
+  return '<div class="errTargetPrompt"><b>🧩 Micro-cloze đúng chỗ sai</b><p>'+before+'<span class="errBlank">_____</span>'+after+'</p>'+
+    '<small>Chỉ gõ phần cần thay, không phải viết lại cả câu.</small>'+
+    '<input class="errTargetInput" autocomplete="off" placeholder="Phần đúng là..."></div>';
+}
+function speakTarget(it){
+  const text=String(it.correctAnswer||"").trim();if(!text)return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);u.lang="en-GB";u.rate=.82;speechSynthesis.speak(u);
+  }catch(e){}
+}
+function markStage(card,n,ok,msg){
+  const stage=card.querySelector('[data-stage="'+n+'"]');
+  const fb=stage&&stage.querySelector(".errStageFeedback");
+  if(stage)stage.dataset.pass=ok?"1":"0";
+  if(stage)stage.classList.toggle("passed",!!ok);
+  if(stage)stage.classList.toggle("failed",!ok);
+  if(fb){fb.className="errStageFeedback "+(ok?"good":"bad");fb.textContent=msg;}
+}
+function maybeCompleteRound(card,it){
+  const stages=[...card.querySelectorAll(".errRepairStage")];
+  if(stages.length<3||!stages.every(s=>s.dataset.pass==="1")||card.dataset.roundSaved==="1")return;
+  card.dataset.roundSaved="1";
+  it.drillWins=(it.drillWins||0)+1;
+  it.reviewLevel=Math.min(5,(it.reviewLevel||0)+1);
+  const days=[1,3,7,14,30][Math.max(0,it.reviewLevel-1)]||30;
+  it.nextReviewAt=Date.now()+days*DAY;
+  if(it.drillWins>=3)it.mastered=true;
+  save();
+  const done=card.querySelector(".errRepairDone");
+  if(done){
+    done.classList.remove("hidden");
+    done.innerHTML='<b>✓ Một vòng sửa lỗi hoàn tất.</b><span>'+(it.mastered?'Bạn đã vượt lỗi này 3 lần. Đã chuyển sang “Đã nhớ”.':'Web sẽ hỏi lại lỗi này '+nextLabel(it.nextReviewAt).toLowerCase()+'.')+'</span>';
+  }
+}
 function statHTML(){
   const active=state.items.filter(i=>!i.mastered),due=active.filter(isDue),mastered=state.items.filter(i=>i.mastered);
   const counts={};active.forEach(i=>counts[i.skill]=(counts[i.skill]||0)+1);
@@ -102,7 +203,9 @@ function cardHTML(i){
   const wrong=i.userAnswer||"Chưa lưu đáp án của bạn";
   const correct=i.correctAnswer||"Xem lại đáp án trong task";
   const due=isDue(i);
-  return '<article class="errCard '+(i.mastered?"mastered":"")+'" data-err="'+idx+'">'+
+  const opts=optionPair(i);
+  const prev=preventionOptions(i);
+  return '<article class="errCard '+(i.mastered?"mastered":"")+'" data-err="'+idx+'" data-id="'+esc(i.id)+'">'+
     '<div class="errCardTop"><div><span class="errSkill '+esc(i.skill)+'">'+skillIcon(i.skill)+' '+esc(skillLabel(i.skill))+'</span>'+
       (i.errorType?'<span class="errType">'+esc(i.errorType)+'</span>':'')+
       (i.seenCount>1?'<span class="errRepeat">Lặp '+i.seenCount+'×</span>':'')+
@@ -110,23 +213,38 @@ function cardHTML(i){
     '<h3>'+esc(i.question||i.task||"Lỗi cần sửa")+'</h3>'+
     (i.task?'<div class="errSource">'+esc(i.task)+'</div>':'')+
     '<div class="errCompare"><div><small>Bạn làm / nói / viết</small><strong class="wrong">'+esc(wrong)+'</strong></div><div><small>Đúng / nên dùng</small><strong class="right">'+esc(correct)+'</strong></div></div>'+
+    diffLineHTML(i)+
     '<div class="errExplain">'+
       '<p><b>Vì sao sai:</b> '+esc(i.why||"Lỗi này cần được đối chiếu lại với yêu cầu câu hỏi và đáp án đúng.")+'</p>'+
-      (i.rule?'<p><b>Quy tắc / cách sửa:</b> '+esc(i.rule)+'</p>':'')+
+      (i.rule?'<p><b>Điểm cần nhớ:</b> '+esc(i.rule)+'</p>':'')+
       (i.evidence?'<p><b>Evidence:</b> '+esc(i.evidence)+'</p>':'')+
-      '<p class="errMemory"><b>🧠 Cách nhớ:</b> '+esc(memoryTip(i))+'</p>'+
+      '<p class="errMemory"><b>⚡ Mẹo 10 giây:</b> '+esc(memoryTip(i))+'</p>'+
     '</div>'+
     '<div class="errActions">'+
-      '<button class="btn errPractice" data-id="'+esc(i.id)+'">🎯 Luyện lại 3 bước</button>'+
-      '<button class="btn errMaster" data-id="'+esc(i.id)+'">'+(i.mastered?"↩ Học lại":"✓ Tôi đã nhớ")+'</button>'+
+      '<button class="btn primary errPractice" data-id="'+esc(i.id)+'">🎯 Mở Repair Test</button>'+
+      '<button class="btn errMaster" data-id="'+esc(i.id)+'">'+(i.mastered?"↩ Học lại":"Ẩn lỗi này")+'</button>'+
     '</div>'+
     '<div class="errDrill hidden" id="drill-'+esc(i.id)+'">'+
-      '<div class="errDrillHead"><b>Bài cải thiện 3 bước</b><span>Recall → Explain → Transfer</span></div>'+
-      '<label><span>1. Không nhìn đáp án, gõ lại câu/đáp án đúng</span><input class="errRecall" autocomplete="off" placeholder="Gõ đáp án đúng..."></label>'+
-      '<button class="btn primary errCheckRecall" data-id="'+esc(i.id)+'">Check</button><div class="errRecallFeedback"></div>'+
-      '<label><span>2. Tự giải thích: tại sao đáp án cũ sai?</span><textarea class="errExplainInput" placeholder="Nói lại quy tắc bằng lời của bạn..."></textarea></label>'+
-      '<label><span>3. Transfer: tự tạo một ví dụ/câu mới dùng đúng quy tắc này</span><textarea class="errTransfer" placeholder="Viết ví dụ mới...">'+esc(i.practiceNote||"")+'</textarea></label>'+
-      '<button class="btn errSavePractice" data-id="'+esc(i.id)+'">💾 Lưu phần luyện</button>'+
+      '<div class="errDrillHead"><div><b>Repair Test</b><span>Không viết giải thích dài. Làm 3 micro-drill đúng vào lỗi vừa mắc.</span></div><em>'+(i.drillWins||0)+'/3 vòng</em></div>'+
+      '<section class="errRepairStage" data-stage="1">'+
+        '<div class="errStageTitle"><b>1. Nhận diện bẫy</b><span>5–10 giây</span></div>'+
+        '<p>Trong hai lựa chọn dưới đây, cái nào đúng trong task này?</p>'+
+        '<div class="errChoiceGrid">'+opts.map(x=>'<button class="errChoice errTrapChoice" data-id="'+esc(i.id)+'" data-value="'+esc(x)+'">'+esc(x)+'</button>').join("")+'</div>'+
+        '<div class="errStageFeedback"></div>'+
+      '</section>'+
+      '<section class="errRepairStage" data-stage="2">'+
+        '<div class="errStageTitle"><b>2. Luyện đúng điểm yếu</b><span>'+esc(skillLabel(i.skill))+'</span></div>'+
+        targetedDrillHTML(i)+
+        (i.skill==="reading"?'' : '<button class="btn primary errCheckTarget" data-id="'+esc(i.id)+'">Check</button>')+
+        '<div class="errStageFeedback"></div>'+
+      '</section>'+
+      '<section class="errRepairStage" data-stage="3">'+
+        '<div class="errStageTitle"><b>3. Anti-repeat test</b><span>Chặn lỗi lặp lại</span></div>'+
+        '<p>Lần sau gặp dạng tương tự, bạn nên làm gì?</p>'+
+        '<div class="errRuleChoices">'+prev.options.map(x=>'<button class="errRuleChoice" data-id="'+esc(i.id)+'" data-value="'+esc(x)+'">'+esc(x)+'</button>').join("")+'</div>'+
+        '<div class="errStageFeedback"></div>'+
+      '</section>'+
+      '<div class="errRepairDone hidden"></div>'+
     '</div>'+
   '</article>';
 }
@@ -149,33 +267,54 @@ window.renderErrorCenter=render;
 function byId(id){return state.items.find(i=>i.id===id);}
 function bind(){
   document.querySelectorAll("[data-err-filter]").forEach(b=>b.onclick=()=>{state.filter=b.dataset.errFilter;save();render();});
-  document.querySelectorAll(".errPractice").forEach(b=>b.onclick=()=>document.getElementById("drill-"+b.dataset.id)?.classList.toggle("hidden"));
+  document.querySelectorAll(".errPractice").forEach(b=>b.onclick=()=>{
+    const drill=document.getElementById("drill-"+b.dataset.id);if(!drill)return;
+    drill.classList.toggle("hidden");
+    if(!drill.classList.contains("hidden"))setTimeout(()=>drill.scrollIntoView({behavior:"smooth",block:"nearest"}),40);
+  });
   document.querySelectorAll(".errMaster").forEach(b=>b.onclick=()=>{
-    const i=byId(b.dataset.id);if(!i)return;i.mastered=!i.mastered;
-    if(!i.mastered)i.nextReviewAt=Date.now();save();render();
+    const i=byId(b.dataset.id);if(!i)return;
+    i.mastered=!i.mastered;
+    if(!i.mastered)i.nextReviewAt=Date.now();
+    save();render();
   });
-  document.querySelectorAll(".errCheckRecall").forEach(b=>b.onclick=()=>{
-    const card=b.closest(".errCard"),input=card.querySelector(".errRecall"),fb=card.querySelector(".errRecallFeedback"),i=byId(b.dataset.id);if(!i)return;
-    const score=similarity(input.value,i.correctAnswer);
-    if(score>=.72){
-      i.drillWins=(i.drillWins||0)+1;i.reviewLevel=Math.min(5,(i.reviewLevel||0)+1);
-      const days=[1,3,7,14,30][Math.max(0,i.reviewLevel-1)]||30;i.nextReviewAt=Date.now()+days*DAY;
-      if(i.drillWins>=3)i.mastered=true;
-      fb.className="errRecallFeedback good";fb.textContent="✓ Đúng. Lần ôn tiếp theo: "+nextLabel(i.nextReviewAt)+".";
-      save();
-    }else{
-      i.reviewLevel=Math.max(0,(i.reviewLevel||0)-1);i.nextReviewAt=Date.now();
-      fb.className="errRecallFeedback bad";fb.innerHTML="Chưa đúng. Gợi ý: <b>"+esc(i.correctAnswer.slice(0,Math.max(3,Math.ceil(i.correctAnswer.length*.35))))+"…</b>";
-      save();
-    }
-  });
-  document.querySelectorAll(".errSavePractice").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".errTrapChoice").forEach(b=>b.onclick=()=>{
     const card=b.closest(".errCard"),i=byId(b.dataset.id);if(!i)return;
-    const ex=card.querySelector(".errExplainInput").value.trim(),tr=card.querySelector(".errTransfer").value.trim();
-    i.practiceNote=tr;if(ex)i.selfExplanation=ex;
-    if(tr&&ex){i.reviewLevel=Math.max(1,i.reviewLevel||0);if(!i.nextReviewAt||i.nextReviewAt<=Date.now())i.nextReviewAt=Date.now()+DAY;}
-    save();b.textContent="✓ Đã lưu";setTimeout(()=>b.textContent="💾 Lưu phần luyện",1000);
+    card.querySelectorAll(".errTrapChoice").forEach(x=>x.classList.remove("picked","right","wrong"));
+    const ok=norm(b.dataset.value)===norm(i.correctAnswer);
+    b.classList.add("picked",ok?"right":"wrong");
+    markStage(card,1,ok,ok?"✓ Đúng. Bạn đã phân biệt được đáp án đúng với bẫy cũ.":"Chưa đúng — đây chính là bẫy cũ. Nhìn phần “Chỗ gây lỗi” phía trên rồi chọn lại.");
+    maybeCompleteRound(card,i);
   });
+  document.querySelectorAll(".errPlayTarget").forEach(b=>b.onclick=()=>{const i=byId(b.dataset.id);if(i)speakTarget(i);});
+  document.querySelectorAll(".errCheckTarget").forEach(b=>b.onclick=()=>{
+    const card=b.closest(".errCard"),i=byId(b.dataset.id);if(!i)return;
+    const input=card.querySelector(".errTargetInput"),d=tokenDiff(i.userAnswer,i.correctAnswer);
+    let expected=i.skill==="listening"?i.correctAnswer:d.correctChunk;
+    let ok=similarity(input?.value||"",expected)>=.84;
+    markStage(card,2,ok,ok?"✓ Chính xác. Bạn đã sửa đúng phần yếu thay vì học thuộc cả câu.":"Chưa đúng. Gợi ý: phần cần sửa bắt đầu bằng “"+String(expected||"").slice(0,Math.max(1,Math.ceil(String(expected||"").length*.25)))+"…”");
+    maybeCompleteRound(card,i);
+  });
+  document.querySelectorAll(".errTargetChoice").forEach(b=>b.onclick=()=>{
+    const card=b.closest(".errCard"),i=byId(b.dataset.id);if(!i)return;
+    card.querySelectorAll(".errTargetChoice").forEach(x=>x.classList.remove("picked","right","wrong"));
+    const ok=norm(b.dataset.value)===norm(i.correctAnswer);
+    b.classList.add("picked",ok?"right":"wrong");
+    markStage(card,2,ok,ok?"✓ Evidence hỗ trợ đáp án này.":"Chưa đúng. Đừng dựa vào từ giống câu hỏi; đọc evidence rồi đối chiếu nghĩa.");
+    maybeCompleteRound(card,i);
+  });
+  document.querySelectorAll(".errRuleChoice").forEach(b=>b.onclick=()=>{
+    const card=b.closest(".errCard"),i=byId(b.dataset.id);if(!i)return;
+    const p=preventionOptions(i);
+    card.querySelectorAll(".errRuleChoice").forEach(x=>x.classList.remove("picked","right","wrong"));
+    const ok=norm(b.dataset.value)===norm(p.right);
+    b.classList.add("picked",ok?"right":"wrong");
+    markStage(card,3,ok,ok?"✓ Đây là chiến lược giúp chặn lỗi này lặp lại.":"Đó là một thói quen dễ làm bạn lặp lại lỗi. Chọn cách kiểm tra có rule/evidence rõ.");
+    maybeCompleteRound(card,i);
+  });
+  document.querySelectorAll(".errTargetInput").forEach(input=>input.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault();input.closest(".errRepairStage")?.querySelector(".errCheckTarget")?.click();}
+  }));
 }
 document.addEventListener("click",e=>{
   const nav=e.target.closest('.nav[data-view="errors"]');
