@@ -2558,3 +2558,165 @@ canvas{
   .errActions{justify-content:stretch}
   .errActions .btn{flex:1}
 }
+
+/* Error Lab adaptive Repair Test */
+.errDiffBox{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:9px;
+}
+.errDiffBox>div{
+  border:1px solid #e5e9f0;
+  border-radius:10px;
+  background:#fff;
+  padding:9px 10px;
+}
+.errDiffBox small{
+  display:block;
+  margin-bottom:5px;
+  color:#7a8798;
+  font-size:9px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.errDiffBox p{margin:0;font-size:12px;line-height:1.5;color:#4a576b}
+.errOldChunk,.errNewChunk{
+  padding:1px 4px;
+  border-radius:5px;
+  font-weight:900;
+}
+.errOldChunk{background:#ffe5e1;color:#bd3028;text-decoration:line-through}
+.errNewChunk{background:#ddf8e5;color:#147c3e}
+.errDrill{
+  padding:13px;
+  background:linear-gradient(180deg,#f8fbff,#f4f8ff);
+}
+.errDrillHead{
+  align-items:flex-start;
+  padding-bottom:10px;
+  border-bottom:1px solid #dfe8f7;
+}
+.errDrillHead>div{display:grid;gap:3px}
+.errDrillHead b{font-size:15px;color:#214b8b}
+.errDrillHead span{font-size:10px;line-height:1.4;color:#71819a}
+.errDrillHead em{
+  font-style:normal;
+  border:1px solid #bfd2f2;
+  background:#fff;
+  color:#3157d5;
+  border-radius:999px;
+  padding:5px 8px;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.errRepairStage{
+  margin-top:10px;
+  border:1px solid #dfe5ee;
+  border-radius:12px;
+  background:#fff;
+  padding:11px;
+  transition:.18s ease;
+}
+.errRepairStage.passed{border-color:#a7dfb6;background:#f5fff8}
+.errRepairStage.failed{border-color:#f2bbb3;background:#fffafa}
+.errStageTitle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:7px;
+}
+.errStageTitle b{font-size:12px;color:#27354e}
+.errStageTitle span{
+  font-size:9px;
+  font-weight:850;
+  color:#738198;
+  background:#f3f6fa;
+  border-radius:999px;
+  padding:4px 7px;
+}
+.errRepairStage>p,.errTargetPrompt>p{
+  margin:4px 0 8px;
+  color:#56647a;
+  font-size:11px;
+  line-height:1.5;
+}
+.errChoiceGrid,.errRuleChoices{
+  display:grid;
+  gap:7px;
+}
+.errChoiceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.errChoice,.errRuleChoice{
+  width:100%;
+  text-align:left;
+  border:1px solid #dce2eb;
+  background:#fff;
+  color:#344258;
+  border-radius:10px;
+  padding:9px 10px;
+  font:inherit;
+  font-size:11px;
+  line-height:1.45;
+  cursor:pointer;
+}
+.errChoice:hover,.errRuleChoice:hover{border-color:#8fa9e7;background:#f7f9ff}
+.errChoice.right,.errRuleChoice.right{border-color:#83cf9a;background:#effbf3;color:#16723b}
+.errChoice.wrong,.errRuleChoice.wrong{border-color:#f0aaa1;background:#fff1ef;color:#ad352d}
+.errTargetPrompt b{font-size:11px;color:#3157d5}
+.errTargetPrompt small{display:block;margin:5px 0;color:#7a8698;font-size:10px}
+.errTargetPrompt input{
+  width:100%;
+  box-sizing:border-box;
+  margin-top:6px;
+  border:1px solid #d5ddea;
+  border-radius:9px;
+  background:#fff;
+  padding:9px 10px;
+  font:inherit;
+  font-size:12px;
+}
+.errBlank{
+  display:inline-block;
+  min-width:72px;
+  padding:0 8px;
+  border-bottom:2px solid #3157d5;
+  color:#3157d5;
+  text-align:center;
+}
+.errEvidenceMini{
+  border-left:3px solid #3157d5;
+  background:#f5f8ff;
+  border-radius:0 9px 9px 0;
+  padding:8px 9px;
+}
+.errStageFeedback{
+  margin-top:7px;
+  min-height:16px;
+  font-size:10px;
+  font-weight:750;
+  line-height:1.45;
+}
+.errStageFeedback.good{color:#168344}
+.errStageFeedback.bad{color:#bd3f33}
+.errRepairDone{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:11px;
+  border:1px solid #91d4a5;
+  background:#ecfff2;
+  border-radius:11px;
+  padding:10px 11px;
+}
+.errRepairDone.hidden{display:none}
+.errRepairDone b{font-size:11px;color:#16723b}
+.errRepairDone span{font-size:10px;color:#557163;text-align:right}
+@media(max-width:760px){
+  .errDiffBox,.errChoiceGrid{grid-template-columns:1fr}
+  .errRepairDone{align-items:flex-start;flex-direction:column}
+  .errRepairDone span{text-align:left}
+}
