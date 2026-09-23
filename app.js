@@ -828,7 +828,7 @@ function inferPOS(surface,base,sentence,groups){
  if(w==='another')return next?'determiner':'pronoun';
  if(w==='in'){if(['come','go','walk','step','get'].includes(prev)&&!next)return'adverb';return set.has('preposition')?'preposition':(set.has('adverb')?'adverb':'preposition')}
  if(w==='read'){if(['a','an','the','this','that','another','good','great','interesting','quick'].includes(prev)&&set.has('noun'))return'noun';if(prev==='well'&&set.has('adjective'))return'adjective';return set.has('verb')?'verb':(set.has('noun')?'noun':'verb')}
- if(['a','an','the','this','that','these','those','my','your','his','her','our','their','its','another','each','every','some','any','many','few','several'].includes(prev)){if(next&&set.has('adjective'))return'adjective';if(set.has('noun'))return'noun'}
+ if(['a','an','the','this','that','these','those','my','your','his','her','our','their','its','another','each','every','some','any','many','few','several'].includes(prev)){if(set.has('noun'))return'noun';if(next&&set.has('adjective'))return'adjective'}
  if(['am','is','are','was','were','be','been','being'].includes(prev)&&w.endsWith('ing')&&set.has('verb'))return'verb';
  if(['have','has','had'].includes(prev)&&set.has('verb'))return'verb';
  if(['can','could','may','might','must','should','will','would'].includes(prev)&&set.has('verb'))return'verb';
@@ -1242,6 +1242,7 @@ async function renderDictionary(surface,targetId,sentence){
  let primary=polysemous&&senseVi?senseVi:(coreSense?.[1]||wordVi||senseVi||'');
  // Do not show song/artist metadata for *any* ordinary vocabulary item.
  if(!validVietnameseTranslation(base,primary)&&!coreSense?.[1])primary=senseVi||'';
+ if(primary.length>160)primary=primary.slice(0,155).replace(/\s+\S*$/,'')+'…';
  if(window.cleanSavedMeaning)primary=window.cleanSavedMeaning(base,primary)||'';
  let currentPOS=pos||group?.partOfSpeech||'';
  if(currentPOS==='unknown')currentPOS='';
