@@ -86,6 +86,16 @@ function wordCard(word){
   const key=norm(word),known=COMMON_PHRASES[key]||{paraphrases:[],collocations:[]};
   return lab.cards[key]||(lab.cards[key]={paraphrases:known.paraphrases.slice(),collocations:known.collocations.slice(),rounds:0,reviewAt:0});
 }
+function phraseNotes(d){
+  const result={paraphrases:{},collocations:{}};
+  for(const field of ['paraphrases','collocations']){
+    for(const x of Array.isArray(d[field])?d[field]:[]){
+      if(x&&typeof x==='object'&&x.phrase&&!offTopic(x.phrase))
+        result[field][norm(x.phrase)]={meaning:String(x.meaning_vi||'').trim(),example:String(x.example||'').trim()};
+    }
+  }
+  return result;
+}
 function applySuggestion(word,d){
   if(!word||!d||typeof d!=='object')return false;
   const app=loadApp(),saved=Object.values(app.saved||{}).find(x=>norm(x?.w)===norm(word));
@@ -98,6 +108,7 @@ function applySuggestion(word,d){
   if(para.length&&!item.paraphrases?.length){item.paraphrases=para;changed=true;}
   if(coll.length&&!item.collocations?.length){item.collocations=coll;changed=true;}
   if(d.meaning_vi&&!offTopic(d.meaning_vi)&&!item.meaningVi){item.meaningVi=String(d.meaning_vi).trim();changed=true;}
+  if(!item.phraseNotes&&(para.length||coll.length)){item.phraseNotes=phraseNotes(d);changed=true;}
   if(changed){saveLab();if(document.querySelector('.vocabPhraseCard'))render();}
   return changed;
 }
@@ -268,7 +279,7 @@ async function suggestPhrases(btn){
       para=[String(d.meaning_en_simple).trim()];
     const coll=(Array.isArray(d.collocations)?d.collocations:[]).map(x=>String(x.phrase||'').trim()).filter(x=>x&&!offTopic(x)).slice(0,5);
     if(!para.length||!coll.length)throw new Error('Chưa có đủ cụm phù hợp; bạn có thể tự thêm.');
-    const item=wordCard(word);item.paraphrases=para;item.collocations=coll;
+    const item=wordCard(word);item.paraphrases=para;item.collocations=coll;item.phraseNotes=phraseNotes(d);
     if(d.meaning_vi&&!offTopic(d.meaning_vi))item.meaningVi=String(d.meaning_vi).trim();
     item.rounds=0;item.reviewAt=0;item.todayPass={};
     saveLab();render();
@@ -283,7 +294,10 @@ function checkPhrase(btn){
   const feedback=row.querySelector('.vocabPhraseFeedback'),field=isPara?'paraphrase':'collocation',done=dayState(k);
   row.classList.toggle('passed',ok);row.classList.toggle('failed',!ok);
   const today=dayKey(Date.now());
-  feedback.textContent=ok?(item.todayPass?.[today]?.needsRetest?'✓ Đã sửa được. Ngày mai thử lại từ đầu, không nhìn gợi ý.':'✓ Đúng.'):value.trim()?'Chưa khớp. Một đáp án phù hợp: '+expected[0]+' — kiểm tra nghĩa và thử lại.':'Nhập đáp án trước khi kiểm tra.';
+  const fullPhrase=isPara?expected[0]:item.collocations[0];
+  const note=item.phraseNotes?.[isPara?'paraphrases':'collocations']?.[norm(fullPhrase)];
+  const explanation=(note?.meaning?' Nghĩa: '+note.meaning+'.':'')+(note?.example?' Ví dụ: '+note.example:'');
+  feedback.textContent=ok?(item.todayPass?.[today]?.needsRetest?'✓ Đã sửa được. Ngày mai thử lại từ đầu, không nhìn gợi ý.':'✓ Đúng.'+(explanation?' '+explanation:'')):value.trim()?'Chưa khớp. '+(isPara?'Cách diễn đạt phù hợp: ':'Cụm đúng: ')+fullPhrase+'.'+explanation+' Ngày mai thử lại không nhìn gợi ý.':'Nhập đáp án trước khi kiểm tra.';
   if(!ok){
     if(value.trim()){
       item.todayPass=item.todayPass||{};
