@@ -1100,7 +1100,7 @@ function quickContextNote(base,sentence,pos){
  if(!s)return'';
  if(base==='access'){
   if(pos==='verb')return'Ở đây, access là truy cập hoặc sử dụng một tài liệu/dịch vụ, như access a course = truy cập một khóa học.';
-  if(/\b(improve|improves|improved|better|wider|greater|equal)\s+access\b/.test(s))return'Ở đây, improve access nghĩa là giúp nhiều người có cơ hội tiếp cận hơn; access là danh từ, không phải động từ “truy cập”.';
+  if(/\b(improve|improves|improved|better|wider|greater|equal)\s+access\b/.test(s))return'Ở đây, improve access nghĩa là giúp nhiều người có cơ hội tiếp cận hơn. Access là danh từ chỉ cơ hội hoặc khả năng tiếp cận.';
   if(/\baccess\s+to\b/.test(s))return'Ở đây, access to + danh từ nói về cơ hội hoặc khả năng tiếp cận thứ đó.';
  }
  if(base==='flexibility'&&/\bflexibility\b/.test(s))return'Ở đây, flexibility nói về khả năng thay đổi thời gian hoặc cách học cho phù hợp.';
