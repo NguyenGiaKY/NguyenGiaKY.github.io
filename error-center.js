@@ -65,6 +65,9 @@ function record(x){
     old.mastered=false;
     old.nextReviewAt=now;
     old.repairProgress={};
+    old._roundCounted=false;
+    old.drillWins=0;
+    old.reviewLevel=0;
     ["why","rule","evidence","errorType","task","memoryTip"].forEach(p=>{if(item[p])old[p]=item[p];});
     save();renderIfMounted();return old;
   }
@@ -83,6 +86,13 @@ function importLegacy(){
 }
 function ensureImport(){if(imported)return;imported=true;importLegacy();}
 function isDue(i){return !i.mastered&&(!i.nextReviewAt||i.nextReviewAt<=Date.now());}
+function startDueRound(it){
+  if(it._roundCounted&&isDue(it)){
+    it._roundCounted=false;
+    it.repairProgress={};
+    save();
+  }
+}
 function filtered(){
   let a=state.items.slice();
   if(state.filter==="due")a=a.filter(isDue);
@@ -136,23 +146,25 @@ function drillControlHTML(drill,idx,it,isFinal){
   const type=String(drill.type||"fill");
   const title=isFinal?"Retry câu gốc":(drill.title_vi||("Bài "+(idx+1)));
   let body="";
+  const locked=idx>0&&!it.repairProgress?.[idx-1];
+  const disabled=locked?' disabled aria-disabled="true"':'';
   if(type==="mcq"&&Array.isArray(drill.options)){
     body='<div class="errSmartChoices">'+drill.options.slice(0,4).map(o=>
-      '<button type="button" class="errSmartChoice" data-pack-choice="'+idx+'" data-id="'+esc(it.id)+'" data-value="'+esc(o)+'">'+esc(o)+'</button>'
+      '<button type="button" class="errSmartChoice" data-pack-choice="'+idx+'" data-id="'+esc(it.id)+'" data-value="'+esc(o)+'"'+disabled+'>'+esc(o)+'</button>'
     ).join("")+'</div>';
   }else if(type==="listen_type"){
-    body='<div class="errListenRow"><button type="button" class="btn errPackListen" data-id="'+esc(it.id)+'" data-pack-listen="'+idx+'">🔊 Nghe</button>'+
+    body='<div class="errListenRow"><button type="button" class="btn errPackListen" data-id="'+esc(it.id)+'" data-pack-listen="'+idx+'"'+disabled+'>🔊 Nghe</button>'+ 
       '<span>Nghe rồi gõ chính xác — không nhìn đáp án.</span></div>'+
-      '<div class="errSmartInputRow"><input class="errPackInput" data-pack-input="'+idx+'" autocomplete="off" placeholder="Gõ đáp án bạn nghe...">'+
-      '<button type="button" class="btn primary errPackCheck" data-id="'+esc(it.id)+'" data-pack-check="'+idx+'">Check</button></div>';
+       '<div class="errSmartInputRow"><input class="errPackInput" data-pack-input="'+idx+'" autocomplete="off" placeholder="Gõ đáp án bạn nghe..."'+disabled+'>'+
+       '<button type="button" class="btn primary errPackCheck" data-id="'+esc(it.id)+'" data-pack-check="'+idx+'"'+disabled+'>Check</button></div>';
   }else{
-    body='<div class="errSmartInputRow"><input class="errPackInput" data-pack-input="'+idx+'" autocomplete="off" placeholder="Nhập đáp án...">'+
-      '<button type="button" class="btn primary errPackCheck" data-id="'+esc(it.id)+'" data-pack-check="'+idx+'">Check</button></div>';
+    body='<div class="errSmartInputRow"><input class="errPackInput" data-pack-input="'+idx+'" autocomplete="off" placeholder="Nhập đáp án..."'+disabled+'>'+
+       '<button type="button" class="btn primary errPackCheck" data-id="'+esc(it.id)+'" data-pack-check="'+idx+'"'+disabled+'>Check</button></div>';
   }
   const passed=!!(it.repairProgress&&it.repairProgress[idx]);
   return '<section class="errSmartDrill '+(passed?"passed":"")+'" data-smart-stage="'+idx+'">'+
     '<div class="errSmartDrillHead"><span>'+(isFinal?"FINAL":("0"+(idx+1)).slice(-2))+'</span><div><b>'+esc(title)+'</b>'+
-    (isFinal?'<small>Làm lại kiểu exam — không hiện đáp án trước</small>':'<small>'+(idx===0?"Đánh đúng vào lỗi vừa mắc":idx===1?"Đổi ngữ cảnh để tránh học thuộc":"Gần dạng IELTS thật hơn")+'</small>')+
+     (isFinal?'<small>Làm lại kiểu exam — không hiện đáp án trước</small>':'<small>'+(idx===0?"Đánh đúng vào lỗi vừa mắc":idx===1?"Đổi ngữ cảnh để tránh học thuộc":"Gần dạng IELTS thật hơn")+'</small>')+
     '</div></div>'+
     '<p class="errSmartPrompt">'+esc(drill.prompt||"")+'</p>'+body+
     '<div class="errStageFeedback '+(passed?"good":"")+'">'+(passed?"✓ Đã vượt bài này.":"")+'</div>'+
@@ -201,7 +213,7 @@ function cardHTML(it){
     '</div>'+
     '<div class="errActions">'+
       '<button type="button" class="btn primary errOpenPack" data-id="'+esc(it.id)+'">'+(it.repairPack?"🎯 Luyện Fix Pack":"✨ Tạo bài luyện")+'</button>'+
-      '<button type="button" class="btn errMaster" data-id="'+esc(it.id)+'">'+(it.mastered?"↩ Học lại":"✓ Đánh dấu đã nhớ")+'</button>'+
+       (it.mastered?'<button type="button" class="btn errMaster" data-id="'+esc(it.id)+'">↩ Học lại</button>':'')+
     '</div>'+
     '<div class="errDrill errDrillV3 '+(it.packOpen?"":"hidden")+'" id="drill-'+esc(it.id)+'">'+repairPackHTML(it)+'</div>'+
   '</article>';
@@ -282,6 +294,8 @@ function markPackStage(card,it,idx,ok,msg){
     it.repairProgress=it.repairProgress||{};
     it.repairProgress[idx]=true;
     save();
+    const next=card.querySelector('[data-smart-stage="'+(idx+1)+'"]');
+    next?.querySelectorAll('button:disabled,input:disabled').forEach(el=>{el.disabled=false;el.removeAttribute('aria-disabled');});
     maybeFinishPack(card,it);
   }
 }
@@ -293,7 +307,7 @@ function maybeFinishPack(card,it){
     it.reviewLevel=Math.min(5,(it.reviewLevel||0)+1);
     const days=[1,3,7,14,30][Math.max(0,it.reviewLevel-1)]||30;
     it.nextReviewAt=Date.now()+days*DAY;
-    it.mastered=it.drillWins>=3;
+     it.mastered=it.drillWins>=3;
     it._roundCounted=true;
     save();
   }
@@ -314,20 +328,22 @@ function bind(){
   if(startDue)startDue.onclick=()=>{
     const first=state.items.filter(isDue).sort((a,b)=>(b.seenCount||1)-(a.seenCount||1))[0];
     if(!first)return;
-    state.filter="due";first.packOpen=true;save();render();
+     state.filter="due";startDueRound(first);first.packOpen=true;save();render();
     setTimeout(()=>document.querySelector('.errCard[data-id="'+CSS.escape(first.id)+'"]')?.scrollIntoView({behavior:"smooth",block:"start"}),30);
   };
 
   document.querySelectorAll(".errOpenPack").forEach(b=>b.onclick=()=>{
     const it=byId(b.dataset.id);if(!it)return;
+    if(!it.packOpen)startDueRound(it);
     it.packOpen=!it.packOpen;save();render();
     if(it.packOpen)setTimeout(()=>document.querySelector('.errCard[data-id="'+CSS.escape(it.id)+'"]')?.scrollIntoView({behavior:"smooth",block:"nearest"}),30);
   });
   document.querySelectorAll(".errGeneratePack").forEach(b=>b.onclick=()=>{const it=byId(b.dataset.id);if(it)generatePack(it,b);});
   document.querySelectorAll(".errMaster").forEach(b=>b.onclick=()=>{
     const it=byId(b.dataset.id);if(!it)return;
-    it.mastered=!it.mastered;
-    if(!it.mastered){it.nextReviewAt=Date.now();it.repairProgress={};it._roundCounted=false;}
+    if(!it.mastered)return;
+    it.mastered=false;it.drillWins=0;it.reviewLevel=0;
+    it.nextReviewAt=Date.now();it.repairProgress={};it._roundCounted=false;
     save();render();
   });
 
