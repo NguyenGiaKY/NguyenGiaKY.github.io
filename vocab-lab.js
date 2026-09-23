@@ -78,9 +78,9 @@ function wordsByDay(){
   return groups;
 }
 function dayState(k){
-  if(!lab.days[k])lab.days[k]={open:k===dayKey(Date.now()),recall:{},speaking:{},paraphrase:{},collocation:{},writing:false};
+  if(!lab.days[k])lab.days[k]={open:k===dayKey(Date.now()),recall:{},speaking:{},paraphrase:{},collocation:{},family:{},writing:false};
   const d=lab.days[k];
-  d.recall=d.recall||{};d.speaking=d.speaking||{};d.paraphrase=d.paraphrase||{};d.collocation=d.collocation||{};return d;
+  d.recall=d.recall||{};d.speaking=d.speaking||{};d.paraphrase=d.paraphrase||{};d.collocation=d.collocation||{};d.family=d.family||{};return d;
 }
 function wordCard(word){
   const key=norm(word),known=COMMON_PHRASES[key]||{paraphrases:[],collocations:[]};
@@ -139,17 +139,35 @@ function highlightContext(sentence,word){
   return esc(s.slice(0,i))+"<mark>"+esc(s.slice(i,i+word.length))+"</mark>"+esc(s.slice(i+word.length));
 }
 function progressOf(k,arr){
-  const d=dayState(k),total=Math.max(1,arr.length*4+1);
+  const d=dayState(k),total=Math.max(1,arr.reduce((n,x)=>n+4+(familyQuestion(x.w).answer?1:0),1));
   let done=0;
-  arr.forEach(x=>{const w=norm(x.w);if(d.recall[w])done++;if(d.speaking[w])done++;if(d.paraphrase[w])done++;if(d.collocation[w])done++;});
+  arr.forEach(x=>{const w=norm(x.w);if(d.recall[w])done++;if(d.speaking[w])done++;if(d.paraphrase[w])done++;if(d.collocation[w])done++;if(familyQuestion(x.w).answer&&d.family[w])done++;});
   if(d.writing)done++;
   return {done,total,pct:Math.round(done/total*100)};
 }
-function wordRow(x){
-  return '<div class="vocabDayWord">'+
-    '<div><b>'+esc(x.w)+'</b><span>'+esc(x.m||"Chưa có nghĩa đáng tin cậy — mở phần Paraphrase để sửa")+'</span></div>'+ 
+function wordRow(x,k,selected){
+  return '<div class="vocabDayWord '+(selected?'vocabWordSelected':'')+'">'+
+    '<button type="button" class="vocabPickWord" data-day="'+esc(k)+'" data-word="'+esc(x.w)+'"><b>'+esc(x.w)+'</b><span>'+esc(x.m||"Chưa có nghĩa rõ — sửa trong thẻ học")+'</span></button>'+ 
     '<button class="vocabSpeakModel" data-word="'+esc(x.w)+'" title="Nghe phát âm">🔊</button>'+
   '</div>';
+}
+function familyQuestion(word){
+  const card=wordCard(word),q=card.familyExercise;
+  if(q?.answer&&q?.sentence_with_blank)return {cue:String(q.sentence_with_blank),answer:String(q.answer),hint:String(q.hint_vi||''),why:String(q.explanation_vi||'')};
+  const related=(card.wordFamily||[]).find(x=>x.word&&norm(x.word)!==norm(word));
+  return related?{cue:'Viết dạng từ phù hợp: '+String(related.part_of_speech||'word form')+' · '+String(related.meaning_vi||'cùng họ với '+word),answer:String(related.word),hint:'Dựa vào từ loại và nghĩa, không chỉ thêm đuôi ngẫu nhiên.',why:''}:{cue:'',answer:''};
+}
+function studyCardHTML(k,x){
+  const card=wordCard(x.w),family=(card.wordFamily||[]).slice(0,6),q=familyQuestion(x.w);
+  return '<section class="vocabStudyCard">'+
+    '<div class="vocabStudyTop"><div><span class="phase">TỪ ĐANG HỌC</span><h3>'+esc(x.w)+'</h3><p>'+esc(card.meaningVi||x.m||'Chưa có nghĩa tiếng Việt')+'</p></div><button type="button" class="btn primary vocabSuggestPhrases" data-word="'+esc(x.w)+'" '+(card.aiGeneratedAt?'disabled':'')+'>'+(card.aiGeneratedAt?'✓ Bài học AI đã lưu':'✨ Tạo bài học AI cho từ này')+'</button></div>'+
+    '<div class="vocabPhraseStatus" aria-live="polite">'+(card.aiGeneratedAt?'Đã lưu bài học; mở lại không tốn thêm lượt AI.':'AI chỉ được gọi khi bạn bấm nút này. Bạn vẫn có thể tự nhập cụm bên dưới.')+'</div>'+
+    (x.context?'<div class="vocabStudyContext"><small>CÂU BẠN GẶP TRONG BÀI</small><p>'+highlightContext(x.context,x.w)+'</p>'+(card.sentenceTranslation?'<span>→ '+esc(card.sentenceTranslation)+'</span>':'')+(card.contextReason?'<p class="vocabStudyWhy"><b>Tại sao dùng nghĩa này?</b> '+esc(card.contextReason)+'</p>':'')+'</div>':'')+
+    (card.usageExample?'<div class="vocabStudyExample"><small>THỬ NHỚ CÁCH DÙNG</small><p>'+esc(card.usageExample)+'</p></div>':'')+
+    (card.memoryTip?'<p class="vocabStudyTip"><b>Mẹo nhớ:</b> '+esc(card.memoryTip)+'</p>':'')+
+    (family.length?'<div class="vocabStudyFamily"><h4>Word family · đổi từ loại</h4><div class="vocabFamilyRows">'+family.map(f=>'<div><b>'+esc(f.word)+'</b><small>'+esc(f.part_of_speech||'')+'</small><span>'+esc(f.meaning_vi||'')+'</span></div>').join('')+'</div>'+
+      (q.answer?'<div class="vocabFamilyQuiz"><label>'+esc(q.cue)+'<input autocomplete="off" placeholder="Gõ dạng từ đúng..."></label><button type="button" class="btn vocabFamilyCheck" data-word="'+esc(x.w)+'" data-day="'+esc(k)+'">Check</button><p class="vocabFamilyFeedback" aria-live="polite"></p></div>':'')+'</div>':'')+
+  '</section>';
 }
 function phraseHTML(k,arr){
   return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>02</span><div><b>Paraphrase + Collocation</b><small>Viết cách diễn đạt cùng nghĩa và hoàn thành cụm từ tự nhiên.</small></div></div>'+
@@ -160,7 +178,7 @@ function phraseHTML(k,arr){
         '<div class="vocabPhraseHead"><div><b>'+esc(x.w)+'</b><small>'+esc(x.m||'Chưa có nghĩa phù hợp — hãy sửa hoặc tạo gợi ý')+'</small></div><span>'+(card.rounds>=4?'✓ Đã qua 4 lượt':dueCard(card)?'Đến lượt ôn':card.reviewAt?'Ôn lại '+new Date(card.reviewAt).toLocaleDateString('vi-VN'):'Chưa có bài')+'</span></div>'+ 
         (ready?'<div class="vocabPhraseQuiz"><label>Paraphrase · diễn đạt cùng nghĩa <input class="vocabParaInput" autocomplete="off" placeholder="Gõ cách nói khác cùng nghĩa"></label><button class="btn vocabParaCheck" data-day="'+k+'" data-word="'+esc(x.w)+'">Check</button><div class="vocabPhraseFeedback" aria-live="polite"></div></div>'+
           '<div class="vocabPhraseQuiz"><label>Collocation · điền từ còn thiếu: <strong>'+esc(coll.cue)+'</strong><input class="vocabCollInput" autocomplete="off" placeholder="Từ/cụm còn thiếu"></label><button class="btn vocabCollCheck" data-day="'+k+'" data-word="'+esc(x.w)+'">Check</button><div class="vocabPhraseFeedback" aria-live="polite"></div></div>':'<p class="muted">Tạo gợi ý hoặc thêm cụm của bạn để mở bài luyện.</p>')+
-        '<details class="vocabPhraseEdit"><summary>'+(ready?'Xem và sửa nghĩa, các cụm':'Thêm nghĩa, paraphrase & collocation')+'</summary><div class="vocabPhraseFields"><label>Nghĩa tiếng Việt ngắn gọn<input class="vocabMeaningEdit" value="'+esc(x.m||'')+'" placeholder="Ví dụ: thói quen"></label><label>Paraphrase (ngăn cách bằng dấu ;)<input class="vocabParaEdit" value="'+esc((card.paraphrases||[]).join('; '))+'" placeholder="Ví dụ: important; substantial"></label><label>Collocation (ngăn cách bằng dấu ;)<input class="vocabCollEdit" value="'+esc((card.collocations||[]).join('; '))+'" placeholder="Ví dụ: a significant increase"></label></div><div class="vocabPhraseButtons"><button class="btn primary vocabSavePhrases" data-word="'+esc(x.w)+'">Lưu nghĩa & cụm</button><button class="btn vocabSuggestPhrases" data-word="'+esc(x.w)+'">✨ Gợi ý nghĩa & cụm</button><span class="vocabPhraseStatus" aria-live="polite"></span></div></details>'+ 
+        '<details class="vocabPhraseEdit"><summary>'+(ready?'Xem và sửa nghĩa, các cụm':'Thêm nghĩa, paraphrase & collocation')+'</summary><div class="vocabPhraseFields"><label>Nghĩa tiếng Việt ngắn gọn<input class="vocabMeaningEdit" value="'+esc(x.m||'')+'" placeholder="Ví dụ: thói quen"></label><label>Paraphrase (ngăn cách bằng dấu ;)<input class="vocabParaEdit" value="'+esc((card.paraphrases||[]).join('; '))+'" placeholder="Ví dụ: important; substantial"></label><label>Collocation (ngăn cách bằng dấu ;)<input class="vocabCollEdit" value="'+esc((card.collocations||[]).join('; '))+'" placeholder="Ví dụ: a significant increase"></label></div><div class="vocabPhraseButtons"><button class="btn primary vocabSavePhrases" data-word="'+esc(x.w)+'">Lưu nghĩa & cụm</button></div></details>'+ 
         '</article>';
     }).join('')+'</div></section>';
 }
@@ -186,16 +204,16 @@ function speakingHTML(k,arr){
       return '<article class="vocabSpeakCard '+(ok?"passed":"")+'" data-word="'+esc(x.w)+'">'+
         '<div class="vocabSpeakCardTop"><div><b>'+esc(x.w)+'</b><small>'+esc(x.m||"")+'</small></div><button class="vocabSpeakModel" data-word="'+esc(x.w)+'">🔊 Mẫu</button></div>'+
         (x.context?'<p class="vocabSourceContext">Trong bài: '+highlightContext(x.context,x.w)+'</p>':'')+
-        '<p class="vocabSpeakCue">Nói 1 câu mới có <strong>'+esc(x.w)+'</strong>. Cố gắng 6–15 từ.</p>'+
+        '<p class="vocabSpeakCue">'+esc(wordCard(x.w).speakingTask||('Nói 1 câu mới có '+x.w+'.'))+(wordCard(x.w).collocations?.[0]?' Thử dùng cụm <b>'+esc(wordCard(x.w).collocations[0])+'</b>.':'')+' Cố gắng 6–15 từ.</p>'+
         '<button class="btn primary vocabStartSpeech" data-day="'+k+'" data-word="'+esc(x.w)+'">🎙️ '+(ok?"Nói lại":"Bắt đầu nói")+'</button>'+
         '<div class="vocabSpeechTranscript">'+(ok?"✓ Đã dùng được từ này trong câu nói.":"")+'</div>'+
       '</article>';
     }).join("")+'</div></section>';
 }
-function writingHTML(k,arr){
+function writingHTML(k,arr,focus){
   const d=dayState(k),need=Math.min(3,arr.length),targets=arr.slice(0,Math.max(need,1));
   return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>04</span><div><b>Mini Writing</b><small>Dùng từ trong đoạn ngắn để biến “biết nghĩa” thành “biết dùng”.</small></div></div>'+
-    '<div class="vocabWritingTask"><p>Viết <strong>2–4 câu</strong> (ít nhất 20 từ) và dùng ít nhất <strong>'+need+' từ</strong> trong bộ hôm nay.</p>'+
+    '<div class="vocabWritingTask"><p>'+esc(wordCard(focus.w).writingTask||'Viết một đoạn ngắn về trải nghiệm học tập hoặc sinh hoạt của bạn.')+' Viết <strong>2–4 câu</strong> (ít nhất 20 từ) và dùng ít nhất <strong>'+need+' từ</strong> trong bộ hôm nay. Thử dùng một collocation đã học.</p>'+
       '<div class="vocabTargetChips">'+targets.map(x=>'<span>'+esc(x.w)+'</span>').join("")+'</div>'+
       '<textarea class="vocabWritingInput" data-day="'+k+'" rows="5" placeholder="Viết một đoạn ngắn về học tập, công nghệ, cuộc sống hằng ngày...">'+esc(d.writingText||"")+'</textarea>'+
       '<div class="vocabWritingBottom"><button class="btn primary vocabCheckWriting" data-day="'+k+'">Check đoạn viết</button><div class="vocabWritingFeedback">'+(d.writing?"✓ Hoàn thành mini writing của ngày này.":"")+'</div></div>'+
@@ -203,15 +221,17 @@ function writingHTML(k,arr){
 }
 function renderDay(k,arr){
   const d=dayState(k),p=progressOf(k,arr);
+  const focus=arr.find(x=>norm(x.w)===norm(d.focusWord))||arr[0];
   return '<section class="vocabDayCard '+(d.open?"open":"")+'" data-vocab-day="'+k+'">'+
     '<button class="vocabDayHeader" data-toggle-day="'+k+'">'+
       '<div><span class="vocabDatePill">'+formatDay(k)+'</span><h3>'+arr.length+' từ đã lưu</h3><p>'+arr.slice(0,5).map(x=>esc(x.w)).join(" · ")+(arr.length>5?" · …":"")+'</p></div>'+
       '<div class="vocabDayProgress"><b>'+p.pct+'%</b><span>'+p.done+'/'+p.total+' hoạt động</span><i><em style="width:'+p.pct+'%"></em></i></div>'+
     '</button>'+
     '<div class="vocabDayBody">'+
-      '<div class="vocabWordShelf">'+arr.map(wordRow).join("")+'</div>'+
-       '<div class="vocabPracticeIntro"><b>Ôn bộ từ của ngày này</b><span>Nhớ nghĩa → luyện paraphrase và collocation → nói → viết. Từ mới được gợi ý cụm sau khi tra và lưu; bạn có thể sửa gợi ý.</span></div>'+
-       recallHTML(k,arr)+phraseHTML(k,arr)+speakingHTML(k,arr)+writingHTML(k,arr)+
+      '<div class="vocabWordShelf">'+arr.map(x=>wordRow(x,k,x===focus)).join("")+'</div>'+
+       studyCardHTML(k,focus)+
+       '<div class="vocabPracticeIntro"><b>Luyện từ đang chọn: '+esc(focus.w)+'</b><span>Hiểu nghĩa trong câu → paraphrase/collocation → word family → nói. Cuối bộ từ, viết đoạn ngắn áp dụng.</span></div>'+
+       recallHTML(k,arr)+phraseHTML(k,[focus])+speakingHTML(k,[focus])+writingHTML(k,arr,focus)+
     '</div>'+
   '</section>';
 }
@@ -226,7 +246,7 @@ function render(){
   }
   const total=keys.reduce((n,k)=>n+groups[k].length,0);
   host.innerHTML=
-     '<section class="vocabHero"><div><span class="phase">VOCABULARY REVIEW</span><h2>Lưu theo ngày → hiểu nghĩa và dùng đúng cụm</h2><p>Mỗi từ có luyện paraphrase và collocation. Các cụm được lưu để bạn ôn lại sau 1, 3 và 7 ngày.</p></div><div class="vocabHeroStat"><b>'+total+'</b><span>từ đã lưu</span><small>'+keys.length+' ngày học</small></div></section>'+
+     '<section class="vocabHero"><div><span class="phase">VOCABULARY REVIEW</span><h2>Mỗi lần học kỹ một từ</h2><p>Chọn từ trong ngày, tạo bài học AI khi cần, rồi luyện ngữ cảnh, cụm từ, word family, nói và viết. Nội dung đã tạo được lưu lại.</p></div><div class="vocabHeroStat"><b>'+total+'</b><span>từ đã lưu</span><small>'+keys.length+' ngày học</small></div></section>'+
     '<div class="vocabDayList">'+keys.map(k=>renderDay(k,groups[k])).join("")+'</div>';
   bind();
 }
@@ -234,6 +254,14 @@ function bind(){
   document.querySelectorAll("[data-toggle-day]").forEach(b=>b.onclick=()=>{
     const d=dayState(b.dataset.toggleDay);d.open=!d.open;saveLab();render();
   });
+  document.querySelectorAll('.vocabPickWord').forEach(b=>b.onclick=()=>{
+    dayState(b.dataset.day).focusWord=b.dataset.word;saveLab();render();
+    document.querySelector('[data-vocab-day="'+CSS.escape(b.dataset.day)+'"] .vocabStudyCard')?.scrollIntoView({block:'nearest'});
+  });
+  document.querySelectorAll('.vocabFamilyCheck').forEach(b=>b.onclick=()=>checkFamily(b));
+  document.querySelectorAll('.vocabFamilyQuiz input').forEach(inp=>inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();inp.closest('.vocabFamilyQuiz')?.querySelector('button')?.click();}
+  }));
   document.querySelectorAll(".vocabSpeakModel").forEach(b=>b.onclick=e=>{e.stopPropagation();speak(b.dataset.word);});
   document.querySelectorAll(".vocabRecallCheck").forEach(b=>b.onclick=()=>{
     const item=b.closest(".vocabRecallItem"),input=item&&item.querySelector("input"),word=b.dataset.word,k=b.dataset.day;
@@ -250,7 +278,7 @@ function bind(){
     item.meaningVi=card.querySelector('.vocabMeaningEdit').value.trim();
     item.paraphrases=card.querySelector('.vocabParaEdit').value.split(';').map(x=>x.trim()).filter(Boolean).slice(0,5);
     item.collocations=card.querySelector('.vocabCollEdit').value.split(';').map(x=>x.trim()).filter(Boolean).slice(0,5);
-    item.rounds=0;item.reviewAt=0;item.todayPass={};saveLab();render();
+    item.manualEdited=true;item.rounds=0;item.reviewAt=0;item.todayPass={};saveLab();render();
   });
   document.querySelectorAll('.vocabSuggestPhrases').forEach(b=>b.onclick=()=>suggestPhrases(b));
   document.querySelectorAll('.vocabParaCheck,.vocabCollCheck').forEach(b=>b.onclick=()=>checkPhrase(b));
@@ -261,27 +289,50 @@ function bind(){
   document.querySelectorAll(".vocabWritingInput").forEach(t=>t.oninput=()=>{const d=dayState(t.dataset.day);d.writingText=t.value;saveLab();});
   document.querySelectorAll(".vocabCheckWriting").forEach(b=>b.onclick=()=>checkWriting(b));
 }
+function checkFamily(btn){
+  const row=btn.closest('.vocabFamilyQuiz'),q=familyQuestion(btn.dataset.word),value=row.querySelector('input').value.trim();
+  const fb=row.querySelector('.vocabFamilyFeedback');
+  if(!value){fb.textContent='Gõ dạng từ trước khi kiểm tra.';return;}
+  const ok=same(value,q.answer);row.classList.toggle('passed',ok);row.classList.toggle('failed',!ok);
+  fb.textContent=ok?'✓ Đúng: '+q.answer+'. '+(q.why||'Để ý từ loại trong câu.'):'Chưa đúng. Đáp án: '+q.answer+'. '+(q.why||q.hint||'Xem bảng word family rồi thử lại.');
+  if(ok){dayState(btn.dataset.day).family[norm(btn.dataset.word)]=true;saveLab();updateDayProgress(btn.dataset.day);}
+}
 async function suggestPhrases(btn){
-  const word=btn.dataset.word,card=btn.closest('.vocabPhraseCard'),status=card.querySelector('.vocabPhraseStatus');
+  const word=btn.dataset.word,card=btn.closest('.vocabStudyCard'),status=card?.querySelector('.vocabPhraseStatus');
   const saved=Object.values(loadApp().saved||{}).find(x=>norm(x.w)===norm(word))||{};
-  const endpoint=window.DICTIONARY_AI_ENDPOINT;
+  const item=wordCard(word);
+  if(item.aiGeneratedAt){if(status)status.textContent='Bài học này đã được lưu; không gọi AI lại.';return;}
+  const endpoint=window.VOCAB_AI_ENDPOINT||window.DICTIONARY_AI_ENDPOINT;
   if(!endpoint){status.textContent='Chưa có dịch vụ gợi ý; bạn vẫn có thể thêm cụm thủ công.';return}
-  btn.disabled=true;status.textContent='Đang tìm cách diễn đạt và cụm tự nhiên…';
+  btn.disabled=true;status.textContent='Đang tạo một bài học cho từ đã lưu…';
   try{
     const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),30000);
     let r;
     try{r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl.signal,
-      body:JSON.stringify({word,base:word,sentence:saved.context||'',lexical:saved.m||''})});}finally{clearTimeout(timer)}
+      body:JSON.stringify({mode:'saved-vocab',word,base:word,sentence:saved.context||'',lexical:saved.m||''})});}finally{clearTimeout(timer)}
     const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||'Không tải được gợi ý');
     let para=(Array.isArray(d.paraphrases)?d.paraphrases:[]).map(x=>String(x.phrase||'').trim()).filter(x=>x&&!offTopic(x)).slice(0,5);
     // Earlier backend versions return a short English rewording of the meaning.
     if(!para.length&&d.meaning_en_simple&&!offTopic(d.meaning_en_simple)&&norm(d.meaning_en_simple)!==norm(word))
       para=[String(d.meaning_en_simple).trim()];
     const coll=(Array.isArray(d.collocations)?d.collocations:[]).map(x=>String(x.phrase||'').trim()).filter(x=>x&&!offTopic(x)).slice(0,5);
-    if(!para.length||!coll.length)throw new Error('Chưa có đủ cụm phù hợp; bạn có thể tự thêm.');
-    const item=wordCard(word);item.paraphrases=para;item.collocations=coll;item.phraseNotes=phraseNotes(d);
+    const family=(Array.isArray(d.word_family)?d.word_family:[]).filter(x=>x?.word&&!offTopic(x.word)).slice(0,6);
+    if(!para.length&&!coll.length&&!family.length&&!d.meaning_vi)throw new Error('AI chưa tạo được nội dung phù hợp. Hãy thử lại sau.');
+    if(para.length&&!item.manualEdited)item.paraphrases=para;
+    if(coll.length&&!item.manualEdited)item.collocations=coll;
+    item.phraseNotes=phraseNotes(d);
+    item.wordFamily=family;
+    const exercise=d.family_exercise;
+    if(exercise?.answer&&exercise?.sentence_with_blank&&family.some(x=>same(x.word,exercise.answer)))item.familyExercise=exercise;
+    item.sentenceTranslation=String(d.sentence_translation_vi||'').slice(0,300);
+    item.contextReason=String(d.context_reason_vi||'').slice(0,300);
+    item.usageExample=String(d.usage_example_en||d.example_sentence||'').slice(0,240);
+    item.memoryTip=String(d.memory_tip_vi||'').slice(0,180);
+    item.speakingTask=String(d.speaking_task_vi||'').slice(0,220);
+    item.writingTask=String(d.writing_task_vi||'').slice(0,220);
     if(d.meaning_vi&&!offTopic(d.meaning_vi))item.meaningVi=String(d.meaning_vi).trim();
-    item.rounds=0;item.reviewAt=0;item.todayPass={};
+    item.aiGeneratedAt=Date.now();
+    if(!item.manualEdited){item.rounds=0;item.reviewAt=0;item.todayPass={};}
     saveLab();render();
   }catch(e){status.textContent=e.name==='AbortError'?'Hết thời gian chờ. Thử lại sau.':String(e.message||e)}finally{btn.disabled=false}
 }
