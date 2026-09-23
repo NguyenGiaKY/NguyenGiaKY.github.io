@@ -22,3 +22,24 @@
 .vocabPhraseButtons{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .vocabPhraseStatus{color:#9a6700;font-size:.85rem;line-height:1.4}
 @media(max-width:600px){.vocabPhraseList{grid-template-columns:1fr}.vocabPhraseQuiz{grid-template-columns:1fr}.vocabPhraseQuiz .btn{justify-self:start}}
+
+/* A short dictionary answer in reading; deeper work lives on the saved-word page. */
+.dictQuickAnswer{border:1px solid #dbe6f6;border-radius:15px;padding:15px;background:#f8fbff;line-height:1.55;color:#263752}
+.dictQuickAnswer>p{margin:0 0 9px}.dictQuickAnswer>p:last-child{margin-bottom:0}
+.dictQuickAnswer strong{color:#2452be;font-size:1.1rem}.dictQuickContext{border-left:3px solid #9db6f3;padding:2px 0 2px 12px;margin:12px 0;background:#fff}
+.dictQuickContext small,.vocabStudyContext small,.vocabStudyExample small{font-size:.72rem;font-weight:800;letter-spacing:.07em;color:#536b9b}
+.dictQuickContext p,.vocabStudyContext p{margin:5px 0}.dictQuickEnglish,.dictQuickExample{font-size:.92rem;color:#42536d}.dictQuickSource{display:block;margin-top:9px;color:#64748b}
+
+.vocabWordSelected{border-color:#3157d5!important;background:#eef3ff!important}
+.vocabPickWord{border:0;background:transparent;text-align:left;cursor:pointer;display:grid;gap:4px;color:inherit;padding:0;min-width:0;flex:1}
+.vocabPickWord b{color:#243f7c}.vocabPickWord span{font-size:.83rem;color:#56667e}
+.vocabPickWord:focus-visible{outline:2px solid #3157d5;border-radius:5px}
+.vocabStudyCard{border:1px solid #d9e4f7;border-radius:18px;padding:20px;margin:15px 0 22px;background:linear-gradient(135deg,#f7faff,#fff 70%);box-shadow:0 5px 18px rgba(34,65,120,.06)}
+.vocabStudyTop{display:flex;justify-content:space-between;gap:15px;align-items:center}.vocabStudyTop h3{font-size:1.55rem;color:#1e3671;margin:5px 0}.vocabStudyTop p{margin:0;color:#506179}.vocabStudyTop button{flex-shrink:0;max-width:260px}
+.vocabStudyCard>.vocabPhraseStatus{display:block;margin:7px 0 0}.vocabStudyContext,.vocabStudyExample,.vocabStudyFamily{margin-top:15px;padding:14px;border-radius:13px;background:#fff;border:1px solid #e6eaf3}
+.vocabStudyContext p{line-height:1.6;color:#283b59}.vocabStudyContext span{font-size:.9rem;color:#526784}.vocabStudyWhy{margin:9px 0 0!important;font-size:.89rem}
+.vocabStudyExample p{margin:6px 0 0}.vocabStudyTip{margin:13px 0 0;font-size:.9rem;color:#35557a}.vocabStudyFamily h4{margin:0 0 10px;font-size:1rem;color:#223f7b}
+.vocabFamilyRows{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:8px}.vocabFamilyRows>div{display:grid;gap:3px;background:#f6f9ff;border-radius:9px;padding:9px}
+.vocabFamilyRows small{color:#596f9a}.vocabFamilyRows span{font-size:.85rem;color:#4d5e72}.vocabFamilyQuiz{border-top:1px solid #e5eaf4;margin-top:12px;padding-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.vocabFamilyQuiz label{display:grid;gap:6px;flex:1;min-width:200px;font-size:.9rem;font-weight:700}.vocabFamilyQuiz input{width:100%;border:1px solid #cfd8e8;border-radius:9px;padding:10px;font:inherit}.vocabFamilyFeedback{width:100%;margin:0;color:#51607a;font-size:.88rem}.vocabFamilyQuiz.passed .vocabFamilyFeedback{color:#177245}.vocabFamilyQuiz.failed .vocabFamilyFeedback{color:#b42318}
+@media(max-width:650px){.vocabStudyTop{align-items:stretch;flex-direction:column}.vocabStudyTop button{max-width:none}.vocabStudyCard{padding:15px}.vocabFamilyRows{grid-template-columns:repeat(2,minmax(0,1fr))}}
