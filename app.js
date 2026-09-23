@@ -618,7 +618,7 @@ document.getElementById('lessonClose').onclick=()=>{stopListeningAudio(true);doc
 
 /* Universal contextual dictionary: online-first, every word, all POS */
 const dict=document.getElementById('dictionary'),hd=document.getElementById('dictHandle');
-const DCACHE_KEY='ielts_dict_v16_cache',TCACHE_KEY='ielts_dict_v12_translate',DPOS_KEY='ielts_dict_v11_window';
+const DCACHE_KEY='ielts_dict_v17_cache',TCACHE_KEY='ielts_dict_v13_translate',DPOS_KEY='ielts_dict_v11_window';
 let dcache={},tcache={};
 try{dcache=JSON.parse(localStorage.getItem(DCACHE_KEY)||'{}')}catch(e){}
 try{tcache=JSON.parse(localStorage.getItem(TCACHE_KEY)||'{}')}catch(e){}
@@ -680,11 +680,11 @@ const CORE={
 
 
 };
-const IRR={am:'be',is:'be',are:'be',was:'be',were:'be',been:'be',being:'be',has:'have',had:'have',having:'have',does:'do',did:'do',done:'do',doing:'do',reads:'read',reading:'read',took:'take',taken:'take',takes:'take',taking:'take',chose:'choose',chosen:'choose',chooses:'choose',choosing:'choose',went:'go',gone:'go',goes:'go',studies:'study',studied:'study',studying:'study',children:'child',people:'person',men:'man',women:'woman',better:'good',best:'good',worse:'bad',worst:'bad'};
+const IRR={am:'be',is:'be',are:'be',was:'be',were:'be',been:'be',being:'be',has:'have',had:'have',having:'have',does:'do',did:'do',done:'do',doing:'do',reads:'read',reading:'read',took:'take',taken:'take',takes:'take',taking:'take',chose:'choose',chosen:'choose',chooses:'choose',choosing:'choose',went:'go',gone:'go',goes:'go',studies:'study',studied:'study',studying:'study',children:'child',people:'person',men:'man',women:'woman',better:'good',best:'good',worse:'bad',worst:'bad',ate:'eat',eaten:'eat',wrote:'write',written:'write',ran:'run',saw:'see',seen:'see',found:'find',bought:'buy',thought:'think',taught:'teach',caught:'catch',spoke:'speak',spoken:'speak',sang:'sing',sung:'sing',fell:'fall',fallen:'fall',learnt:'learn',learned:'learn',swam:'swim',swum:'swim'};
 const FIXED={i:'pronoun',you:'pronoun',he:'pronoun',she:'pronoun',it:'pronoun',we:'pronoun',they:'pronoun',me:'pronoun',him:'pronoun',her:'pronoun',us:'pronoun',them:'pronoun',my:'determiner',your:'determiner',his:'determiner',our:'determiner',their:'determiner',its:'determiner',a:'article',an:'article',the:'article',and:'conjunction',but:'conjunction',or:'conjunction',because:'conjunction',although:'conjunction',while:'conjunction',whereas:'conjunction',if:'conjunction',in:'preposition',on:'preposition',at:'preposition',of:'preposition',from:'preposition',for:'preposition',with:'preposition',by:'preposition',can:'modal',could:'modal',may:'modal',might:'modal',must:'modal',should:'modal',will:'modal',would:'modal'};
-function dclean(w){return (w||'').trim().replace(/^[^A-Za-z]+|[^A-Za-z'-]+$/g,'').toLowerCase()}
+function dclean(w){return String(w||'').trim().replace(/^[^\p{L}]+|[^\p{L}'-]+$/gu,'').toLowerCase()}
 function candidates(raw){
- let w=dclean(raw),a=[];const add=x=>{if(x&&!a.includes(x))a.push(x)};add(w);if(IRR[w])add(IRR[w]);
+ let w=dclean(raw),a=[];const add=x=>{if(x&&!a.includes(x))a.push(x)};add(w);if(w.includes(' '))return a;if(IRR[w])add(IRR[w]);
  if(w.endsWith('ies')&&w.length>4)add(w.slice(0,-3)+'y');
  if(w.endsWith('ves')&&w.length>4){add(w.slice(0,-3)+'f');add(w.slice(0,-3)+'fe')}
  if(w.endsWith('es')&&w.length>3){add(w.slice(0,-1));add(w.slice(0,-2))}
@@ -708,9 +708,29 @@ function around(word,sentence){
  let s=(sentence||'').toLowerCase(),w=dclean(word),i=s.indexOf(w);if(i<0)return{prev:'',next:''};let b=s.slice(0,i),a=s.slice(i+w.length);
  return{prev:(b.match(/([a-z']+)\s*$/)||[])[1]||'',next:(a.match(/^\s*([a-z']+)/)||[])[1]||''};
 }
+function validVietnameseTranslation(source,translation){
+ const x=String(translation||'').trim(),src=String(source||'').trim();
+ if(!x||x.toLowerCase()===src.toLowerCase()||/MYMEMORY WARNING|PLEASE SELECT TWO DISTINCT LANGUAGES|TRANSLATION LIMIT/i.test(x))return false;
+ // Reject obvious encyclopaedic / entertainment metadata, regardless of the searched word.
+ if(/\b(?:song|album|single)\b.{0,85}\b(?:released|recorded|singer|sang by|performed by)\b/i.test(x)||
+    /\b(?:released|recorded|singer|performed by)\b.{0,85}\b(?:song|album|single)\b/i.test(x)||
+    /(?:bài hát|album|đĩa đơn).{0,75}(?:phát hành|ca sĩ|thu âm|trình bày|của tove lo)/i.test(x))return false;
+ if(src.split(/\s+/).length<=2&&x.length>145)return false;
+ return true;
+}
 async function translateText(t){
- t=String(t||'').trim();if(!t)return'';let k=t.toLowerCase();if(tcache[k])return tcache[k];
- try{let r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t.slice(0,450))+'&langpair=en%7Cvi');if(!r.ok)return'';let j=await r.json(),x=(j?.responseData?.translatedText||'').trim();if(/MYMEMORY WARNING/i.test(x))x='';if(x){tcache[k]=x;let keys=Object.keys(tcache);if(keys.length>400)delete tcache[keys[0]];localStorage.setItem(TCACHE_KEY,JSON.stringify(tcache))}return x}catch(e){return''}
+ t=String(t||'').trim();if(!t)return'';const k=t.toLowerCase();
+ if(tcache[k])return tcache[k];
+ try{
+  const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t.slice(0,450))+'&langpair=en%7Cvi');
+  if(!r.ok)return'';
+  const j=await r.json();
+  const x=String(j?.responseData?.translatedText||'').trim();
+  if(!validVietnameseTranslation(t,x))return'';
+  tcache[k]=x;const keys=Object.keys(tcache);if(keys.length>320)delete tcache[keys[0]];
+  try{localStorage.setItem(TCACHE_KEY,JSON.stringify(tcache))}catch(e){}
+  return x;
+ }catch(e){return''}
 }
 
 async function quickTranslate(t,ms=900){
@@ -736,7 +756,7 @@ async function fetchDatamuse(base,sentence){
   if(A.prev)url+='&lc='+encodeURIComponent(A.prev);
   if(A.next)url+='&rc='+encodeURIComponent(A.next);
   let r=await fetch(url,{cache:'force-cache'});if(!r.ok)return null;
-  let rows=await r.json(),row=rows.find(x=>String(x.word||'').toLowerCase()===base.toLowerCase())||rows[0];
+  let rows=await r.json(),row=rows.find(x=>String(x.word||'').toLowerCase()===base.toLowerCase());
   if(!row)return null;
   let groups=[],ensure=pos=>{let g=groups.find(x=>x.partOfSpeech===pos);if(!g){g={partOfSpeech:pos,definitions:[]};groups.push(g)}return g};
   (row.defs||[]).forEach(raw=>{
@@ -777,42 +797,27 @@ function timeoutPromise(p,ms){
  return Promise.race([p,new Promise(resolve=>setTimeout(()=>resolve(null),ms))]);
 }
 async function fetchData(surface,sentence){
- let cs=candidates(surface);
- for(let base of cs){
-  let cached=dcache[base];
-  if(CORE[base]){
-   let core={base:base,data:{groups:coreGroups(base),phonetic:'',audio:'',audios:[],source:'Fast built-in lexicon'}};
-   return core;
+ // Dictionary API covers the open vocabulary, not just the words in CORE.
+ // CORE remains an instant offline fallback for grammatical words and common examples.
+ const fastCore=new Set(['a','an','the','of','to','in','on','at','for','by','be','do','have','can','may','will','should','another']);
+ for(const base of candidates(surface).slice(0,5)){
+  const cached=dcache[base];
+  if(cached?.groups?.some(g=>g.definitions?.length))return{base:cached.base||base,data:cached};
+  if(fastCore.has(base)&&CORE[base])return{base,data:{groups:coreGroups(base),phonetic:'',audio:'',audios:[],source:'Từ điển tích hợp'}};
+  // Prefer actual dictionary definitions/examples/IPA, then try a separate lexical source.
+  let result=await timeoutPromise(fetchFreeDictionary(base),2300);
+  if(!result?.data?.groups?.some(g=>g.definitions?.length))result=await timeoutPromise(fetchDatamuse(base,sentence),1700);
+  if(result?.data?.groups?.some(g=>g.definitions?.length)){
+   result.data.base=result.base;
+   dcache[base]=result.data;
+   const keys=Object.keys(dcache);if(keys.length>320)delete dcache[keys[0]];
+   try{localStorage.setItem(DCACHE_KEY,JSON.stringify(dcache))}catch(e){}
+   return result;
   }
-  if(cached&&cached.groups&&cached.groups.length)return{base:cached.base||base,data:cached};
-
-  // Fast path: Datamuse normally gives POS + definitions quickly.
-  let dm=await timeoutPromise(fetchDatamuse(base,sentence),1400);
-  if(dm&&dm.data&&dm.data.groups&&dm.data.groups.length){
-   dm.data.groups=mergeGroups(dm.data.groups,dm.base);
-   dm.data.base=dm.base;
-   dm.data.audios=dm.data.audios||[];
-   dcache[base]=dm.data;
-   let keys=Object.keys(dcache);if(keys.length>320)delete dcache[keys[0]];
-   localStorage.setItem(DCACHE_KEY,JSON.stringify(dcache));
-   return dm;
-  }
-
-  // Fallback only when the fast lexical source did not return usable data.
-  let fd=await timeoutPromise(fetchFreeDictionary(base),1800);
-  if(fd&&fd.data&&fd.data.groups&&fd.data.groups.length){
-   fd.data.groups=mergeGroups(fd.data.groups,fd.base);
-   fd.data.base=fd.base;
-   dcache[base]=fd.data;
-   let keys=Object.keys(dcache);if(keys.length>320)delete dcache[keys[0]];
-   localStorage.setItem(DCACHE_KEY,JSON.stringify(dcache));
-   return fd;
-  }
-
-  if(CORE[base])return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:'',audios:[],source:'Built-in IELTS lexicon'}};
+  if(CORE[base])return{base,data:{groups:coreGroups(base),phonetic:'',audio:'',audios:[],source:'Từ điển tích hợp'}};
  }
- let base=cs[0]||dclean(surface);
- return{base:base,data:{groups:coreGroups(base),phonetic:'',audio:'',audios:[],source:'fallback'}};
+ const base=candidates(surface)[0]||dclean(surface);
+ return{base,data:{groups:[],phonetic:'',audio:'',audios:[],source:'Dịch dự phòng'}};
 }
 function inferPOS(surface,base,sentence,groups){
  let w=dclean(surface),A=around(surface,sentence),prev=A.prev,next=A.next,set=new Set(groups.map(g=>g.partOfSpeech)),fixed=FIXED[w];
@@ -857,13 +862,26 @@ function roleInfo(surface,pos,sentence){
  else{role='Chức năng được suy đoán từ vị trí trong câu.';pattern=[prev,w,next].filter(Boolean).join(' ');why='Nếu từ có nhiều chức năng, xem danh sách loại từ bên dưới để so sánh.'}
  return{role:role,pattern:pattern,why:why};
 }
-function scoreDefinition(def,sentence){
- let stop=new Set(['the','a','an','and','or','to','of','in','on','at','for','with','is','are','was','were','be','this','that','it','as','by']);
- let st=(sentence||'').toLowerCase().match(/[a-z']+/g)||[],dt=((def.definition||'')+' '+(def.example||'')).toLowerCase().match(/[a-z']+/g)||[],S=new Set(st.filter(x=>!stop.has(x)));
- return dt.reduce((n,x)=>n+(S.has(x)?1:0),0);
+function scoreDefinition(def,sentence,word){
+ if(!sentence)return 0;
+ const stop=new Set(['the','a','an','and','or','to','of','in','on','at','for','with','is','are','was','were','be','this','that','it','as','by','you','they','we','he','she','my']);
+ const target=dclean(word),context=String(sentence||'').toLowerCase();
+ const words=(context.match(/[a-z']+/g)||[]).filter(x=>!stop.has(x)&&x!==target);
+ const text=(String(def.definition||'')+' '+String(def.example||'')).toLowerCase();
+ const tokens=text.match(/[a-z']+/g)||[],set=new Set(tokens);
+ let score=0;
+ // Topic-word overlap is a weak signal; adjacent-word collocations are stronger.
+ for(const w of new Set(words))if(w.length>2&&set.has(w))score+=1;
+ const aroundWord=around(word,sentence);
+ if(aroundWord.prev&&set.has(aroundWord.prev))score+=3;
+ if(aroundWord.next&&set.has(aroundWord.next))score+=3;
+ if(def.example){
+  const ex=String(def.example).toLowerCase();
+  if(aroundWord.prev&&ex.includes(aroundWord.prev+' '+target))score+=6;
+  if(aroundWord.next&&ex.includes(target+' '+aroundWord.next))score+=6;
+ }
+ return score;
 }
-
-
 function posLearningInfo(pos,base){
  const special={
   review:{
@@ -1095,31 +1113,50 @@ async function chatStyleExamples(base,groups,sentence,pos){
 
 
 function aiPOSLabel(pos){return POSVI[String(pos||'').toLowerCase()]||pos||'—';}
-function quickContextNote(base,sentence,pos){
- const s=String(sentence||'').toLowerCase();
- if(!s)return'';
- if(base==='access'){
-  if(pos==='verb')return'Ở đây, access là truy cập hoặc sử dụng một tài liệu/dịch vụ, như access a course = truy cập một khóa học.';
-  if(/\b(improve|improves|improved|better|wider|greater|equal)\s+access\b/.test(s))return'Ở đây, improve access nghĩa là giúp nhiều người có cơ hội tiếp cận hơn. Access là danh từ chỉ cơ hội hoặc khả năng tiếp cận.';
-  if(/\baccess\s+to\b/.test(s))return'Ở đây, access to + danh từ nói về cơ hội hoặc khả năng tiếp cận thứ đó.';
- }
- if(base==='flexibility'&&/\bflexibility\b/.test(s))return'Ở đây, flexibility nói về khả năng thay đổi thời gian hoặc cách học cho phù hợp.';
- return'';
-}
-function quickDictionaryHTML(base,sentence,meaning,definition,coreSense,pos){
+function quickDictionaryHTML(base,sentence,meaning,definition,coreSense,pos,definitionVi){
  const english=String(definition?.definition||coreSense?.[2]||'').trim();
- const example=String(coreSense?.[3]||definition?.example||'').trim();
- const safeMeaning=String(meaning||'').trim();
- const note=quickContextNote(base,sentence,pos);
- return '<section class="dictQuickAnswer">'+
-   (safeMeaning?'<p><b>'+descape(base)+'</b>: <strong>'+descape(safeMeaning)+'</strong></p>':'<p>Chưa tra được nghĩa của <b>'+descape(base)+'</b> lúc này. Bạn có thể mở Cambridge để đối chiếu.</p>')+
-   (note?'<p class="dictQuickNote">'+descape(note)+'</p>':'')+
-   (sentence?'<div class="dictQuickContext"><small>Trong bài của bạn</small><p>'+highlightWord(String(sentence).slice(0,250),base)+'</p></div>':'')+
-   (english&&!note&&safeMeaning?'<p class="dictQuickEnglish"><b>English:</b> '+descape(english.slice(0,135))+'</p>':'')+
-   (example&&!sentence?'<p class="dictQuickExample"><b>Ví dụ:</b> '+descape(example.slice(0,160))+'</p>':'')+
+ const example=String(definition?.example||coreSense?.[3]||'').trim();
+ const safeMeaning=String(meaning||'').trim(),senseVi=String(definitionVi||'').trim();
+ const primary=safeMeaning?'<p><b>'+descape(base)+'</b>: <strong>'+descape(safeMeaning)+'</strong></p>':
+  '<p>Chưa tìm được nghĩa tiếng Việt đáng tin cậy cho <b>'+descape(base)+'</b>. Bạn có thể xem định nghĩa tiếng Anh hoặc từ điển bên ngoài.</p>';
+ const contextNote=sentence&&senseVi&&senseVi.toLowerCase()!==safeMeaning.toLowerCase()?
+  '<p class="dictQuickNote"><b>Trong ngữ cảnh này:</b> '+descape(senseVi.slice(0,190))+'</p>':'';
+ return '<section class="dictQuickAnswer">'+primary+contextNote+
+   (sentence?'<div class="dictQuickContext"><small>Câu đang đọc</small><p>'+highlightWord(String(sentence).slice(0,260),base)+'</p></div>':'')+
+   (english?'<p class="dictQuickEnglish"><b>English:</b> '+descape(english.slice(0,175))+'</p>':'')+
+   (example&&example.trim().toLowerCase()!==String(sentence||'').trim().toLowerCase()?
+     '<p class="dictQuickExample"><b>Example:</b> '+descape(example.slice(0,185))+'</p>':'')+
  '</section>';
 }
-
+function otherMeaningsHTML(groups,selectedPos,selectedDefinition){
+ const seen=new Set(),other=[];
+ for(const g of groups){
+  for(const d of (g.definitions||[]).slice(0,4)){
+   if(!d.definition||(g.partOfSpeech===selectedPos&&d.definition===selectedDefinition))continue;
+   const key=g.partOfSpeech+'|'+d.definition.toLowerCase();if(seen.has(key))continue;seen.add(key);
+   other.push({pos:g.partOfSpeech,en:d.definition});
+   if(other.length===5)break;
+  }
+  if(other.length===5)break;
+ }
+ if(!other.length)return'';
+ return '<details class="dictOtherMeanings"><summary>Xem nghĩa và loại từ khác ('+other.length+')</summary><div class="dictOtherList">'+
+   other.map(x=>'<div class="dictOtherItem"><b>'+descape(POSVI[x.pos]||x.pos)+'</b><span>'+descape(x.en.slice(0,180))+
+   '</span><small class="dictOtherVi" data-en="'+descape(x.en.slice(0,350))+'"></small></div>').join('')+'</div></details>';
+}
+function bindOtherMeanings(target){
+ const details=target.querySelector('.dictOtherMeanings');
+ if(!details)return;
+ details.addEventListener('toggle',async()=>{
+  if(!details.open||details.dataset.translated)return;
+  details.dataset.translated='1';
+  const items=[...details.querySelectorAll('.dictOtherVi')];
+  await Promise.all(items.map(async item=>{
+   const text=await quickTranslate(item.dataset.en,1500);
+   if(text&&details.isConnected)item.textContent='→ '+text.slice(0,170);
+  }));
+ });
+}
 const PRON_AUDIO_CACHE={};
 function googleTtsURL(base,accent){
  let tl=accent==='UK'?'en-GB':'en-US';
@@ -1180,65 +1217,60 @@ async function hydrateRecordedPronunciation(base){
  if(fd&&fd.data&&fd.data.audios&&fd.data.audios.length)PRON_AUDIO_CACHE[base]=fd.data.audios;
 }
 async function renderDictionary(surface,targetId,sentence){
- let target=document.getElementById(targetId);if(!target)return;surface=(surface||'').trim();if(!surface)return;
+ const target=document.getElementById(targetId);if(!target)return;
+ surface=String(surface||'').trim();if(!surface)return;
  const requestToken=Date.now()+'-'+Math.random();
  target.dataset.dictRequest=requestToken;
- let hasContext=!!String(sentence||'').trim();
- target.innerHTML='<div class="dictLoadingHead"><div class="dictWord">'+descape(surface)+'</div><div class="muted">Đang tra nghĩa và phát âm…</div></div>';
-
- let got=await fetchData(surface,sentence);
- if(target.dataset.dictRequest!==String(requestToken))return;
- let base=got.base||dclean(surface),groups=got.data.groups||[];
- let pos=hasContext?inferPOS(surface,base,sentence,groups):(groups[0]?.partOfSpeech||'');
- let g=(pos?groups.find(x=>x.partOfSpeech===pos):null)||groups[0];
- if(g&&g.definitions&&g.definitions.length)g.definitions.sort((x,y)=>scoreDefinition(y,sentence)-scoreDefinition(x,sentence));
- let def=g?.definitions?.[0]||{},coreSense=(pos?CORE[base]?.s.find(x=>x[0]===pos):null)||CORE[base]?.s?.[0];
- let cleanDefinition=String(def.definition||'').replace(/^\((?:intransitive|transitive|countable|uncountable|informal|formal|dated|archaic)[^)]*\)\s*/i,'').trim();
- let meaning=coreSense?.[1]||def.vi||await quickTranslate(base,750);
- if((!meaning||meaning.toLowerCase()===base.toLowerCase())&&cleanDefinition)meaning=await quickTranslate(cleanDefinition,850);
- let simpleMeaning=meaning||'';
- // A dictionary provider may return an encyclopedic entry for a common word
- // (for example the song title “Habits”). Prefer its everyday lexical sense.
- if(/^habits?$/i.test(base))simpleMeaning='thói quen';
- else if(window.cleanSavedMeaning)simpleMeaning=window.cleanSavedMeaning(base,simpleMeaning);
- let currentPOS=pos||g?.partOfSpeech||'';
+ target.innerHTML='<div class="dictLoadingHead"><div class="dictWord">'+descape(surface)+'</div><div class="muted">Đang tra từ miễn phí…</div></div>';
+ const got=await fetchData(surface,sentence);
+ if(target.dataset.dictRequest!==requestToken)return;
+ const base=got.base||dclean(surface),groups=got.data.groups||[];
+ const pos=sentence?inferPOS(surface,base,sentence,groups):(groups[0]?.partOfSpeech||FIXED[base]||'');
+ const group=(pos?groups.find(x=>x.partOfSpeech===pos):null)||groups[0];
+ const definitions=(group?.definitions||[]).slice().sort((a,b)=>scoreDefinition(b,sentence,base)-scoreDefinition(a,sentence,base));
+ const def=definitions[0]||{},coreSense=(pos?CORE[base]?.s.find(x=>x[0]===pos):null)||CORE[base]?.s?.[0];
+ const cleanDefinition=String(def.definition||coreSense?.[2]||'')
+  .replace(/^\((?:intransitive|transitive|countable|uncountable|informal|formal|dated|archaic)[^)]*\)\s*/i,'').trim();
+ // A short free translation of the chosen *definition* is more useful in context
+ // than a bare translation of an ambiguous headword (e.g., bank, charge).
+ const [wordVi,senseVi]=await Promise.all([
+   coreSense?.[1]?Promise.resolve(coreSense[1]):quickTranslate(base,1350),
+   cleanDefinition?quickTranslate(cleanDefinition.slice(0,350),1550):Promise.resolve('')
+ ]);
+ if(target.dataset.dictRequest!==requestToken)return;
+ const polysemous=!!sentence&&(!CORE[base])&&((group?.definitions?.length||0)>1||groups.length>1);
+ let primary=polysemous&&senseVi?senseVi:(coreSense?.[1]||wordVi||senseVi||'');
+ // Do not show song/artist metadata for *any* ordinary vocabulary item.
+ if(!validVietnameseTranslation(base,primary)&&!coreSense?.[1])primary=senseVi||'';
+ if(window.cleanSavedMeaning)primary=window.cleanSavedMeaning(base,primary)||'';
+ let currentPOS=pos||group?.partOfSpeech||'';
  if(currentPOS==='unknown')currentPOS='';
-
- target.innerHTML=
-  '<div class="dictHeaderLine"><div><div class="dictWord">'+descape(titleWord(surface))+'</div>'+
-    '<div class="dictMetaLine">'+
-      (got.data.phonetic?'<span class="phonetic">'+descape(got.data.phonetic)+'</span>':'')+
-      (currentPOS?'<span class="posBadge">'+descape(aiPOSLabel(currentPOS))+'</span>':'')+
-      (base&&dclean(surface)!==base?'<span class="dictBase">base: <b>'+descape(base)+'</b></span>':'')+
-    '</div></div>'+
-  '</div>'+
-  '<div class="dictActions">'+
-    dictionaryAudioButtons(got.data.audios,base)+
-    '<button class="save" id="dictSaveWord" data-meaning="'+descape(simpleMeaning)+'">⭐ Lưu ôn</button>'+
-    '<a target="_blank" rel="noopener" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a>'+
-  '</div>'+
-  quickDictionaryHTML(base,sentence,simpleMeaning,def,coreSense,currentPOS)+
-  '<small class="dictQuickSource">Lưu từ để luyện ngữ cảnh, cụm từ, nói và viết.</small>';
-
- bindDictionaryAudio(target);
- hydrateRecordedPronunciation(base);
+ const meaningForSave=String(primary||'').slice(0,190);
+ target.innerHTML='<div class="dictHeaderLine"><div><div class="dictWord">'+descape(titleWord(surface))+'</div>'+
+   '<div class="dictMetaLine">'+
+     (got.data.phonetic?'<span class="phonetic">'+descape(got.data.phonetic)+'</span>':'')+
+     (currentPOS?'<span class="posBadge">'+descape(aiPOSLabel(currentPOS))+'</span>':'')+
+     (base&&dclean(surface)!==base?'<span class="dictBase">gốc: <b>'+descape(base)+'</b></span>':'')+
+   '</div></div></div>'+
+   '<div class="dictActions">'+dictionaryAudioButtons(got.data.audios,base)+
+     '<button class="save" id="dictSaveWord" data-meaning="'+descape(meaningForSave)+'">⭐ Lưu từ</button>'+
+     '<a target="_blank" rel="noopener" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a>'+
+   '</div>'+
+   quickDictionaryHTML(base,sentence,primary,def,coreSense,currentPOS,senseVi)+
+   otherMeaningsHTML(groups,currentPOS,def.definition)+
+   '<small class="dictQuickSource">Dữ liệu từ điển + dịch máy miễn phí; không gọi AI khi tra từ. Lưu từ để luyện sâu hơn.</small>';
+ bindDictionaryAudio(target);bindOtherMeanings(target);hydrateRecordedPronunciation(base);
  const saveBtn=target.querySelector('.dictActions .save');
  if(saveBtn)saveBtn.onclick=function(){
-    const raw=this.dataset.meaning||simpleMeaning||meaning||'';
-    const m=window.cleanSavedMeaning?window.cleanSavedMeaning(base,raw):raw;
-    const oldSaved=st.saved[base]||{};
-    st.saved[base]={
-      ...oldSaved,
-      w:base,
-      m:m||'',
-      savedAt:Number(oldSaved.savedAt)||Date.now(),
-      context:(window.isOffTopicSavedText&&window.isOffTopicSavedText(String(sentence||'').trim()||oldSaved.context))?'':(String(sentence||'').trim()||oldSaved.context||''),
-     updatedAt:Date.now()
-   };
+   const raw=this.dataset.meaning||meaningForSave;
+   const m=window.cleanSavedMeaning?window.cleanSavedMeaning(base,raw):raw;
+   const oldSaved=st.saved[base]||{};
+   st.saved[base]={...oldSaved,w:base,m:m||'',savedAt:Number(oldSaved.savedAt)||Date.now(),
+     context:(window.isOffTopicSavedText&&window.isOffTopicSavedText(String(sentence||'').trim()||oldSaved.context))?'':(String(sentence||'').trim()||oldSaved.context||''),
+     updatedAt:Date.now()};
    save();renderSaved();this.textContent='✓ Đã lưu';
  };
 }
-
 window.lookupDictionary=function(raw,targetId='dictResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
 window.toggleDictionary=function(force){let open=force===undefined?!dict.classList.contains('open'):!!force;dict.classList.toggle('open',open)};
 window.dictMinimize=function(){dict.classList.toggle('min')};
