@@ -270,8 +270,8 @@
   function acceptableListening(ans,correct){
     const a=norm(ans),c=norm(correct);
     if(!a)return false;
-    const variants=[c,c.replace(/^a |^an |^the /,""),c.replace(/ weeks?$/,""),c.replace(/room /,"")];
-    return variants.some(v=>a===v||a.includes(v)||v.includes(a));
+    const noArticle=s=>s.replace(/^(?:a|an|the)\s+/,"");
+    return a===c||noArticle(a)===noArticle(c);
   }
   function scoreListening(){
     let right=0;
@@ -314,6 +314,22 @@
   function showObjectiveResult(r,l,auto){
     const body=document.getElementById("mockExamBody");
     const parts=[];
+    if(typeof window.recordLearningError==="function"){
+      if(l)exam.listening.q.forEach((q,i)=>{
+        const given=exam.answers.listening[i]||"";
+        if(!acceptableListening(given,q[1]))window.recordLearningError({
+          skill:"listening",task:"Mock Test · Listening",question:q[0],userAnswer:given||"Bỏ trống",
+          correctAnswer:q[1],why:q[2]||"Đáp án cần khớp với thông tin nghe được.",errorType:"Listening mock"
+        });
+      });
+      if(r)exam.reading.q.forEach((q,i)=>{
+        const given=exam.answers.reading[i];
+        if(Number(given)!==q[2]||given===undefined)window.recordLearningError({
+          skill:"reading",task:"Mock Test · Reading",question:q[0],userAnswer:given===undefined?"Bỏ trống":q[1][given],
+          correctAnswer:q[1][q[2]],why:q[3]||"Đáp án đúng được hỗ trợ bởi đoạn đọc.",errorType:"Reading mock"
+        });
+      });
+    }
     if(l){
       parts.push('<section class="mockResultSection"><h3>Listening · '+l.right+'/'+l.total+'</h3>'+
         exam.listening.q.map((q,i)=>{
