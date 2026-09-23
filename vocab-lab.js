@@ -23,6 +23,7 @@ function dayKey(ts){
   return y+"-"+m+"-"+day;
 }
 function formatDay(k){
+  if(k==="legacy")return "Từ đã lưu trước khi bật chia theo ngày";
   const p=k.split("-").map(Number),d=new Date(p[0],p[1]-1,p[2]);
   const today=dayKey(Date.now());
   const yesterday=dayKey(Date.now()-86400000);
@@ -34,7 +35,7 @@ function migrate(){
   Object.keys(app.saved).forEach((k,idx)=>{
     const x=app.saved[k]||{};
     if(!x.w){x.w=k;changed=true;}
-    if(!Number(x.savedAt)){x.savedAt=Date.now()+idx;changed=true;}
+    if(!Number(x.savedAt)){x.legacySaved=true;changed=true;}
     if(!("context" in x)){x.context="";changed=true;}
     app.saved[k]=x;
   });
@@ -44,7 +45,7 @@ function migrate(){
 function wordsByDay(){
   const app=migrate(),groups={};
   Object.values(app.saved||{}).filter(x=>x&&x.w).forEach(x=>{
-    const k=dayKey(x.savedAt);
+    const k=x.legacySaved&&!Number(x.savedAt)?"legacy":dayKey(x.savedAt);
     (groups[k]||(groups[k]=[])).push(x);
   });
   Object.values(groups).forEach(a=>a.sort((x,y)=>(x.savedAt||0)-(y.savedAt||0)));
@@ -137,7 +138,9 @@ function renderDay(k,arr){
 }
 function render(){
   const host=document.getElementById("savedWords");if(!host)return;
-  const groups=wordsByDay(),keys=Object.keys(groups).sort().reverse();
+  const groups=wordsByDay(),keys=Object.keys(groups).sort((a,b)=>{
+    if(a==="legacy")return 1;if(b==="legacy")return -1;return b.localeCompare(a);
+  });
   if(!keys.length){
     host.innerHTML='<div class="vocabEmpty"><b>Chưa lưu từ nào.</b><p>Tra từ trong Reading/Listening rồi bấm ⭐ Lưu ôn. Từ mới sẽ tự vào đúng ngày bạn lưu.</p></div>';
     return;
