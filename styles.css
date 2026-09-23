@@ -2769,3 +2769,176 @@ canvas{
 @media(max-width:560px){
   .errMethodRow{grid-template-columns:1fr}
 }
+
+/* Error Lab Fix Pack v3 */
+.errHeroV3 h2{max-width:760px}
+.errMethodV3>div{
+  min-height:74px;
+  border-color:#dfe6f2;
+  background:linear-gradient(180deg,#fff,#fbfcff);
+}
+.errCardV3{overflow:hidden}
+.errCardV3 .errActions{border-top:1px solid #eef1f5;padding-top:10px}
+.errDrillV3{
+  background:linear-gradient(180deg,#f7faff,#f3f7ff);
+  border-color:#bfd2f5;
+  padding:14px;
+}
+.errPackStart{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px 14px;
+  align-items:center;
+  padding:12px;
+  background:#fff;
+  border:1px solid #dbe4f2;
+  border-radius:12px;
+}
+.errPackStart>div{display:grid;gap:4px}
+.errPackStart b{color:#234a86;font-size:14px}
+.errPackStart p{margin:0;color:#647189;font-size:11px;line-height:1.5}
+.errPackStart small{grid-column:1/-1;color:#8793a5;font-size:9px}
+.errPackStart .errPackError{grid-column:1/-1;color:#b42318;font-size:10px;margin:0}
+.errSmartIntro{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:10px;
+}
+.errSmartIntro>p{
+  grid-column:1/-1;
+  margin:0;
+  border-left:3px solid #8ba9ef;
+  background:#fff;
+  border-radius:0 9px 9px 0;
+  padding:8px 10px;
+  color:#59677b;
+  font-size:11px;
+  line-height:1.45;
+}
+.errPattern,.errMemoryHook{
+  border:1px solid #dfe6f1;
+  border-radius:11px;
+  background:#fff;
+  padding:10px;
+  display:grid;
+  gap:4px;
+}
+.errPattern span,.errMemoryHook span{
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.05em;
+}
+.errPattern span{color:#3157d5}
+.errMemoryHook span{color:#b36d00}
+.errPattern b,.errMemoryHook b{
+  font-size:11px;
+  line-height:1.45;
+  color:#354258;
+}
+.errMemoryHook{background:#fffaf0;border-color:#f0deb4}
+.errSmartDrills{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.errSmartDrill{
+  border:1px solid #dfe5ee;
+  border-radius:12px;
+  background:#fff;
+  padding:11px;
+  min-width:0;
+  transition:.18s ease;
+}
+.errSmartDrill.passed{border-color:#94d6a8;background:#f4fff7}
+.errSmartDrill.failed{border-color:#efb2aa;background:#fffafa}
+.errSmartDrillHead{
+  display:flex;
+  gap:9px;
+  align-items:flex-start;
+  margin-bottom:8px;
+}
+.errSmartDrillHead>span{
+  min-width:34px;
+  height:26px;
+  display:grid;
+  place-items:center;
+  border-radius:7px;
+  background:#eef3ff;
+  color:#3157d5;
+  font-size:9px;
+  font-weight:900;
+}
+.errSmartDrillHead>div{display:grid;gap:2px}
+.errSmartDrillHead b{font-size:12px;color:#26354e}
+.errSmartDrillHead small{font-size:9px;color:#8490a2;line-height:1.35}
+.errSmartPrompt{
+  margin:0 0 8px;
+  min-height:34px;
+  color:#536078;
+  font-size:11px;
+  line-height:1.5;
+}
+.errSmartChoices{
+  display:grid;
+  gap:6px;
+}
+.errSmartChoice{
+  width:100%;
+  text-align:left;
+  border:1px solid #dce3ed;
+  background:#fff;
+  color:#344258;
+  border-radius:9px;
+  padding:8px 9px;
+  font:inherit;
+  font-size:11px;
+  line-height:1.4;
+  cursor:pointer;
+}
+.errSmartChoice:hover{border-color:#96ade8;background:#f8faff}
+.errSmartChoice.right{border-color:#7fc795;background:#edfaf2;color:#136e38}
+.errSmartChoice.wrong{border-color:#eba69c;background:#fff0ee;color:#aa332a}
+.errSmartInputRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:7px;
+}
+.errSmartInputRow input{
+  min-width:0;
+  border:1px solid #d7deea;
+  border-radius:9px;
+  padding:9px 10px;
+  font:inherit;
+  font-size:11px;
+}
+.errSmartInputRow .btn{margin:0}
+.errListenRow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:7px;
+  color:#718096;
+  font-size:10px;
+}
+.errListenRow .btn{margin:0;flex:0 0 auto}
+.errPackDone{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:10px;
+  border:1px solid #8fd0a2;
+  border-radius:10px;
+  background:#effcf3;
+  padding:10px 11px;
+}
+.errPackDone.hidden{display:none}
+.errPackDone b{font-size:11px;color:#16713a}
+.errPackDone span{font-size:10px;color:#627467;text-align:right}
+@media(max-width:820px){
+  .errSmartIntro,.errSmartDrills{grid-template-columns:1fr}
+  .errSmartIntro>p{grid-column:auto}
+  .errPackStart{grid-template-columns:1fr}
+  .errPackStart small,.errPackStart .errPackError{grid-column:auto}
+}
