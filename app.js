@@ -1159,8 +1159,12 @@ async function fetchContextDictionaryAI(surface,base,sentence,groups,pos,slotId)
    box.innerHTML='<div class="dictAIUnavailable">AI ngữ cảnh chưa được cấu hình. Đang dùng nguồn từ điển dự phòng.</div>';
    return null;
  }
- const key=dictAIKey(base,sentence);
- if(dictAICache[key]){
+  const key=dictAIKey(base,sentence);
+  if(dictAICache[key]&&window.isOffTopicSavedText&&window.isOffTopicSavedText(dictAICache[key].meaning_vi)){
+    delete dictAICache[key];
+    try{localStorage.setItem(DAI_KEY,JSON.stringify(dictAICache))}catch(e){}
+  }
+  if(dictAICache[key]){
    renderContextDictionaryAI(dictAICache[key],base,sentence,slotId);
    return dictAICache[key];
  }
