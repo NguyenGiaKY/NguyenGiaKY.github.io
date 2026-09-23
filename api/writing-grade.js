@@ -135,7 +135,7 @@ export default async function handler(req,res){
       body:JSON.stringify({
         model,
         input:prompt,
-        max_output_tokens:4200
+        max_output_tokens:6500
       })
     });
 
