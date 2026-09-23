@@ -1,0 +1,24 @@
+/* Error Lab review and saved vocabulary phrase practice */
+.errSmartChoice:disabled,.errSmartDrill button:disabled,.errSmartDrill input:disabled{opacity:.48;cursor:not-allowed}
+.errSmartDrill:has(button:disabled){background:#f7f9fd}
+.vocabPhraseList{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+.vocabPhraseCard{border:1px solid #e3e8f2;background:#fff;border-radius:14px;padding:14px;min-width:0}
+.vocabPhraseHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+.vocabPhraseHead>div{display:grid;gap:3px;min-width:0}
+.vocabPhraseHead b{font-size:1rem;color:#22314b;overflow-wrap:anywhere}
+.vocabPhraseHead small{color:#64748b;font-size:.85rem}
+.vocabPhraseHead span{font-size:.82rem;color:#3157d5;font-weight:700;text-align:right}
+.vocabPhraseQuiz{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:end;border-top:1px solid #edf0f5;padding:10px 0}
+.vocabPhraseQuiz label,.vocabPhraseFields label{display:grid;gap:6px;font-size:.9rem;font-weight:700;line-height:1.45;color:#35445e;min-width:0}
+.vocabPhraseQuiz strong{font-weight:750;color:#1d3c80}
+.vocabPhraseQuiz input,.vocabPhraseFields input{width:100%;min-width:0;border:1px solid #cfd8e8;border-radius:9px;padding:10px;color:#16213e;background:#fff;font-size:1rem}
+.vocabPhraseQuiz input:focus,.vocabPhraseFields input:focus{outline:2px solid #abc0ff;outline-offset:1px}
+.vocabPhraseFeedback{grid-column:1/-1;font-size:.85rem;color:#64748b;line-height:1.4}
+.vocabPhraseQuiz.passed .vocabPhraseFeedback{color:#177245}
+.vocabPhraseQuiz.failed .vocabPhraseFeedback{color:#b42318}
+.vocabPhraseEdit{border-top:1px solid #edf0f5;padding-top:10px;margin-top:2px}
+.vocabPhraseEdit summary{cursor:pointer;color:#3157d5;font-size:.9rem;font-weight:700}
+.vocabPhraseFields{display:grid;gap:10px;margin:12px 0}
+.vocabPhraseButtons{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vocabPhraseStatus{color:#9a6700;font-size:.85rem;line-height:1.4}
+@media(max-width:600px){.vocabPhraseList{grid-template-columns:1fr}.vocabPhraseQuiz{grid-template-columns:1fr}.vocabPhraseQuiz .btn{justify-self:start}}
