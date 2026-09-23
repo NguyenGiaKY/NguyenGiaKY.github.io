@@ -23,4 +23,12 @@
     ? location.origin+"/api/dictionary-explain"
     : "";
   window.DICTIONARY_AI_ENDPOINT=dictionarySaved||dictionarySameOrigin||dictionaryVercel;
+
+  var errorDrillSaved="";
+  try{errorDrillSaved=localStorage.getItem("error_drill_ai_endpoint")||"";}catch(e){}
+  var errorDrillVercel="https://nguyen-gia-ky-github-io-rvay.vercel.app/api/error-drill";
+  var errorDrillSameOrigin=(location.hostname.endsWith(".vercel.app")||location.hostname==="localhost"||location.hostname==="127.0.0.1")
+    ? location.origin+"/api/error-drill"
+    : "";
+  window.ERROR_DRILL_AI_ENDPOINT=errorDrillSaved||errorDrillSameOrigin||errorDrillVercel;
 })();
