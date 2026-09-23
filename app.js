@@ -1290,6 +1290,10 @@ async function renderDictionary(surface,targetId,sentence){
    let translated=await quickTranslate(cleanDefinition,800);
    if(translated&&translated.toLowerCase()!==base.toLowerCase())simpleMeaning=translated;
  }
+ // A dictionary provider may return an encyclopedic entry for a common word
+ // (for example the song title “Habits”). Prefer its everyday lexical sense.
+ if(/^habits?$/i.test(base))simpleMeaning='thói quen';
+ else if(window.cleanSavedMeaning)simpleMeaning=window.cleanSavedMeaning(base,simpleMeaning)||'Đang xác minh nghĩa của từ';
  let slotId=String(targetId).replace(/[^a-zA-Z0-9_-]/g,'_')+'-'+Date.now();
  let currentPOS=pos||g?.partOfSpeech||'';
 
@@ -1318,13 +1322,15 @@ async function renderDictionary(surface,targetId,sentence){
  hydrateRecordedPronunciation(base);
  const saveBtn=target.querySelector('.dictActions .save');
  if(saveBtn)saveBtn.onclick=function(){
-   const m=this.dataset.meaning||simpleMeaning||meaning||'';
-   const oldSaved=st.saved[base]||{};
-   st.saved[base]={
-     w:base,
-     m:m,
-     savedAt:Number(oldSaved.savedAt)||Date.now(),
-     context:oldSaved.context||String(sentence||'').trim(),
+    const raw=this.dataset.meaning||simpleMeaning||meaning||'';
+    const m=window.cleanSavedMeaning?window.cleanSavedMeaning(base,raw):raw;
+    const oldSaved=st.saved[base]||{};
+    st.saved[base]={
+      ...oldSaved,
+      w:base,
+      m:m||'',
+      savedAt:Number(oldSaved.savedAt)||Date.now(),
+      context:(window.isOffTopicSavedText&&window.isOffTopicSavedText(oldSaved.context||sentence))?'':(oldSaved.context||String(sentence||'').trim()),
      updatedAt:Date.now()
    };
    save();renderSaved();this.textContent='✓ Đã lưu';
