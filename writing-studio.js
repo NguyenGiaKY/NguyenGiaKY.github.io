@@ -282,6 +282,21 @@
     var body=document.getElementById("lessonBody");if(!body)return;
     var raw=combinedEssay();
     var corr=result.corrections||[];
+    if(typeof window.recordLearningError==="function"){
+      corr.forEach(function(x){
+        window.recordLearningError({
+          skill:"writing",
+          task:TASK.title,
+          question:TASK.prompt,
+          userAnswer:x.wrong||"",
+          correctAnswer:x.better||"",
+          why:x.reason||"",
+          rule:x.rule||"",
+          errorType:x.type||"Writing",
+          source:"Writing AI"
+        });
+      });
+    }
     if(typeof window.recordTaskPerformance==="function"){
       window.recordTaskPerformance({kind:"writing",band:Number(result.overall),errors:corr.length,note:"Writing practice band "+Number(result.overall).toFixed(1)});
     }
