@@ -1,0 +1,35 @@
+
+/* Dictionary teaching panel: practical ChatGPT-style pedagogy, no model calls */
+.dictRichMount{margin:14px 0 2px;color:#263653}
+.dictLearnPanel{background:#fff;border:1px solid #dfe8f5;border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(20,44,85,.045)}
+.dictLearnHead{padding:14px 14px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(110deg,#f2f6ff,#fff)}
+.dictLearnHead small{font-size:.68rem;font-weight:850;letter-spacing:.11em;color:#436cbb}
+.dictLearnHead h3{font-size:1.06rem;line-height:1.24;margin:5px 0 0;color:#1b356e}
+.dictGPTButton{border:1px solid #b9c6e6;border-radius:10px;background:#fff;font:inherit;font-size:.81rem;font-weight:770;padding:9px 10px;color:#254c9a;cursor:pointer;white-space:nowrap}
+.dictGPTButton:hover{background:#ecf3ff}
+.dictLearnContext{padding:11px 14px;background:#f6f9ff;border-top:1px solid #e6edfb;font-size:.9rem}
+.dictLearnContext b{font-size:.75rem;letter-spacing:.02em;color:#3c5f9a}
+.dictLearnContext p{margin:6px 0 0;line-height:1.5}
+.dictLearnSection{padding:13px 14px;border-top:1px solid #e9eef6}
+.dictLearnSection h4,.dictLearnPattern h4{font-size:.9rem;margin:0 0 10px;color:#203b75}
+.dictLearnExamples,.dictCollocations,.dictFamilies{display:grid;gap:8px}
+.dictLearnExample{border-left:3px solid #8cacfa;padding:2px 0 3px 10px}
+.dictLearnExample p{margin:0 0 4px;font-size:.9rem;line-height:1.53}
+.dictExampleTranslation{display:block;color:#527161;font-size:.83rem;line-height:1.4}
+.dictExampleTranslation:empty{display:none}
+.dictCollocations p,.dictFamilies p{display:flex;align-items:baseline;column-gap:7px;row-gap:2px;flex-wrap:wrap;margin:0;font-size:.9rem}
+.dictCollocations p:before{content:"•";color:#4670ce;font-weight:800}
+.dictCollocations b,.dictFamilies b{font-weight:750}
+.dictCollocations span,.dictFamilies span{color:#556a88}
+.dictFamilies i{font-style:normal;color:#5e78a6;font-size:.77rem;border-radius:5px;background:#eff4fd;padding:2px 5px}
+.dictLearnPattern{background:#f2f7ff;padding:13px 14px;border-top:1px solid #e3ecfc}
+.dictLearnPattern strong{display:block;font-size:.9rem}
+.dictLearnPattern span{display:block;font-size:.83rem;color:#53708a;margin-top:5px;line-height:1.4}
+.dictLearnMuted{font-size:.82rem;color:#7c899f;margin:0;line-height:1.45}
+.dictLearnDisclaimer{padding:0 14px;margin:11px 0 8px;font-size:.72rem;color:#647691;line-height:1.4}
+.dictGPTStatus{padding:0 14px;margin:0 0 12px;font-size:.82rem;color:#256748;line-height:1.45}
+.dictGPTStatus:empty{display:none}
+.dictGPTManual{width:calc(100% - 28px);min-height:90px;margin:0 14px 14px;border:1px solid #c6d5eb;border-radius:8px;padding:10px;font-size:.8rem;resize:vertical}
+.dictQuickAnswer>p:first-child{font-size:1.02rem;line-height:1.5}
+.dictQuickAnswer>p:first-child strong{color:#244f9d}
+@media(max-width:510px){.dictLearnHead{align-items:flex-start;flex-direction:column}.dictGPTButton{width:100%}}
