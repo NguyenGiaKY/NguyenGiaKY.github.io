@@ -14,6 +14,10 @@ function esc(s){
 function norm(s){return String(s||"").toLowerCase().replace(/[^a-z0-9' -]/g,"").replace(/\s+/g," ").trim();}
 const COMMON_MEANINGS={habit:'thói quen',habits:'thói quen'};
 const COMMON_EXAMPLES={habit:'Reading every day is a useful habit.',habits:'Good study habits help me learn English.'};
+const COMMON_PHRASES={
+  habit:{paraphrases:['routine','regular behaviour'],collocations:['a good habit','develop a habit']},
+  habits:{paraphrases:['routines','regular ways of behaving'],collocations:['good habits','study habits']}
+};
 function offTopic(s){
   s=String(s||'');
   return s.length>170||/bài hát|ca sĩ|album|đĩa (đơn|mở rộng|đầu tay)|thu âm|phòng thu|thụy điển|stay high|truth serum|queen of the clouds|singer|recorded by|soundtrack|film (released|starring)/i.test(s);
@@ -77,7 +81,10 @@ function dayState(k){
   const d=lab.days[k];
   d.recall=d.recall||{};d.speaking=d.speaking||{};d.paraphrase=d.paraphrase||{};d.collocation=d.collocation||{};return d;
 }
-function wordCard(word){return lab.cards[norm(word)]||(lab.cards[norm(word)]={paraphrases:[],collocations:[],rounds:0,reviewAt:0});}
+function wordCard(word){
+  const key=norm(word),known=COMMON_PHRASES[key]||{paraphrases:[],collocations:[]};
+  return lab.cards[key]||(lab.cards[key]={paraphrases:known.paraphrases.slice(),collocations:known.collocations.slice(),rounds:0,reviewAt:0});
+}
 function same(a,b){return norm(a).replace(/[’]/g,"'")===norm(b).replace(/[’]/g,"'");}
 function dueCard(card){return !!(card.paraphrases?.length&&card.collocations?.length&&card.rounds<4&&(!card.reviewAt||card.reviewAt<=Date.now()));}
 function collocationPrompt(word,phrase){
@@ -238,8 +245,11 @@ async function suggestPhrases(btn){
     try{r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl.signal,
       body:JSON.stringify({word,base:word,sentence:saved.context||'',lexical:saved.m||''})});}finally{clearTimeout(timer)}
     const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||'Không tải được gợi ý');
-    const para=(Array.isArray(d.paraphrases)?d.paraphrases:[]).map(x=>String(x.phrase||'').trim()).filter(Boolean).slice(0,5);
-    const coll=(Array.isArray(d.collocations)?d.collocations:[]).map(x=>String(x.phrase||'').trim()).filter(Boolean).slice(0,5);
+    let para=(Array.isArray(d.paraphrases)?d.paraphrases:[]).map(x=>String(x.phrase||'').trim()).filter(x=>x&&!offTopic(x)).slice(0,5);
+    // Earlier backend versions return a short English rewording of the meaning.
+    if(!para.length&&d.meaning_en_simple&&!offTopic(d.meaning_en_simple)&&norm(d.meaning_en_simple)!==norm(word))
+      para=[String(d.meaning_en_simple).trim()];
+    const coll=(Array.isArray(d.collocations)?d.collocations:[]).map(x=>String(x.phrase||'').trim()).filter(x=>x&&!offTopic(x)).slice(0,5);
     if(!para.length||!coll.length)throw new Error('Chưa có đủ cụm phù hợp; bạn có thể tự thêm.');
     const item=wordCard(word);item.paraphrases=para;item.collocations=coll;
     if(d.meaning_vi&&!offTopic(d.meaning_vi))item.meaningVi=String(d.meaning_vi).trim();
