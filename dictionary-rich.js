@@ -52,7 +52,7 @@ function cardHTML(d){
  return '<section class="dictLearnPanel" aria-label="English study notes">'+
  '<div class="dictLearnHead"><div><small>VOCABULARY STUDY</small><h3>Hiểu và dùng từ</h3></div>'+
  '<button class="dictGPTButton" type="button">↗ Hỏi ChatGPT</button></div>'+
- (d.context?'<div class="dictLearnContext"><b>Trong bài đọc</b><p>'+esc(d.context.slice(0,240))+'</p></div>':'')+
+ 
  '<div class="dictLearnSection"><h4>Ví dụ thực tế</h4><div class="dictLearnExamples">'+
  (examples.length?examples.map(en=>'<div class="dictLearnExample"><p>'+esc(en)+'</p><span class="dictExampleTranslation" data-example="'+esc(en)+'">Đang dịch…</span></div>').join(''):'<p class="dictLearnMuted">Chưa có ví dụ đã kiểm chứng từ nguồn từ điển cho nghĩa này.</p>')+
  '</div></div>'+
@@ -85,6 +85,12 @@ async function relations(d,box){
  const w=norm(d.base),pos=d.pos;
  if(!/^[a-z][a-z'-]{2,28}$/.test(w))return setUnavailable();
  const root=stem(w);
+ const key="r:"+w+":"+pos,cached=cache[key];
+ if(cached?.when>Date.now()-TTL&&cached.value){
+  const a=box.querySelector(".dictCollocations"),b=box.querySelector(".dictFamilies");
+  if(a)a.innerHTML=cached.value.colHtml;if(b)b.innerHTML=cached.value.famHtml;
+  return;
+ }
  const jobs=[];
  if(pos==="adjective")jobs.push(fetch("https://api.datamuse.com/words?rel_jjb="+encodeURIComponent(w)+"&max=10").then(r=>r.ok?r.json():[]).then(rows=>rows.filter(x=>/^[a-z]{3,}$/.test(x.word)).slice(0,3).map(x=>w+" "+x.word)));
  if(pos==="noun")jobs.push(fetch("https://api.datamuse.com/words?rel_jja="+encodeURIComponent(w)+"&max=10").then(r=>r.ok?r.json():[]).then(rows=>rows.filter(x=>/^[a-z]{3,}$/.test(x.word)).slice(0,3).map(x=>x.word+" "+w)));
@@ -98,6 +104,7 @@ async function relations(d,box){
  const collTarget=box.querySelector(".dictCollocations"),familyTarget=box.querySelector(".dictFamilies");
  if(collTarget)collTarget.innerHTML=col.length?col.map(phrase=>'<p><b>'+esc(phrase)+'</b></p>').join(""):'<p class="dictLearnMuted">Chưa có cụm từ được nguồn dữ liệu xác nhận cho từ này.</p>';
  if(familyTarget)familyTarget.innerHTML=fam.length?fam.map(f=>'<p><b>'+esc(f[0])+'</b><i>'+esc(f[1])+'</i></p>').join(""):'<p class="dictLearnMuted">Chưa tìm được dạng từ cùng họ được xác nhận.</p>';
+ cache[key]={when:Date.now(),value:{colHtml:collTarget?.innerHTML||"",famHtml:familyTarget?.innerHTML||""}};persist();
  function setUnavailable(){const a=box.querySelector(".dictCollocations"),b=box.querySelector(".dictFamilies");if(a)a.innerHTML='<p class="dictLearnMuted">Chưa có dữ liệu.</p>';if(b)b.innerHTML='<p class="dictLearnMuted">Chưa có dữ liệu.</p>'}
 }
 function promptFor(d){
@@ -107,6 +114,8 @@ function bindGPT(box,d){
  const btn=box.querySelector(".dictGPTButton"),status=box.querySelector(".dictGPTStatus");if(!btn)return;
  btn.onclick=async()=>{
   const prompt=promptFor(d);let copied=false;
+  // Open immediately, while the click still has transient user activation.
+  window.open("https://chatgpt.com/","_blank","noopener,noreferrer");
   try{await navigator.clipboard.writeText(prompt);copied=true}catch(e){
    const ta=document.createElement("textarea");ta.value=prompt;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
    try{copied=document.execCommand("copy")}catch(_){}ta.remove();
@@ -114,7 +123,6 @@ function bindGPT(box,d){
   if(copied){status.textContent="Đã sao chép câu hỏi. Dán vào tab ChatGPT vừa mở (⌘V / Ctrl+V) để nhận giải thích thực sự từ ChatGPT.";}
   else{status.textContent="Trình duyệt chặn sao chép. Dùng ô bên dưới để sao chép rồi dán vào ChatGPT.";
    let input=box.querySelector(".dictGPTManual");if(!input){input=document.createElement("textarea");input.className="dictGPTManual";input.readOnly=true;box.appendChild(input)}input.value=prompt;input.focus();input.select();}
-  window.open("https://chatgpt.com/","_blank","noopener,noreferrer");
  };
 }
 window.enrichDictionaryCard=function(target,input){
