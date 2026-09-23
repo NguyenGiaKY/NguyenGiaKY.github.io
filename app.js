@@ -14,7 +14,12 @@ function renderDays(){let e=document.getElementById('dayGrid'),c=cd();e.innerHTM
 function renderToday(d=cd()){let s=slots(d),h='<div class="dayHeader"><div><span class="phase">'+phase(d)+'</span><h2>Day '+d+' • '+dateOf(d)+'</h2><div class="muted">Unit '+Math.min(10,Math.ceil(Math.min(d,70)/7))+'</div></div></div><h3>Bấm vào từng khung để học ngay</h3><div class="slots">';s.forEach((x,i)=>h+='<button class="slot '+(st.done[key(d,i)]?'done':'')+'" data-i="'+i+'"><span class="time">'+x[0]+'</span><span><b>'+x[2]+'</b><small>Learn → Practice → Check → Fix → Review</small></span></button>');h+='</div><h3>Ghi chú Day '+d+'</h3><textarea id="note" class="note">'+(st.notes[d]||'')+'</textarea>';document.getElementById('todayCard').innerHTML=h;document.querySelectorAll('.slot').forEach(b=>b.onclick=()=>openLesson(d,+b.dataset.i));document.getElementById('note').oninput=e=>{st.notes[d]=e.target.value;save()}}
 function renderRoadmap(){let h='';for(let d=1;d<=100;d++)h+='<div class="roadDay"><b>Day '+d+' • '+dateOf(d)+'</b><div class="muted">'+phase(d)+'</div><button class="btn primary" onclick="renderToday('+d+');show(&quot;today&quot;)">Mở Day '+d+'</button></div>';document.getElementById('roadmapList').innerHTML=h}
 function renderGrammar(){document.getElementById('grammarList').innerHTML=grammar.map(x=>'<div class="grammarCard"><h3>'+x+'</h3><p>Học rule → examples → 20 câu → 3 câu tự viết → sửa lỗi.</p></div>').join('')}
-function renderSaved(){let a=Object.values(st.saved);document.getElementById('savedWords').innerHTML=a.length?a.map(x=>'<div class="reviewItem"><b>'+x.w+'</b> — '+x.m+'</div>').join(''):'<p class="muted">Chưa lưu từ nào.</p>'}
+function renderSaved(){
+ const host=document.getElementById('savedWords');if(!host)return;
+ if(typeof window.renderSavedVocabulary==='function'){window.renderSavedVocabulary();return;}
+ let a=Object.values(st.saved);
+ host.innerHTML=a.length?a.map(x=>'<div class="reviewItem"><b>'+x.w+'</b> — '+x.m+'</div>').join(''):'<p class="muted">Chưa lưu từ nào.</p>';
+}
 
 function mistake(day,type,prompt,correct,explain,meta){
  let exists=st.mistakes.find(m=>m.day===day&&m.type===type&&m.p===prompt&&!m.mastered);
@@ -1314,7 +1319,15 @@ async function renderDictionary(surface,targetId,sentence){
  const saveBtn=target.querySelector('.dictActions .save');
  if(saveBtn)saveBtn.onclick=function(){
    const m=this.dataset.meaning||simpleMeaning||meaning||'';
-   st.saved[base]={w:base,m:m};save();renderSaved();this.textContent='✓ Đã lưu';
+   const oldSaved=st.saved[base]||{};
+   st.saved[base]={
+     w:base,
+     m:m,
+     savedAt:Number(oldSaved.savedAt)||Date.now(),
+     context:oldSaved.context||String(sentence||'').trim(),
+     updatedAt:Date.now()
+   };
+   save();renderSaved();this.textContent='✓ Đã lưu';
  };
  fetchContextDictionaryAI(surface,base,sentence,groups,pos,slotId);
 }
