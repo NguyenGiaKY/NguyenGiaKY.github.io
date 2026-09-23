@@ -78,13 +78,13 @@ window.recordLearningError=record;
 function importLegacy(){
   try{
     const legacy=JSON.parse(localStorage.getItem("ielts100_online")||"{}");
-    (legacy.mistakes||[]).forEach(m=>record({
+    (legacy.mistakes||[]).forEach(m=>{if(state.items.some(i=>i.id==="legacy-"+m.id))return;record({
       id:"legacy-"+m.id,skill:m.type,task:"Day "+(m.day||"?"),question:m.p,correctAnswer:m.c,
       why:m.e,mastered:!!m.mastered,createdAt:Date.now()-DAY
-    }));
+    });});
   }catch(e){}
 }
-function ensureImport(){if(imported)return;imported=true;importLegacy();}
+function ensureImport(){if(imported)return;imported=true;if(!state.legacyImported){importLegacy();state.legacyImported=true;save();}}
 function isDue(i){return !i.mastered&&(!i.nextReviewAt||i.nextReviewAt<=Date.now());}
 function startDueRound(it){
   if(it._roundCounted&&isDue(it)){
@@ -101,12 +101,17 @@ function filtered(){
   return a.sort((a,b)=>(Number(isDue(b))-Number(isDue(a)))||(b.lastSeenAt-a.lastSeenAt));
 }
 function byId(id){return state.items.find(i=>i.id===id);}
-function similarity(a,b){
-  a=norm(a);b=norm(b);
-  if(!a||!b)return 0;if(a===b)return 1;
-  const A=new Set(a.split(/\s+/)),B=new Set(b.split(/\s+/));
-  let hit=0;A.forEach(x=>{if(B.has(x))hit++;});
-  return hit/Math.max(A.size,B.size);
+function answerKey(s){return norm(s).replace(/[’‘]/g,"'").replace(/[.,!?;:]+$/g,"").trim();}
+function answerMatches(input,expected){
+  const key=answerKey(input);
+  return !!key&&String(expected||"").split("|").some(option=>key===answerKey(option));
+}
+function validPack(pack){
+  const stages=[...(Array.isArray(pack?.drills)?pack.drills:[]),pack?.final_retry];
+  return stages.length===4&&stages.every(d=>{
+    if(!d||!["mcq","fill","listen_type"].includes(d.type)||!String(d.prompt||"").trim()||!String(d.answer||"").trim())return false;
+    return d.type!=="mcq"||(Array.isArray(d.options)&&d.options.length>=2&&d.options.some(o=>answerMatches(o,d.answer)));
+  });
 }
 function tokenDiff(wrong,correct){
   const W=String(wrong||"").trim().split(/\s+/).filter(Boolean);
@@ -265,6 +270,7 @@ async function generatePack(it,btn){
     }finally{if(timer)clearTimeout(timer);}
     const d=await r.json().catch(()=>({}));
     if(!r.ok||d.error)throw new Error(d.message||d.error||("HTTP "+r.status));
+    if(!validPack(d))throw new Error("Bài luyện tạo ra chưa đủ 3 câu và câu cuối có đáp án hợp lệ. Hãy thử tạo lại.");
     it.repairPack=d;
     it.repairProgress={};
     it.packOpen=true;
@@ -306,7 +312,8 @@ function maybeFinishPack(card,it){
     it.drillWins=(it.drillWins||0)+1;
     it.reviewLevel=Math.min(5,(it.reviewLevel||0)+1);
     const days=[1,3,7,14,30][Math.max(0,it.reviewLevel-1)]||30;
-    it.nextReviewAt=Date.now()+days*DAY;
+    const next=new Date();next.setHours(0,0,0,0);next.setDate(next.getDate()+days);
+    it.nextReviewAt=next.getTime();
      it.mastered=it.drillWins>=3;
     it._roundCounted=true;
     save();
@@ -351,7 +358,7 @@ function bind(){
     const card=b.closest(".errCard"),it=byId(b.dataset.id),idx=Number(b.dataset.packChoice),d=getPackDrill(it,idx);
     if(!it||!d)return;
     card.querySelectorAll('[data-pack-choice="'+idx+'"]').forEach(x=>x.classList.remove("right","wrong"));
-    const ok=norm(b.dataset.value)===norm(d.answer);
+    const ok=answerMatches(b.dataset.value,d.answer);
     b.classList.add(ok?"right":"wrong");
     markPackStage(card,it,idx,ok,ok?"✓ Đúng. "+(d.explanation_vi||""):("Chưa đúng. "+(d.explanation_vi||"Thử đối chiếu lại pattern phía trên.")));
   });
@@ -360,7 +367,7 @@ function bind(){
     if(!it||!d)return;
     const input=card.querySelector('[data-pack-input="'+idx+'"]');
     const val=input?input.value:"";
-    const ok=similarity(val,d.answer)>=.88;
+    const ok=answerMatches(val,d.answer);
     markPackStage(card,it,idx,ok,ok?"✓ Chính xác. "+(d.explanation_vi||""):("Chưa đúng. "+(d.explanation_vi||"Thử lại mà không nhìn đáp án.")));
   });
   document.querySelectorAll(".errPackListen").forEach(b=>b.onclick=()=>{
