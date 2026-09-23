@@ -1239,7 +1239,7 @@ async function renderDictionary(surface,targetId,sentence){
  ]);
  if(target.dataset.dictRequest!==requestToken)return;
  const polysemous=!!sentence&&(!CORE[base])&&((group?.definitions?.length||0)>1||groups.length>1);
- let primary=polysemous&&senseVi?senseVi:(coreSense?.[1]||wordVi||senseVi||'');
+ let primary=(coreSense?.[1]||(polysemous&&sentence&&(pos==='noun'||pos==='verb')&&senseVi?senseVi:'')||wordVi||senseVi||'');
  // Do not show song/artist metadata for *any* ordinary vocabulary item.
  if(!validVietnameseTranslation(base,primary)&&!coreSense?.[1])primary=senseVi||'';
  if(primary.length>160)primary=primary.slice(0,155).replace(/\s+\S*$/,'')+'…';
@@ -1260,6 +1260,7 @@ async function renderDictionary(surface,targetId,sentence){
    quickDictionaryHTML(base,sentence,primary,def,coreSense,currentPOS,senseVi)+
    otherMeaningsHTML(groups,currentPOS,def.definition)+
    '<small class="dictQuickSource">Dữ liệu từ điển + dịch máy miễn phí; không gọi AI khi tra từ. Lưu từ để luyện sâu hơn.</small>';
+ if(typeof window.enrichDictionaryCard==='function')window.enrichDictionaryCard(target,{base,surface,context:sentence,example:def.example||coreSense?.[3]||'',partOfSpeech:currentPOS,meaning:primary,requestToken});
  bindDictionaryAudio(target);bindOtherMeanings(target);hydrateRecordedPronunciation(base);
  const saveBtn=target.querySelector('.dictActions .save');
  if(saveBtn)saveBtn.onclick=function(){
