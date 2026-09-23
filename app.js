@@ -618,12 +618,10 @@ document.getElementById('lessonClose').onclick=()=>{stopListeningAudio(true);doc
 
 /* Universal contextual dictionary: online-first, every word, all POS */
 const dict=document.getElementById('dictionary'),hd=document.getElementById('dictHandle');
-const DCACHE_KEY='ielts_dict_v16_cache',TCACHE_KEY='ielts_dict_v12_translate',DPOS_KEY='ielts_dict_v11_window',DAI_KEY='ielts_dict_ai_v1_cache';
-let dcache={},tcache={},dictAICache={};
-const DICT_AI_INFLIGHT=new Map();
+const DCACHE_KEY='ielts_dict_v16_cache',TCACHE_KEY='ielts_dict_v12_translate',DPOS_KEY='ielts_dict_v11_window';
+let dcache={},tcache={};
 try{dcache=JSON.parse(localStorage.getItem(DCACHE_KEY)||'{}')}catch(e){}
 try{tcache=JSON.parse(localStorage.getItem(TCACHE_KEY)||'{}')}catch(e){}
-try{dictAICache=JSON.parse(localStorage.getItem(DAI_KEY)||'{}')}catch(e){}
 const POSVI={noun:'danh từ',verb:'động từ',adjective:'tính từ',adverb:'trạng từ',preposition:'giới từ',conjunction:'liên từ',pronoun:'đại từ',determiner:'từ hạn định',article:'mạo từ',interjection:'thán từ',auxiliary:'trợ động từ',modal:'động từ khuyết thiếu',particle:'tiểu từ'};
 const CORE={
  in:{s:[['preposition','trong; ở; vào','inside or within a place, time or situation','She is in the classroom.'],['adverb','vào trong; ở trong','towards or at the inside','Come in.'],['adjective','đang thịnh hành; hợp thời','fashionable or popular','That style is in.'],['noun','người có quan hệ/ảnh hưởng; lợi thế nội bộ','an influential connection or advantage','He has an in with the organisers.']]},
@@ -665,6 +663,8 @@ const CORE={
  ,employee:{s:[['noun','nhân viên; người làm việc cho chủ/công ty và nhận lương','a person who is paid to work for someone','The company has 50 employees.']]}
  ,begin:{s:[['verb','bắt đầu; khởi đầu','to start happening, existing, or doing something','When does the course begin?']]}
  ,run:{s:[['verb','chạy; vận hành; kéo dài/diễn ra','to move quickly, operate, or continue for a period of time','The course runs for eight weeks.'],['noun','lần chạy; quãng chạy; chuỗi','an act or period of running, or a continuous series','a short run']]}
+ ,habit:{s:[['noun','thói quen','something you do regularly','Reading every day is a useful habit.']]}
+ ,habits:{s:[['noun','thói quen','things you do regularly','Good study habits help me learn English.']]}
 
 
 };
@@ -1078,143 +1078,17 @@ async function chatStyleExamples(base,groups,sentence,pos){
 }
 
 
-function localDictionaryHTML(base,groups,pos,sentence,simpleMeaning,meaning,slotId){
- let g=groups.find(x=>x.partOfSpeech===pos)||groups[0],precise=g?.definitions?.[0]?.definition||'',patterns=usagePatterns(base,pos||g?.partOfSpeech||'noun',groups);
- return '<div class="dictFallback" id="dictFallback-'+slotId+'">'+
-   '<div class="dictMeaningLead"><span>Nghĩa tạm thời</span><strong>'+descape(simpleMeaning||meaning||'Đang phân tích…')+'</strong></div>'+
-   (sentence?'<div class="contextCard"><b>Trong câu này</b><div class="contextSentence">'+highlightWord(sentence,base)+'</div><small>AI đang xác định đúng nghĩa của từ trong câu này.</small></div>':'')+
-   (precise?'<p class="en">'+descape(precise)+'</p>':'')+
-   (patterns.length?'<details class="dictLocalDetails"><summary>Cấu trúc từ nguồn lexical</summary>'+patterns.map(p=>'<div class="patternCard"><code>'+descape(p)+'</code></div>').join('')+'</details>':'')+
-  '</div>';
-}
-
-function dictAIKey(base,sentence){
- return (base+'|'+String(sentence||'').toLowerCase().replace(/\s+/g,' ').trim().slice(0,500));
-}
-function dictLexicalHint(groups,pos){
- let ordered=(pos?groups.slice().sort((a,b)=>(b.partOfSpeech===pos)-(a.partOfSpeech===pos)):groups).slice(0,4);
- return ordered.map(g=>{
-   let defs=(g.definitions||[]).slice(0,2).map(d=>d.definition).filter(Boolean).join(' | ');
-   return (g.partOfSpeech||'unknown')+': '+defs;
- }).join('\n').slice(0,2200);
-}
-function validAIArray(x){return Array.isArray(x)?x.filter(Boolean):[]}
-function aiPOSLabel(pos){return POSVI[String(pos||'').toLowerCase()]||pos||'—'}
-
-function renderContextDictionaryAI(d,base,sentence,slotId){
- const box=document.getElementById('dictAI-'+slotId);if(!box)return;
- const forms=validAIArray(d.forms).slice(0,8);
- const patterns=validAIArray(d.patterns).slice(0,6);
- const collocations=validAIArray(d.collocations).slice(0,8);
- const family=validAIArray(d.word_family).slice(0,7);
- const confusions=validAIArray(d.common_confusions).slice(0,5);
- const others=validAIArray(d.other_meanings).slice(0,5);
- const pos=d.part_of_speech||'';
- const context=String(sentence||'').trim();
-
- box.innerHTML=
-  '<section class="dictPrimary">'+
-    '<div class="dictSectionKicker">NGHĨA ĐÚNG TRONG NGỮ CẢNH</div>'+
-    '<div class="dictMeaningRow"><strong>'+descape(d.meaning_vi||'')+'</strong><span class="posBadge">'+descape(aiPOSLabel(pos))+'</span></div>'+
-    (d.meaning_en_simple?'<p class="dictEnglishMeaning">'+descape(d.meaning_en_simple)+'</p>':'')+
-    (context?'<div class="dictContextFocus"><div class="dictContextEN">'+highlightWord(context,base)+'</div>'+
-      (d.sentence_translation_vi?'<div class="dictContextVI">→ '+descape(d.sentence_translation_vi)+'</div>':'')+
-      (d.context_reason_vi?'<p><b>Tại sao nghĩa này?</b> '+descape(d.context_reason_vi)+'</p>':'')+
-      (d.grammar_role_vi?'<p><b>Vai trò trong câu:</b> '+descape(d.grammar_role_vi)+'</p>':'')+
-    '</div>':'')+
-  '</section>'+
-
-  (forms.length?'<section class="dictLearningSection"><h3>Word forms</h3><div class="dictChipGrid">'+forms.map(x=>
-    '<span><b>'+descape(x.form||'')+'</b>'+(x.label_vi?' · '+descape(x.label_vi):'')+'</span>').join('')+'</div></section>':'')+
-
-  (patterns.length?'<section class="dictLearningSection"><h3>Cấu trúc nên nhớ</h3><div class="dictPatternList">'+patterns.map(x=>
-    '<div class="dictPatternItem"><code>'+descape(x.pattern||'')+'</code>'+
-      (x.meaning_vi?'<p>'+descape(x.meaning_vi)+'</p>':'')+
-      (x.example?'<small>'+descape(x.example)+'</small>':'')+
-    '</div>').join('')+'</div></section>':'')+
-
-  (collocations.length?'<section class="dictLearningSection"><h3>Collocations hữu ích</h3><div class="dictChipGrid">'+collocations.map(x=>
-    '<span><b>'+descape(x.phrase||'')+'</b>'+(x.meaning_vi?' · '+descape(x.meaning_vi):'')+'</span>').join('')+'</div></section>':'')+
-
-  (family.length?'<section class="dictLearningSection"><h3>Word family</h3><div class="familyTableWrap"><table class="familyTable"><thead><tr><th>Word</th><th>Loại từ</th><th>Nghĩa</th></tr></thead><tbody>'+
-    family.map(x=>'<tr><td><b>'+descape(x.word||'')+'</b></td><td>'+descape(aiPOSLabel(x.part_of_speech||''))+'</td><td>'+descape(x.meaning_vi||'')+'</td></tr>').join('')+
-    '</tbody></table></div></section>':'')+
-
-  (confusions.length?'<section class="dictLearningSection dictTrap"><h3>⚠ Dễ nhầm</h3>'+confusions.map(x=>
-    '<div><b>'+descape(x.item||'')+'</b><p>'+descape(x.difference_vi||'')+'</p></div>').join('')+'</section>':'')+
-
-  (d.ielts_note_vi?'<section class="dictIELTSNote"><b>🎯 IELTS note</b><p>'+descape(d.ielts_note_vi)+'</p></section>':'')+
-  (d.memory_tip_vi?'<section class="dictMemory"><b>🧠 Nhớ nhanh</b><p>'+descape(d.memory_tip_vi)+'</p></section>':'')+
-
-  (others.length?'<details class="dictOtherMeanings"><summary>Các nghĩa phổ biến khác</summary>'+others.map(x=>
-    '<div><span class="posBadge">'+descape(aiPOSLabel(x.part_of_speech||''))+'</span> '+descape(x.meaning_vi||'')+'</div>').join('')+'</details>':'')+
-  '<div class="dictAIStamp">✓ Phân tích theo ngữ cảnh của câu hiện tại</div>';
-
- const fallback=document.getElementById('dictFallback-'+slotId);
- if(fallback)fallback.remove();
- const saveBtn=box.parentElement&&box.parentElement.querySelector('.dictActions .save');
- if(saveBtn&&d.meaning_vi)saveBtn.dataset.meaning=d.meaning_vi;
- if(st.saved&&st.saved[base]&&window.applyVocabularySuggestion)window.applyVocabularySuggestion(base,d);
-}
-
-async function fetchContextDictionaryAI(surface,base,sentence,groups,pos,slotId){
- const box=document.getElementById('dictAI-'+slotId);if(!box)return null;
- const endpoint=String(window.DICTIONARY_AI_ENDPOINT||'').trim();
- if(!endpoint){
-   box.innerHTML='<div class="dictAIUnavailable">AI ngữ cảnh chưa được cấu hình. Đang dùng nguồn từ điển dự phòng.</div>';
-   return null;
- }
-  const key=dictAIKey(base,sentence);
-  if(dictAICache[key]&&window.isOffTopicSavedText&&window.isOffTopicSavedText(dictAICache[key].meaning_vi)){
-    delete dictAICache[key];
-    try{localStorage.setItem(DAI_KEY,JSON.stringify(dictAICache))}catch(e){}
-  }
-  if(dictAICache[key]){
-   renderContextDictionaryAI(dictAICache[key],base,sentence,slotId);
-   return dictAICache[key];
- }
- box.innerHTML='<div class="dictAILoading"><span></span><div><b>Đang phân tích đúng nghĩa trong câu…</b><small>Kiểm tra loại từ, nghĩa, cấu trúc và IELTS usage.</small></div></div>';
- try{
-   let pending=DICT_AI_INFLIGHT.get(key);
-   if(!pending){
-     pending=(async function(){
-       const ctl=typeof AbortController!=='undefined'?new AbortController():null;
-       const timer=ctl?setTimeout(()=>ctl.abort(),22000):null;
-       try{
-         const r=await fetch(endpoint,{
-           method:'POST',
-           headers:{'Content-Type':'application/json'},
-           body:JSON.stringify({
-             word:surface,
-             base:base,
-             sentence:sentence||'',
-             lexical:dictLexicalHint(groups,pos)
-           }),
-           signal:ctl?ctl.signal:undefined
-         });
-         const d=await r.json().catch(()=>({}));
-         if(!r.ok||d.error)throw new Error(d.message||d.error||('HTTP '+r.status));
-         dictAICache[key]=d;
-         let keys=Object.keys(dictAICache);
-         while(keys.length>160){delete dictAICache[keys.shift()];}
-         try{localStorage.setItem(DAI_KEY,JSON.stringify(dictAICache))}catch(e){}
-         return d;
-       }finally{
-         if(timer)clearTimeout(timer);
-         DICT_AI_INFLIGHT.delete(key);
-       }
-     })();
-     DICT_AI_INFLIGHT.set(key,pending);
-   }
-   const d=await pending;
-   if(document.getElementById('dictAI-'+slotId))renderContextDictionaryAI(d,base,sentence,slotId);
-   return d;
- }catch(e){
-   if(document.getElementById('dictAI-'+slotId)){
-     box.innerHTML='<div class="dictAIUnavailable"><b>Không tải được phân tích AI.</b><br>Phần từ điển cơ bản bên dưới vẫn dùng được.</div>';
-   }
-   return null;
- }
+function aiPOSLabel(pos){return POSVI[String(pos||'').toLowerCase()]||pos||'—';}
+function quickDictionaryHTML(base,sentence,meaning,definition,coreSense){
+ const english=String(definition?.definition||coreSense?.[2]||'').trim();
+ const example=String(coreSense?.[3]||definition?.example||'').trim();
+ const safeMeaning=String(meaning||'').trim();
+ return '<section class="dictQuickAnswer">'+
+   '<p><b>'+descape(base)+'</b> = <strong>'+descape(safeMeaning||'Chưa có nghĩa tiếng Việt đáng tin cậy')+'</strong></p>'+
+   (sentence?'<div class="dictQuickContext"><small>Trong bài của bạn</small><p>'+highlightWord(String(sentence).slice(0,250),base)+'</p></div>':'')+
+   (english?'<p class="dictQuickEnglish"><b>Hiểu đơn giản:</b> '+descape(english.slice(0,170))+'</p>':'')+
+   (example&&example!==sentence?'<p class="dictQuickExample"><b>Ví dụ:</b> '+descape(example.slice(0,180))+'</p>':'')+
+ '</section>';
 }
 
 const PRON_AUDIO_CACHE={};
@@ -1281,7 +1155,7 @@ async function renderDictionary(surface,targetId,sentence){
  const requestToken=Date.now()+'-'+Math.random();
  target.dataset.dictRequest=requestToken;
  let hasContext=!!String(sentence||'').trim();
- target.innerHTML='<div class="dictLoadingHead"><div class="dictWord">'+descape(surface)+'</div><div class="muted">Đang lấy IPA và phân tích ngữ cảnh…</div></div>';
+ target.innerHTML='<div class="dictLoadingHead"><div class="dictWord">'+descape(surface)+'</div><div class="muted">Đang tra nghĩa và phát âm…</div></div>';
 
  let got=await fetchData(surface,sentence);
  if(target.dataset.dictRequest!==String(requestToken))return;
@@ -1291,19 +1165,13 @@ async function renderDictionary(surface,targetId,sentence){
  if(g&&g.definitions&&g.definitions.length)g.definitions.sort((x,y)=>scoreDefinition(y,sentence)-scoreDefinition(x,sentence));
  let def=g?.definitions?.[0]||{},coreSense=(pos?CORE[base]?.s.find(x=>x[0]===pos):null)||CORE[base]?.s?.[0];
  let cleanDefinition=String(def.definition||'').replace(/^\((?:intransitive|transitive|countable|uncountable|informal|formal|dated|archaic)[^)]*\)\s*/i,'').trim();
- let meaning=coreSense?.[1]||def.vi||'';
- if(!meaning&&cleanDefinition)meaning=await quickTranslate(cleanDefinition,900);
- if(!meaning)meaning=base;
- let simpleMeaning=meaning;
- if(simpleMeaning.toLowerCase()===String(base).toLowerCase()&&cleanDefinition){
-   let translated=await quickTranslate(cleanDefinition,800);
-   if(translated&&translated.toLowerCase()!==base.toLowerCase())simpleMeaning=translated;
- }
+ let meaning=coreSense?.[1]||def.vi||await quickTranslate(base,750);
+ if((!meaning||meaning.toLowerCase()===base.toLowerCase())&&cleanDefinition)meaning=await quickTranslate(cleanDefinition,850);
+ let simpleMeaning=meaning||'';
  // A dictionary provider may return an encyclopedic entry for a common word
  // (for example the song title “Habits”). Prefer its everyday lexical sense.
  if(/^habits?$/i.test(base))simpleMeaning='thói quen';
- else if(window.cleanSavedMeaning)simpleMeaning=window.cleanSavedMeaning(base,simpleMeaning)||'Đang xác minh nghĩa của từ';
- let slotId=String(targetId).replace(/[^a-zA-Z0-9_-]/g,'_')+'-'+Date.now();
+ else if(window.cleanSavedMeaning)simpleMeaning=window.cleanSavedMeaning(base,simpleMeaning);
  let currentPOS=pos||g?.partOfSpeech||'';
 
  target.innerHTML=
@@ -1319,13 +1187,8 @@ async function renderDictionary(surface,targetId,sentence){
     '<button class="save" id="dictSaveWord" data-meaning="'+descape(simpleMeaning)+'">⭐ Lưu ôn</button>'+
     '<a target="_blank" rel="noopener" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a>'+
   '</div>'+
-  localDictionaryHTML(base,groups,pos,sentence,simpleMeaning,meaning,slotId)+
-  '<div id="dictAI-'+slotId+'"></div>'+
-  '<details class="dictSourceDetails"><summary>Nguồn & nghĩa từ điển khác</summary>'+
-    '<div class="dictSourceList">'+groups.slice(0,5).map(gr=>
-      '<div class="dictSourcePOS"><b>'+descape(aiPOSLabel(gr.partOfSpeech))+'</b>'+
-      (gr.definitions||[]).slice(0,3).map(x=>'<p>'+descape(x.definition||'')+'</p>').join('')+'</div>').join('')+
-    '</div><small>Nguồn lexical: '+descape(got.data.source||'dictionary sources')+'</small></details>';
+  quickDictionaryHTML(base,sentence,simpleMeaning,def,coreSense)+
+  '<small class="dictQuickSource">Nghĩa tham khảo từ từ điển; học sâu sau khi lưu từ.</small>';
 
  bindDictionaryAudio(target);
  hydrateRecordedPronunciation(base);
@@ -1339,14 +1202,11 @@ async function renderDictionary(surface,targetId,sentence){
       w:base,
       m:m||'',
       savedAt:Number(oldSaved.savedAt)||Date.now(),
-      context:(window.isOffTopicSavedText&&window.isOffTopicSavedText(oldSaved.context||sentence))?'':(oldSaved.context||String(sentence||'').trim()),
+      context:(window.isOffTopicSavedText&&window.isOffTopicSavedText(String(sentence||'').trim()||oldSaved.context))?'':(String(sentence||'').trim()||oldSaved.context||''),
      updatedAt:Date.now()
    };
    save();renderSaved();this.textContent='✓ Đã lưu';
-   const cached=dictAICache[dictAIKey(base,sentence)];
-   if(cached&&window.applyVocabularySuggestion)window.applyVocabularySuggestion(base,cached);
  };
- fetchContextDictionaryAI(surface,base,sentence,groups,pos,slotId);
 }
 
 window.lookupDictionary=function(raw,targetId='dictResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
