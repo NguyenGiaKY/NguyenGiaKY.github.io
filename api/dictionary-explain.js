@@ -99,7 +99,7 @@ export default async function handler(req,res){
         "Authorization":"Bearer "+key,
         "Content-Type":"application/json"
       },
-      body:JSON.stringify({model,input:prompt,max_output_tokens:1700})
+      body:JSON.stringify({model,input:prompt,max_output_tokens:2600})
     });
     const raw=await response.json().catch(()=>({}));
     if(!response.ok){
