@@ -2,7 +2,7 @@
 "use strict";
 const KEY="gkyyy_error_center_v2";
 const DAY=86400000;
-const FILTERS=["all","grammar","reading","listening","writing","speaking"];
+const FILTERS=["all","due","grammar","reading","listening","writing","speaking","mastered"];
 let state={items:[],filter:"all"};
 try{state=Object.assign(state,JSON.parse(localStorage.getItem(KEY)||"{}")||{});}catch(e){}
 if(!Array.isArray(state.items))state.items=[];
@@ -10,7 +10,7 @@ if(!Array.isArray(state.items))state.items=[];
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 function norm(s){return String(s||"").toLowerCase().replace(/\s+/g," ").trim();}
-function skillLabel(s){return ({grammar:"Grammar",reading:"Reading",listening:"Listening",writing:"Writing",speaking:"Speaking"})[s]||s||"Other";}
+function skillLabel(s){return ({all:"Tất cả",due:"Cần ôn",mastered:"Đã nhớ",grammar:"Grammar",reading:"Reading",listening:"Listening",writing:"Writing",speaking:"Speaking"})[s]||s||"Other";}
 function skillIcon(s){return ({grammar:"🧠",reading:"📖",listening:"🎧",writing:"✍️",speaking:"🎙️"})[s]||"🧩";}
 function memoryTip(it){
   const custom=String(it.memoryTip||"").trim(); if(custom)return custom;
@@ -78,7 +78,9 @@ function ensureImport(){if(imported)return;imported=true;importLegacy();}
 function isDue(i){return !i.mastered && (!i.nextReviewAt||i.nextReviewAt<=Date.now());}
 function filtered(){
   let a=state.items.slice();
-  if(state.filter!=="all")a=a.filter(i=>i.skill===state.filter);
+  if(state.filter==="due")a=a.filter(isDue);
+  else if(state.filter==="mastered")a=a.filter(i=>i.mastered);
+  else if(state.filter!=="all")a=a.filter(i=>i.skill===state.filter&&!i.mastered);
   return a.sort((a,b)=>(Number(isDue(b))-Number(isDue(a)))||(b.lastSeenAt-a.lastSeenAt));
 }
 function similarity(a,b){
@@ -221,8 +223,8 @@ function cardHTML(i){
       '<p class="errMemory"><b>⚡ Mẹo 10 giây:</b> '+esc(memoryTip(i))+'</p>'+
     '</div>'+
     '<div class="errActions">'+
-      '<button class="btn primary errPractice" data-id="'+esc(i.id)+'">🎯 Mở Repair Test</button>'+
-      '<button class="btn errMaster" data-id="'+esc(i.id)+'">'+(i.mastered?"↩ Học lại":"Ẩn lỗi này")+'</button>'+
+      '<button class="btn primary errPractice" data-id="'+esc(i.id)+'">🎯 Luyện ngay · 3 bài nhỏ</button>'+
+      '<button class="btn errMaster" data-id="'+esc(i.id)+'">'+(i.mastered?"↩ Học lại":"✓ Đã nhớ")+'</button>'+
     '</div>'+
     '<div class="errDrill hidden" id="drill-'+esc(i.id)+'">'+
       '<div class="errDrillHead"><div><b>Repair Test</b><span>Không viết giải thích dài. Làm 3 micro-drill đúng vào lỗi vừa mắc.</span></div><em>'+(i.drillWins||0)+'/3 vòng</em></div>'+
@@ -252,14 +254,22 @@ function render(){
   ensureImport();
   const root=document.getElementById("errorCenter");if(!root)return;
   const list=filtered();
+  const dueCount=state.items.filter(isDue).length;
   root.innerHTML=
-    '<section class="errHero"><div><span class="phase">ERROR LAB</span><h2>Lỗi sai → hiểu → luyện lại → nhớ lâu</h2><p>Mọi lỗi từ Grammar, Reading, Listening, Writing và Speaking sẽ tự vào đây. Mục tiêu không chỉ lưu lỗi, mà biến mỗi lỗi thành một bài sửa ngắn có lịch ôn lại.</p></div>'+
-      '<div class="errCycle"><b>1</b> Sai <i>→</i><b>2</b> Hiểu <i>→</i><b>3</b> Luyện <i>→</i><b>4</b> Ôn lại</div></section>'+
+    '<section class="errHero"><div><span class="phase">ERROR LAB</span><h2>Lỗi sai → hiểu → luyện lại → nhớ lâu</h2><p>Mọi lỗi từ Grammar, Reading, Listening, Writing và Speaking sẽ tự vào đây. Mỗi lỗi có giải thích, mẹo nhớ và Repair Test đúng vào chỗ bạn vừa sai.</p></div>'+
+      '<div class="errHeroActions"><div class="errCycle"><b>1</b> Sai <i>→</i><b>2</b> Hiểu <i>→</i><b>3</b> Luyện <i>→</i><b>4</b> Ôn lại</div>'+
+      '<button id="errStartDue" class="btn primary" '+(dueCount?'':'disabled')+'>🎯 Luyện lỗi hôm nay'+(dueCount?' · '+dueCount:'')+'</button></div></section>'+
     statHTML()+
-    '<div class="errToolbar"><div class="errFilters">'+FILTERS.map(f=>'<button data-err-filter="'+f+'" class="'+(state.filter===f?"active":"")+'">'+(f==="all"?"Tất cả":skillLabel(f))+'</button>').join("")+'</div>'+
+    '<section class="errMethodRow">'+
+      '<div><b>🪤 Nhận diện bẫy</b><span>Chọn lại giữa đáp án đúng và lỗi cũ.</span></div>'+
+      '<div><b>🧩 Luyện đúng điểm yếu</b><span>Micro-cloze, dictation hoặc evidence-first theo từng kỹ năng.</span></div>'+
+      '<div><b>🛡 Anti-repeat</b><span>Chọn chiến lược để không mắc lại lỗi tương tự.</span></div>'+
+      '<div><b>⚡ Mẹo 10 giây</b><span>Rule ngắn, dễ nhớ ngay trên mỗi lỗi.</span></div>'+
+    '</section>'+
+    '<div class="errToolbar"><div class="errFilters">'+FILTERS.map(f=>'<button data-err-filter="'+f+'" class="'+(state.filter===f?"active":"")+'">'+skillLabel(f)+'</button>').join("")+'</div>'+
       '<span>'+list.length+' lỗi đang hiển thị</span></div>'+
     (list.length?'<div class="errList">'+list.map(cardHTML).join("")+'</div>':
-      '<div class="errEmpty"><b>Chưa có lỗi trong mục này.</b><p>Làm task và bấm chấm bài. Những câu sai sẽ tự được lưu vào Error Lab.</p></div>');
+      '<div class="errEmpty"><b>Chưa có lỗi trong mục này.</b><p>Làm task và bấm chấm bài. Những câu sai sẽ tự được lưu vào Error Lab và tạo bài luyện riêng.</p></div>');
   bind();
 }
 window.renderErrorCenter=render;
@@ -267,6 +277,16 @@ window.renderErrorCenter=render;
 function byId(id){return state.items.find(i=>i.id===id);}
 function bind(){
   document.querySelectorAll("[data-err-filter]").forEach(b=>b.onclick=()=>{state.filter=b.dataset.errFilter;save();render();});
+  const startDue=document.getElementById("errStartDue");
+  if(startDue)startDue.onclick=()=>{
+    const first=state.items.filter(isDue).sort((a,b)=>(b.seenCount||1)-(a.seenCount||1))[0];
+    if(!first)return;
+    state.filter="due";save();render();
+    setTimeout(()=>{
+      const btn=document.querySelector('.errPractice[data-id="'+CSS.escape(first.id)+'"]');
+      if(btn){btn.click();btn.closest(".errCard")?.scrollIntoView({behavior:"smooth",block:"start"});}
+    },30);
+  };
   document.querySelectorAll(".errPractice").forEach(b=>b.onclick=()=>{
     const drill=document.getElementById("drill-"+b.dataset.id);if(!drill)return;
     drill.classList.toggle("hidden");
