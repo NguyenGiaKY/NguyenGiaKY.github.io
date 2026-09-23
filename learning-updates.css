@@ -48,3 +48,14 @@
 .vocabFamilyRows small{color:#596f9a}.vocabFamilyRows span{font-size:.85rem;color:#4d5e72}.vocabFamilyQuiz{border-top:1px solid #e5eaf4;margin-top:12px;padding-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:end}
 .vocabFamilyQuiz label{display:grid;gap:6px;flex:1;min-width:200px;font-size:.9rem;font-weight:700}.vocabFamilyQuiz input{width:100%;border:1px solid #cfd8e8;border-radius:9px;padding:10px;font:inherit}.vocabFamilyFeedback{width:100%;margin:0;color:#51607a;font-size:.88rem}.vocabFamilyQuiz.passed .vocabFamilyFeedback{color:#177245}.vocabFamilyQuiz.failed .vocabFamilyFeedback{color:#b42318}
 @media(max-width:650px){.vocabStudyTop{align-items:stretch;flex-direction:column}.vocabStudyTop button{max-width:none}.vocabStudyCard{padding:15px}.vocabFamilyRows{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Universal, compact quick dictionary: optional senses never crowd the reading panel. */
+.dictOtherMeanings{margin:12px 0 4px;border:1px solid #dde6f4;border-radius:12px;overflow:hidden;background:#f8fbff}
+.dictOtherMeanings>summary{cursor:pointer;padding:10px 13px;font-size:.87rem;color:#315184;font-weight:700;list-style-position:inside}
+.dictOtherMeanings>summary:focus-visible{outline:2px solid #406ad5;outline-offset:-2px}
+.dictOtherList{padding:1px 12px 10px;max-height:235px;overflow:auto}
+.dictOtherItem{display:grid;gap:4px;border-top:1px solid #e7edf5;padding:10px 0;line-height:1.45}
+.dictOtherItem>b{font-size:.78rem;color:#3055a6}
+.dictOtherItem>span{font-size:.89rem;color:#304057}
+.dictOtherVi{font-size:.85rem;color:#177245}
+.dictQuickSource{display:block;margin-top:10px;font-size:.77rem;color:#60728d}
