@@ -169,7 +169,7 @@
             '<div class="wsCoachCard"><h3>Useful language</h3>'+
               '<p><b>rose to</b> + number</p><p><b>fell to</b> + number</p><p><b>remained stable at</b></p><p><b>overtook</b></p><p><b>approximately / roughly</b></p>'+
             '</div>'+
-            '<div class="wsCoachCard"><h3>Quick feedback</h3><div id="wsQuickFeedback" class="muted">Viết bài rồi bấm AI chấm & sửa. Nếu Chrome AI không khả dụng, website vẫn cho điểm luyện tập cơ bản và sửa các lỗi phổ biến.</div></div>'+
+            '<div class="wsCoachCard"><h3>Quick feedback</h3><div id="wsQuickFeedback" class="muted">Viết bài rồi bấm AI chấm & sửa. Nếu dịch vụ AI tạm thời không hoạt động, website chỉ kiểm tra cấu trúc và vài lỗi thông dụng, không ước lượng band.</div></div>'+
           '</aside>'+
         '</div>'+
         '<div class="lessonActions"><button id="finish" class="btn green">Đã hoàn thành block</button></div>'+
@@ -297,7 +297,7 @@
         });
       });
     }
-    if(typeof window.recordTaskPerformance==="function"){
+    if(result.source==="openai-text"&&typeof window.recordTaskPerformance==="function"){
       window.recordTaskPerformance({kind:"writing",band:Number(result.overall),errors:corr.length,note:"Writing practice band "+Number(result.overall).toFixed(1)});
     }
     var corrHTML=corr.length?'<div class="wsCorrectionCards">'+corr.map(function(x,i){
@@ -321,32 +321,33 @@
     var priorities=Array.isArray(result.priority_fixes)&&result.priority_fixes.length
       ?result.priority_fixes
       :["Kiểm tra lại yêu cầu đề trước khi viết.","Sửa các lỗi lặp ở phần Lỗi cần sửa.","Rewrite bài sau khi đọc feedback."];
-    var sourceText=result.source==="openai-text"
+    var aiScored=result.source==="openai-text";
+    var sourceText=aiScored
       ?"✓ AI đã chấm dựa trên đề bài + bài viết của bạn"
-      :(result.ai_error?"⚠ AI chưa kết nối được — đang hiển thị chấm cục bộ":"Chấm luyện tập cục bộ");
+      :(result.ai_error?"⚠ AI chưa kết nối được — đây là checklist cục bộ, chưa chấm band":"Checklist cục bộ, chưa chấm band");
 
     body.innerHTML=
       '<div class="writingResult">'+
-        '<div class="wsResultTop"><button id="wsBackEdit" class="wsGhost">← Quay lại sửa bài</button><div class="wsOverallBand"><span>Estimated practice band</span><strong>'+Number(result.overall).toFixed(1)+'</strong><small>Không phải điểm IELTS chính thức</small></div><button id="wsRegrade" class="wsGhost">Chấm lại</button></div>'+
+        '<div class="wsResultTop"><button id="wsBackEdit" class="wsGhost">← Quay lại sửa bài</button><div class="wsOverallBand"><span>'+(aiScored?'Estimated practice band':'Kiểm tra bài viết')+'</span><strong>'+(aiScored?Number(result.overall).toFixed(1):'Checklist')+'</strong><small>'+(aiScored?'Không phải điểm IELTS chính thức':'Chưa có điểm band')+'</small></div><button id="wsRegrade" class="wsGhost">Chấm lại</button></div>'+
         '<div class="wsAISource '+(result.source==="openai-text"?"active":"fallback")+'">'+esc(sourceText)+'</div>'+
-        '<div class="wsBandGrid">'+
+        (aiScored?'<div class="wsBandGrid">'+
           bandCard("Task Achievement",result.task,result.task_comment||"Mức độ đáp ứng đúng yêu cầu đề, overview, main features và data.")+
           bandCard("Coherence & Cohesion",result.coherence,result.coherence_comment||"Paragraphing, progression and linking.")+
           bandCard("Lexical Resource",result.lexical,result.lexical_comment||"Range, precision and collocations.")+
           bandCard("Grammar",result.grammar,result.grammar_comment||"Range and accuracy of sentence structures.")+
-        '</div>'+
+        '</div>':'')+
         '<div class="wsResultGrid">'+
           '<section class="wsResultMain">'+
-            '<div class="wsResultCard"><h2>1. Yêu cầu đề bài</h2><p class="muted">AI đối chiếu trực tiếp bài của bạn với yêu cầu của task trước khi sửa grammar.</p>'+reqHTML+'</div>'+
+            '<div class="wsResultCard"><h2>1. Yêu cầu đề bài</h2><p class="muted">'+(aiScored?'AI đối chiếu bài viết với yêu cầu đề.':'Hãy tự so bài với đề; checklist không xác nhận nội dung và số liệu.')+'</p>'+reqHTML+'</div>'+
             '<div class="wsResultCard"><h2>2. Bài của bạn</h2><div class="wsEssayText">'+esc(raw).replace(/\n/g,"<br>")+'</div></div>'+
-            '<div class="wsResultCard"><h2>3. Lỗi cần sửa</h2><p class="muted">Mỗi lỗi gồm câu bạn viết → bản sửa → nguyên nhân → quy tắc để tránh lặp lại.</p>'+corrHTML+'</div>'+
-            '<div class="wsResultCard good"><h2>4. Bản sửa giữ nguyên ý của bạn</h2><div id="wsCorrectedEssay" class="wsEssayText">'+esc(result.corrected||correctedLocal(raw,corr)).replace(/\n/g,"<br>")+'</div></div>'+
-            '<div class="wsResultCard blue"><h2>5. Bản nâng cấp</h2><div id="wsImprovedEssay" class="wsEssayText">'+esc(result.improved||result.corrected||correctedLocal(raw,corr)).replace(/\n/g,"<br>")+'</div></div>'+
+            '<div class="wsResultCard"><h2>3. Lỗi cần sửa</h2><p class="muted">'+(aiScored?'Mỗi lỗi gồm câu bạn viết → bản sửa → nguyên nhân → quy tắc để tránh lặp lại.':'Checklist cục bộ chỉ nhận diện một số mẫu lỗi phổ biến.')+'</p>'+corrHTML+'</div>'+
+            '<div class="wsResultCard good"><h2>4. '+(aiScored?'Bản sửa giữ nguyên ý của bạn':'Bản sửa các lỗi đã nhận diện')+'</h2><div id="wsCorrectedEssay" class="wsEssayText">'+esc(result.corrected||correctedLocal(raw,corr)).replace(/\n/g,"<br>")+'</div></div>'+
+            (aiScored?'<div class="wsResultCard blue"><h2>5. Bản nâng cấp</h2><div id="wsImprovedEssay" class="wsEssayText">'+esc(result.improved||result.corrected||correctedLocal(raw,corr)).replace(/\n/g,"<br>")+'</div></div>':'')+
           '</section>'+
           '<aside class="wsResultAside">'+
             '<div class="wsCoachCard"><h3>Nhận xét tổng thể</h3><p id="wsDetailedFeedback">'+esc(result.feedback||"")+'</p></div>'+
             '<div class="wsCoachCard"><h3>Ưu tiên sửa tiếp</h3><ol>'+priorities.slice(0,5).map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ol></div>'+
-            '<div class="wsCoachCard"><button id="wsCopyImproved" class="btn primary" style="width:100%">Copy bản nâng cấp</button></div>'+
+            (aiScored?'<div class="wsCoachCard"><button id="wsCopyImproved" class="btn primary" style="width:100%">Copy bản nâng cấp</button></div>':'')+
           '</aside>'+
         '</div>'+
         '<div class="lessonActions"><button id="finish" class="btn green">Đã hoàn thành block</button></div>'+
@@ -354,7 +355,7 @@
 
     document.getElementById("wsBackEdit").onclick=renderWorkspace;
     document.getElementById("wsRegrade").onclick=gradeEssay;
-    document.getElementById("wsCopyImproved").onclick=function(){
+    var copyBtn=document.getElementById("wsCopyImproved");if(copyBtn)copyBtn.onclick=function(){
       var t=document.getElementById("wsImprovedEssay").innerText;
       if(navigator.clipboard)navigator.clipboard.writeText(t);
       var b=this;b.textContent="✓ Đã copy";setTimeout(function(){b.textContent="Copy bản nâng cấp";},1200);
