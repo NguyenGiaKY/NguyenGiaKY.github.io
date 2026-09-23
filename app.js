@@ -1150,6 +1150,7 @@ function renderContextDictionaryAI(d,base,sentence,slotId){
  if(fallback)fallback.remove();
  const saveBtn=box.parentElement&&box.parentElement.querySelector('.dictActions .save');
  if(saveBtn&&d.meaning_vi)saveBtn.dataset.meaning=d.meaning_vi;
+ if(st.saved&&st.saved[base]&&window.applyVocabularySuggestion)window.applyVocabularySuggestion(base,d);
 }
 
 async function fetchContextDictionaryAI(surface,base,sentence,groups,pos,slotId){
@@ -1338,6 +1339,8 @@ async function renderDictionary(surface,targetId,sentence){
      updatedAt:Date.now()
    };
    save();renderSaved();this.textContent='✓ Đã lưu';
+   const cached=dictAICache[dictAIKey(base,sentence)];
+   if(cached&&window.applyVocabularySuggestion)window.applyVocabularySuggestion(base,cached);
  };
  fetchContextDictionaryAI(surface,base,sentence,groups,pos,slotId);
 }
