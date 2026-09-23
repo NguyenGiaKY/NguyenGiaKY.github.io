@@ -69,7 +69,8 @@ function migrate(){
 function wordsByDay(){
   const app=migrate(),groups={};
   Object.values(app.saved||{}).filter(x=>x&&x.w).forEach(x=>{
-    x={...x,m:wordCard(x.w).meaningVi||goodMeaning(x.w,x.m),context:offTopic(x.context)?'':x.context};
+    const context=offTopic(x.context)?'':x.context;
+    x={...x,m:(contextChanged(x.w,context)?'':wordCard(x.w).meaningVi)||goodMeaning(x.w,x.m),context};
     if(!x.context&&COMMON_EXAMPLES[norm(x.w)])x.context=COMMON_EXAMPLES[norm(x.w)];
     const k=x.legacySaved&&!Number(x.savedAt)?"legacy":dayKey(x.savedAt);
     (groups[k]||(groups[k]=[])).push(x);
