@@ -282,6 +282,24 @@
     RS.elapsed=Math.floor((Date.now()-RS.startTime)/1000);
     var s=scoreData(),body=document.getElementById("lessonBody");if(!body)return;
     var pct=Math.round((s.correct/s.total)*100);
+    if(typeof window.recordLearningError==="function"){
+      RS.pack.q.forEach(function(q,i){
+        if(RS.answers[i]===q[2])return;
+        var mine=RS.answers[i]===undefined?"Bỏ qua":q[1][RS.answers[i]];
+        var diagnosis=readingErrorDiagnosis(q,i);
+        window.recordLearningError({
+          skill:"reading",
+          task:RS.pack.title||"Reading practice",
+          question:q[0],
+          userAnswer:mine,
+          correctAnswer:q[1][q[2]],
+          why:diagnosis.why||q[3]||"",
+          rule:diagnosis.fix||"",
+          evidence:evidenceFor(q),
+          errorType:isTFNG(q)?"TFNG":"Reading answer"
+        });
+      });
+    }
     if(!RS.progressRecorded&&typeof window.recordTaskPerformance==="function"){
       window.recordTaskPerformance({kind:"reading",score:s.correct,total:s.total,errors:s.wrong+s.skip,note:s.wrong+" sai · "+s.skip+" bỏ trống"});
       RS.progressRecorded=true;
