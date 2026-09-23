@@ -16,10 +16,15 @@ function renderRoadmap(){let h='';for(let d=1;d<=100;d++)h+='<div class="roadDay
 function renderGrammar(){document.getElementById('grammarList').innerHTML=grammar.map(x=>'<div class="grammarCard"><h3>'+x+'</h3><p>Học rule → examples → 20 câu → 3 câu tự viết → sửa lỗi.</p></div>').join('')}
 function renderSaved(){let a=Object.values(st.saved);document.getElementById('savedWords').innerHTML=a.length?a.map(x=>'<div class="reviewItem"><b>'+x.w+'</b> — '+x.m+'</div>').join(''):'<p class="muted">Chưa lưu từ nào.</p>'}
 
-function mistake(day,type,prompt,correct,explain){
+function mistake(day,type,prompt,correct,explain,meta){
  let exists=st.mistakes.find(m=>m.day===day&&m.type===type&&m.p===prompt&&!m.mastered);
  if(!exists)st.mistakes.push({id:String(Date.now())+Math.random().toString(36).slice(2),day:day,type:type,p:prompt,c:correct,e:explain,due:[day+1,day+3,day+7].filter(x=>x<=100),mastered:false});
  save();renderReview();
+ meta=meta||{};
+ if(typeof window.recordLearningError==='function')window.recordLearningError({
+   skill:type,task:meta.source||('Day '+day),question:prompt,userAnswer:meta.userAnswer||'',correctAnswer:correct,
+   why:meta.why||explain,rule:meta.rule||'',evidence:meta.evidence||'',errorType:meta.errorType||''
+ });
 }
 function master(id){let m=st.mistakes.find(x=>x.id===id);if(m)m.mastered=true;save();renderReview()}
 function renderReview(){
@@ -238,7 +243,13 @@ function checkChoice(prefix,qs,d,type){
   if(ok)correct++;
   fb.classList.remove('hidden');fb.className='feedback '+(ok?'good':'bad');
   fb.innerHTML=ok?'✓ Correct':'✗ Correct: <b>'+q[1][q[2]]+'</b><br><b>Giải thích:</b> '+q[3];
-  if(!ok && typeof mistake==='function')mistake(d,type,q[0],q[1][q[2]],q[3]);
+  if(!ok && typeof mistake==='function')mistake(d,type,q[0],q[1][q[2]],q[3],{
+    userAnswer:(a===undefined||a===null)?'Bỏ trống':q[1][a],
+    source:'Day '+d+' • '+(type==='grammar'?'Grammar':'Reading'),
+    errorType:type==='grammar'?'Grammar choice':'Reading answer',
+    why:q[3],
+    rule:type==='reading'?'Tìm evidence trong passage và đối chiếu paraphrase trước khi chọn đáp án.':'Đọc lại rule của cấu trúc rồi làm lại câu mà không nhìn đáp án.'
+  });
  });
  let s=document.getElementById(prefix+'-score');if(s)s.textContent=correct+'/'+qs.length;
 }
@@ -552,7 +563,9 @@ function gradeListeningLesson(d,l){
   fb.innerHTML=ok
    ? '<div class="lcStatus good">✓ Đúng</div><div class="lcGrid"><div><span>Đáp án của bạn</span><b>'+descape(given)+'</b></div><div><span>Đáp án chuẩn</span><b>'+descape(q[1])+'</b></div></div><div class="lcEvidence"><b>Evidence trong audio:</b> '+descape(evidence)+'</div><div class="lcRule"><b>Vì sao đúng:</b> '+descape(q[2])+'</div>'
    : '<div class="lcStatus bad">✕ '+descape(diag.type)+'</div><div class="lcGrid"><div><span>Đáp án của bạn</span><b>'+descape(given||'Bỏ trống')+'</b></div><div><span>Đáp án đúng</span><b>'+descape(q[1])+'</b></div></div><div class="lcEvidence"><b>Evidence trong audio:</b> '+descape(evidence)+'</div><div class="lcWhy"><b>Lỗi ở đâu:</b> '+descape(diag.why)+'</div><div class="lcRule"><b>Cách chữa:</b> '+descape(diag.fix)+'</div><div class="lcWhy"><b>Giải thích câu này:</b> '+descape(q[2])+'</div>';
-  if(!ok&&typeof mistake==='function')mistake(d,'listening',q[0],q[1],diag.type+': '+diag.fix+' Evidence: '+evidence);
+  if(!ok&&typeof mistake==='function')mistake(d,'listening',q[0],q[1],diag.type+': '+diag.fix+' Evidence: '+evidence,{
+    userAnswer:given||'Bỏ trống',source:'Day '+d+' • Listening',errorType:diag.type,why:diag.why,rule:diag.fix,evidence:evidence
+  });
  });
  const total=l.q.length,summary=document.getElementById('listeningGradeSummary');
  if(summary){
