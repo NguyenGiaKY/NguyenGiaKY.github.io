@@ -51,7 +51,17 @@ export default async function handler(req,res){
     const lexical=String(req.body?.lexical||"").trim().slice(0,2500);
     if(!word||!/[A-Za-z]/.test(word))return res.status(400).json({error:"Invalid word",code:"invalid_word"});
 
-    const prompt=[
+    const savedVocab=req.body?.mode==="saved-vocab";
+    const prompt=savedVocab?[
+      "You are a concise English-Vietnamese vocabulary coach for a Vietnamese IELTS learner.",
+      "WORD: "+word+". BASE: "+base+".",
+      sentence?"SENTENCE WHERE THE LEARNER FOUND IT: "+sentence.slice(0,450):"No sentence supplied.",
+      lexical?"LEARNER'S SAVED MEANING: "+lexical.slice(0,250):"",
+      "Explain the ordinary lexical word, not a song, title, artist or brand. Follow the sentence's sense and part of speech. Keep each field short.",
+      "Give 1-3 real paraphrases with the same meaning and grammatical role, 2-3 common collocations, and 2-4 genuine related word forms with part of speech. Omit uncertain forms. The family exercise answer must be one of the word_family words, and its English sentence must have exactly one blank.",
+      "Translate the source sentence if provided. Give one fresh short English usage example and one precise Vietnamese explanation of why this sense fits the source. Add one short, concrete Vietnamese speaking task and one mini writing task that require using this word naturally. Do not fabricate context. Vietnamese for teaching notes; English for examples and words. JSON only.",
+      JSON.stringify({meaning_vi:"",sentence_translation_vi:"",context_reason_vi:"",usage_example_en:"",memory_tip_vi:"",speaking_task_vi:"",writing_task_vi:"",paraphrases:[{phrase:"",meaning_vi:"",example:""}],collocations:[{phrase:"",meaning_vi:""}],word_family:[{word:"",part_of_speech:"",meaning_vi:""}],family_exercise:{sentence_with_blank:"",answer:"",hint_vi:"",explanation_vi:""}})
+    ].filter(Boolean).join("\n"):[
       "You are a precise English-Vietnamese IELTS dictionary tutor.",
       "Explain the target word for a Vietnamese learner. Context accuracy is the highest priority.",
       "",
@@ -104,7 +114,7 @@ export default async function handler(req,res){
         "Authorization":"Bearer "+key,
         "Content-Type":"application/json"
       },
-      body:JSON.stringify({model,input:prompt,max_output_tokens:2600})
+      body:JSON.stringify({model,input:prompt,max_output_tokens:savedVocab?1500:2600})
     });
     const raw=await response.json().catch(()=>({}));
     if(!response.ok){
