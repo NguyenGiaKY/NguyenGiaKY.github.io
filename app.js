@@ -1254,7 +1254,7 @@ async function renderDictionary(surface,targetId,sentence,source){
      (base&&dclean(surface)!==base?'<span class="dictBase">gốc: <b>'+descape(base)+'</b></span>':'')+
    '</div></div></div>'+
    '<div class="dictActions">'+dictionaryAudioButtons(got.data.audios,base)+
-     '<button class="save" id="dictSaveWord" data-meaning="'+descape(meaningForSave)+'">⭐ Lưu từ</button>'+
+     '<button type="button" class="save" id="dictSaveWord" data-meaning="'+descape(meaningForSave)+'">☆ Lưu từ</button>'+
      '<a target="_blank" rel="noopener" href="https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(base)+'">Cambridge ↗</a>'+
    '</div>'+
    quickDictionaryHTML(base,sentence,primary,def,coreSense,currentPOS,senseVi)+
@@ -1263,27 +1263,42 @@ async function renderDictionary(surface,targetId,sentence,source){
  if(typeof window.enrichDictionaryCard==='function')window.enrichDictionaryCard(target,{base,surface,context:sentence,example:def.example||coreSense?.[3]||'',partOfSpeech:currentPOS,meaning:primary,requestToken});
  bindDictionaryAudio(target);bindOtherMeanings(target);hydrateRecordedPronunciation(base);
  const saveBtn=target.querySelector('.dictActions .save');
- if(saveBtn)saveBtn.onclick=function(){
-   const raw=this.dataset.meaning||meaningForSave;
-   const m=window.cleanSavedMeaning?window.cleanSavedMeaning(base,raw):raw;
-    const context=(window.isOffTopicSavedText&&window.isOffTopicSavedText(sentence))?'':String(sentence||'').trim();
-    if(source&&source.taskId){
-      const task=st.vocabTasks[source.taskId]||{id:source.taskId,words:{}};
-      task.title=source.taskTitle;
-      task.passageTitle=source.passageTitle;
-      task.words=task.words||{};
-      const old=task.words[base]||{};
-      task.words[base]={...old,w:base,m:m||'',context:context||old.context||'',
-        example:String(def.example||coreSense?.[3]||old.example||'').trim(),
-        partOfSpeech:currentPOS||old.partOfSpeech||'',savedAt:old.savedAt||Date.now(),updatedAt:Date.now()};
-      st.vocabTasks[source.taskId]=task;
-    }else{
-      const oldSaved=st.saved[base]||{};
-      st.saved[base]={...oldSaved,w:base,m:m||'',savedAt:Number(oldSaved.savedAt)||Date.now(),
-        context:context||oldSaved.context||'',updatedAt:Date.now()};
-    }
-   save();renderSaved();this.textContent='✓ Đã lưu';
- };
+ if(saveBtn){
+   const taskId=source?.taskId;
+   const isSaved=()=>taskId?!!st.vocabTasks?.[taskId]?.words?.[base]:!!st.saved[base];
+   const updateSaveButton=()=>{
+     const saved=isSaved();
+     saveBtn.textContent=saved?'✓ Đã lưu':'☆ Lưu từ';
+     saveBtn.title=saved?'Bấm để huỷ lưu từ khỏi bài này':'Lưu từ để ôn tập';
+     saveBtn.setAttribute('aria-pressed',String(saved));
+   };
+   updateSaveButton();
+   saveBtn.onclick=function(){
+     if(isSaved()){
+       if(taskId){
+         delete st.vocabTasks[taskId].words[base];
+         if(!Object.keys(st.vocabTasks[taskId].words).length)delete st.vocabTasks[taskId];
+       }else delete st.saved[base];
+     }else{
+       const raw=this.dataset.meaning||meaningForSave;
+       const m=window.cleanSavedMeaning?window.cleanSavedMeaning(base,raw):raw;
+       const context=(window.isOffTopicSavedText&&window.isOffTopicSavedText(sentence))?'':String(sentence||'').trim();
+       if(taskId){
+         const task=st.vocabTasks[taskId]||{id:taskId,words:{}};
+         task.title=source.taskTitle;
+         task.passageTitle=source.passageTitle;
+         task.words=task.words||{};
+         task.words[base]={w:base,m:m||'',context,
+           example:String(def.example||coreSense?.[3]||context||'').trim(),
+           partOfSpeech:currentPOS||'',savedAt:Date.now(),updatedAt:Date.now()};
+         st.vocabTasks[taskId]=task;
+       }else{
+         st.saved[base]={w:base,m:m||'',savedAt:Date.now(),context,updatedAt:Date.now()};
+       }
+     }
+     save();renderSaved();updateSaveButton();
+   };
+ }
 }
 window.lookupDictionary=function(raw,targetId='dictResult',sentence='',source=null){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence,source)};
 window.toggleDictionary=function(force){let open=force===undefined?!dict.classList.contains('open'):!!force;dict.classList.toggle('open',open)};

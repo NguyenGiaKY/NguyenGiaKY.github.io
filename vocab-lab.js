@@ -185,7 +185,7 @@ function studyCardHTML(k,x){
     (k.startsWith("task:")?'<p class="vocabSourceMeaning"><b>Nghĩa trong bài đọc:</b> '+esc(x.m||'Chưa có nghĩa')+'</p>':'')+
     '<div class="vocabPhraseStatus" aria-live="polite">'+(stale?'Câu đã lưu thay đổi. Gợi ý cũ có thể không đúng ngữ cảnh mới; tạo lại nếu cần.':card.aiGeneratedAt?'Đã lưu bài học; mở lại không tốn thêm lượt AI.':'AI chỉ được gọi khi bạn bấm nút này. Bạn vẫn có thể tự nhập cụm bên dưới.')+'</div>'+
     (x.context?'<div class="vocabStudyContext"><small>CÂU BẠN GẶP TRONG BÀI</small><p>'+highlightContext(x.context,x.w)+'</p>'+(!stale&&card.sentenceTranslation?'<span>→ '+esc(card.sentenceTranslation)+'</span>':'')+(!stale&&card.contextReason?'<p class="vocabStudyWhy"><b>Tại sao dùng nghĩa này?</b> '+esc(card.contextReason)+'</p>':'')+'</div>':'')+
-    (x.example?'<div class="vocabStudyExample"><small>VÍ DỤ TỪ TỪ ĐIỂN</small><p>'+esc(x.example)+'</p></div>':'')+
+    (x.example?'<div class="vocabStudyExample"><small>CÂU VÍ DỤ</small><p>'+esc(x.example)+'</p></div>':'')+
     (!stale&&card.usageExample?'<div class="vocabStudyExample"><small>THỬ NHỚ CÁCH DÙNG</small><p>'+esc(card.usageExample)+'</p></div>':'')+
     (!stale&&card.memoryTip?'<p class="vocabStudyTip"><b>Mẹo nhớ:</b> '+esc(card.memoryTip)+'</p>':'')+
     (family.length?'<div class="vocabStudyFamily"><h4>Word family · đổi từ loại</h4><div class="vocabFamilyRows">'+family.map(f=>'<div><b>'+esc(f.word)+'</b><small>'+esc(f.part_of_speech||'')+'</small><span>'+esc(f.meaning_vi||'')+'</span></div>').join('')+'</div>'+
@@ -220,14 +220,14 @@ function recallHTML(k,arr){
 }
 function speakingHTML(k,arr){
   const d=dayState(k);
-  return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>03</span><div><b>Speaking Sprint</b><small>Nói một câu tự nhiên có dùng từ — không chỉ đọc riêng từ đó.</small></div></div>'+
+  return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>03</span><div><b>IELTS Speaking</b><small>Trả lời thành câu, dùng từ đúng nghĩa trong bài đọc.</small></div></div>'+
     '<div class="vocabUseCaseHint"><b>3 tình huống nên thử:</b><span>👤 câu về bản thân</span><span>🎓 câu IELTS/học thuật</span><span>🔗 câu có because / for example / however</span></div>'+
     '<div class="vocabSpeakGrid">'+arr.map(x=>{
       const key=norm(x.w),ok=!!d.speaking[key];
       return '<article class="vocabSpeakCard '+(ok?"passed":"")+'" data-word="'+esc(x.w)+'">'+
         '<div class="vocabSpeakCardTop"><div><b>'+esc(x.w)+'</b><small>'+esc(x.m||"")+'</small></div><button class="vocabSpeakModel" data-word="'+esc(x.w)+'">🔊 Mẫu</button></div>'+
         (x.context?'<p class="vocabSourceContext">Trong bài: '+highlightContext(x.context,x.w)+'</p>':'')+
-        '<p class="vocabSpeakCue">'+esc(!contextChanged(x.w,x.context,k)&&wordCard(x.w,k).speakingTask||('Nói 1 câu mới có '+x.w+'.'))+(!contextChanged(x.w,x.context,k)&&wordCard(x.w,k).collocations?.[0]?' Thử dùng cụm <b>'+esc(wordCard(x.w,k).collocations[0])+'</b>.':'')+' Cố gắng 6–15 từ.</p>'+
+        '<p class="vocabSpeakCue">'+esc(!contextChanged(x.w,x.context,k)&&wordCard(x.w,k).speakingTask||('Trả lời một câu hỏi IELTS Speaking về '+(x.passageTitle||'chủ đề bài đọc')+', dùng từ '+x.w+' trong câu giải thích.'))+(!contextChanged(x.w,x.context,k)&&wordCard(x.w,k).collocations?.[0]?' Thử dùng cụm <b>'+esc(wordCard(x.w,k).collocations[0])+'</b>.':'')+' Cố gắng 6–15 từ.</p>'+
         '<button class="btn primary vocabStartSpeech" data-day="'+k+'" data-word="'+esc(x.w)+'">🎙️ '+(ok?"Nói lại":"Bắt đầu nói")+'</button>'+
         '<div class="vocabSpeechTranscript">'+(ok?"✓ Đã dùng được từ này trong câu nói.":"")+'</div>'+
       '</article>';
@@ -235,8 +235,8 @@ function speakingHTML(k,arr){
 }
 function writingHTML(k,arr,focus){
   const d=dayState(k),need=Math.min(3,arr.length),targets=arr.slice(0,Math.max(need,1));
-  return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>04</span><div><b>Mini Writing</b><small>Dùng từ trong đoạn ngắn để biến “biết nghĩa” thành “biết dùng”.</small></div></div>'+
-    '<div class="vocabWritingTask"><p>'+esc(!contextChanged(focus.w,focus.context,k)&&wordCard(focus.w,k).writingTask||'Viết một đoạn ngắn về trải nghiệm học tập hoặc sinh hoạt của bạn.')+' Viết <strong>2–4 câu</strong> (ít nhất 20 từ) và dùng ít nhất <strong>'+need+' từ</strong> trong bộ hôm nay. Thử dùng một collocation đã học.</p>'+
+  return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>04</span><div><b>IELTS Writing</b><small>Dùng từ trong đoạn lập luận ngắn, đúng ngữ cảnh.</small></div></div>'+
+    '<div class="vocabWritingTask"><p>'+esc(!contextChanged(focus.w,focus.context,k)&&wordCard(focus.w,k).writingTask||('Viết một ý cho IELTS Writing Task 2 về '+(focus.passageTitle||'chủ đề bài đọc')+', rồi giải thích và cho ví dụ.'))+' Viết <strong>2–4 câu</strong> (ít nhất 20 từ) và dùng ít nhất <strong>'+need+' từ</strong> trong bộ này. Thử dùng một collocation đã học.</p>'+
       '<div class="vocabTargetChips">'+targets.map(x=>'<span>'+esc(x.w)+'</span>').join("")+'</div>'+
       '<textarea class="vocabWritingInput" data-day="'+k+'" rows="5" placeholder="Viết một đoạn ngắn về học tập, công nghệ, cuộc sống hằng ngày...">'+esc(d.writingText||"")+'</textarea>'+
       '<div class="vocabWritingBottom"><button class="btn primary vocabCheckWriting" data-day="'+k+'">Check đoạn viết</button><div class="vocabWritingFeedback">'+(d.writing?"✓ Hoàn thành mini writing của ngày này.":"")+'</div></div>'+
@@ -311,6 +311,16 @@ function bind(){
     item.collocations=card.querySelector('.vocabCollEdit').value.split(';').map(x=>x.trim()).filter(Boolean).slice(0,5);
     item.manualEdited=true;
     const k=b.closest("[data-vocab-day]")?.dataset.vocabDay,saved=savedWord(k,b.dataset.word);
+    const app=loadApp(),taskId=k?.startsWith("task:")?k.slice(5):null;
+    const record=taskId?app.vocabTasks?.[taskId]?.words?.[b.dataset.word]:app.saved?.[b.dataset.word];
+    if(record){
+      record.m=item.meaningVi;
+      saveApp(app);
+      if(typeof st!=="undefined"){
+        const live=taskId?st.vocabTasks?.[taskId]?.words?.[b.dataset.word]:st.saved?.[b.dataset.word];
+        if(live)live.m=item.meaningVi;
+      }
+    }
     if(contextChanged(b.dataset.word,saved?.context,k)){
       item.aiGeneratedAt=0;item.sentenceTranslation='';item.contextReason='';item.usageExample='';
       item.speakingTask='';item.writingTask='';item.memoryTip='';item.familyExercise=null;item.wordFamily=[];

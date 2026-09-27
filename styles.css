@@ -2971,6 +2971,7 @@ canvas{
 .vocabDayHeader:hover{background:#fbfcff}
 .vocabStartReview{margin:0 18px 16px}
 .vocabSourceMeaning{margin:10px 0 0;color:#31507c;line-height:1.5}
+.dictActions .save[aria-pressed="true"]{background:#eaf7ef;color:#166534;border-color:#a6d9b5}
 .vocabDayHeader h3{margin:7px 0 3px;color:#1d2a43;font-size:19px}
 .vocabDayHeader p{margin:0;color:#7a879a;font-size:12px;line-height:1.45}
 .vocabDatePill{
