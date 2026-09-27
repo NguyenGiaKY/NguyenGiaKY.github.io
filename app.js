@@ -1,5 +1,5 @@
 
-const S='ielts100_online';let st=JSON.parse(localStorage.getItem(S)||'{}');st.done=st.done||{};st.notes=st.notes||{};st.err=st.err||[];st.saved=st.saved||{};st.answers=st.answers||{};st.mistakes=st.mistakes||[];st.errorNotes=st.errorNotes||{};const save=()=>localStorage.setItem(S,JSON.stringify(st));
+const S='ielts100_online';let st=JSON.parse(localStorage.getItem(S)||'{}');st.done=st.done||{};st.notes=st.notes||{};st.err=st.err||[];st.saved=st.saved||{};st.vocabTasks=st.vocabTasks||{};st.answers=st.answers||{};st.mistakes=st.mistakes||[];st.errorNotes=st.errorNotes||{};const save=()=>localStorage.setItem(S,JSON.stringify(st));
 const topics=['Education','Technology','Environment','Work','Health','Society','Travel','Culture','Crime','Language'];
 const grammar=['Present Simple vs Present Continuous','Past Simple vs Past Continuous','Present Perfect','Articles','Subject–Verb Agreement','Comparatives & Superlatives','Modal Verbs','Passive Voice','Relative Clauses','Conditionals','Gerunds & Infinitives','Linking Ideas','Prepositions for Task 1','Word Formation','Complex Sentences'];
 const start=new Date('2026-09-21T00:00:00');
@@ -1216,7 +1216,7 @@ async function hydrateRecordedPronunciation(base){
  let fd=await timeoutPromise(fetchFreeDictionary(base),2200);
  if(fd&&fd.data&&fd.data.audios&&fd.data.audios.length)PRON_AUDIO_CACHE[base]=fd.data.audios;
 }
-async function renderDictionary(surface,targetId,sentence){
+async function renderDictionary(surface,targetId,sentence,source){
  const target=document.getElementById(targetId);if(!target)return;
  surface=String(surface||'').trim();if(!surface)return;
  const requestToken=Date.now()+'-'+Math.random();
@@ -1266,14 +1266,26 @@ async function renderDictionary(surface,targetId,sentence){
  if(saveBtn)saveBtn.onclick=function(){
    const raw=this.dataset.meaning||meaningForSave;
    const m=window.cleanSavedMeaning?window.cleanSavedMeaning(base,raw):raw;
-   const oldSaved=st.saved[base]||{};
-   st.saved[base]={...oldSaved,w:base,m:m||'',savedAt:Number(oldSaved.savedAt)||Date.now(),
-     context:(window.isOffTopicSavedText&&window.isOffTopicSavedText(String(sentence||'').trim()||oldSaved.context))?'':(String(sentence||'').trim()||oldSaved.context||''),
-     updatedAt:Date.now()};
+    const context=(window.isOffTopicSavedText&&window.isOffTopicSavedText(sentence))?'':String(sentence||'').trim();
+    if(source&&source.taskId){
+      const task=st.vocabTasks[source.taskId]||{id:source.taskId,words:{}};
+      task.title=source.taskTitle;
+      task.passageTitle=source.passageTitle;
+      task.words=task.words||{};
+      const old=task.words[base]||{};
+      task.words[base]={...old,w:base,m:m||'',context:context||old.context||'',
+        example:String(def.example||coreSense?.[3]||old.example||'').trim(),
+        partOfSpeech:currentPOS||old.partOfSpeech||'',savedAt:old.savedAt||Date.now(),updatedAt:Date.now()};
+      st.vocabTasks[source.taskId]=task;
+    }else{
+      const oldSaved=st.saved[base]||{};
+      st.saved[base]={...oldSaved,w:base,m:m||'',savedAt:Number(oldSaved.savedAt)||Date.now(),
+        context:context||oldSaved.context||'',updatedAt:Date.now()};
+    }
    save();renderSaved();this.textContent='✓ Đã lưu';
  };
 }
-window.lookupDictionary=function(raw,targetId='dictResult',sentence=''){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence)};
+window.lookupDictionary=function(raw,targetId='dictResult',sentence='',source=null){let w=(raw||'').trim();if(!w)return;dict.classList.add('open');dict.classList.remove('min');let fi=document.getElementById('dictFloatInput');if(fi)fi.value=w;return renderDictionary(w,targetId,sentence,source)};
 window.toggleDictionary=function(force){let open=force===undefined?!dict.classList.contains('open'):!!force;dict.classList.toggle('open',open)};
 window.dictMinimize=function(){dict.classList.toggle('min')};
 window.dictMaximize=function(){dict.classList.toggle('max')};
@@ -1290,7 +1302,11 @@ document.getElementById('dictGo').onclick=()=>{let di=document.getElementById('d
 let di=document.getElementById('dictInput');if(di)di.onkeydown=e=>{if(e.key==='Enter')lookupDictionary(di.value,'dictResult','')};
 document.addEventListener('dblclick',()=>{
  let sel=(getSelection()?.toString()||'').trim();if(!sel||!/[A-Za-z]/.test(sel)||sel.split(/\s+/).length>1)return;
- lookupDictionary(sel,'dictResult',sentenceContext());
+ const selection=getSelection();
+ const pane=document.getElementById('rsPassagePane');
+ const source=pane&&selection?.rangeCount&&pane.contains(selection.getRangeAt(0).commonAncestorContainer)
+   ?window.__readingVocabSource:null;
+ lookupDictionary(sel,'dictResult',sentenceContext(),source);
 });
 
 let dpg=document.getElementById('dictPageGo');

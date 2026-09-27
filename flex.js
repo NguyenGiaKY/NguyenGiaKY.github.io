@@ -895,6 +895,8 @@ function toggleDone(id){
 function openFlexTask(t){
  if(!t)return;
  startTaskSession(t.id);
+ window.__readingTaskInfo=t.skill==='reading'
+   ?{id:t.id,title:t.title,moduleTitle:t.moduleTitle}:null;
  if(t.day==='checkpoint'){openCheckpoint(t);return;}
  if(typeof window.openLesson==='function'){
   window.openLesson(t.day,t.index);
@@ -1066,6 +1068,7 @@ if(close){
    if(id)finishTaskTime(id);
    activeTaskSession=null;
    window.__activeFlexTaskId=null;
+   window.__readingTaskInfo=null;
    if(old)old.call(this,e);
    setTimeout(()=>{renderFlexHome();renderAllModules();renderCarry();renderProgressHub();updateHero()},0);
  };

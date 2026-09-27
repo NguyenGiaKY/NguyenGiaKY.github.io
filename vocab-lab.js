@@ -68,6 +68,15 @@ function migrate(){
 }
 function wordsByDay(){
   const app=migrate(),groups={};
+  Object.values(app.vocabTasks||{}).forEach(task=>{
+    if(!task?.id||!task.words)return;
+    const k="task:"+task.id;
+    const arr=Object.values(task.words).filter(x=>x&&x.w).map(x=>({
+      ...x,context:offTopic(x.context)?"":x.context,
+      taskTitle:task.title,passageTitle:task.passageTitle
+    })).sort((a,b)=>(a.savedAt||0)-(b.savedAt||0));
+    if(arr.length)groups[k]=arr;
+  });
   Object.values(app.saved||{}).filter(x=>x&&x.w).forEach(x=>{
     const context=offTopic(x.context)?'':x.context;
     x={...x,m:(contextChanged(x.w,context)?'':wordCard(x.w).meaningVi)||goodMeaning(x.w,x.m),context};
@@ -83,9 +92,15 @@ function dayState(k){
   const d=lab.days[k];
   d.recall=d.recall||{};d.speaking=d.speaking||{};d.paraphrase=d.paraphrase||{};d.collocation=d.collocation||{};d.family=d.family||{};return d;
 }
-function wordCard(word){
-  const key=norm(word),known=COMMON_PHRASES[key]||{paraphrases:[],collocations:[]};
+function wordCard(word,k){
+  const key=k?.startsWith("task:")?k+"|"+norm(word):norm(word);
+  const known=COMMON_PHRASES[norm(word)]||{paraphrases:[],collocations:[]};
   return lab.cards[key]||(lab.cards[key]={paraphrases:known.paraphrases.slice(),collocations:known.collocations.slice(),rounds:0,reviewAt:0});
+}
+function savedWord(k,word){
+  const app=loadApp();
+  const values=k?.startsWith("task:")?Object.values(app.vocabTasks?.[k.slice(5)]?.words||{}):Object.values(app.saved||{});
+  return values.find(x=>norm(x?.w)===norm(word))||{};
 }
 function phraseNotes(d){
   const result={paraphrases:{},collocations:{}};
@@ -140,9 +155,9 @@ function highlightContext(sentence,word){
   return esc(s.slice(0,i))+"<mark>"+esc(s.slice(i,i+word.length))+"</mark>"+esc(s.slice(i+word.length));
 }
 function progressOf(k,arr){
-  const d=dayState(k),total=Math.max(1,arr.reduce((n,x)=>n+4+(familyQuestion(x.w).answer?1:0),1));
+  const d=dayState(k),total=Math.max(1,arr.reduce((n,x)=>n+4+(familyQuestion(x.w,k).answer?1:0),1));
   let done=0;
-  arr.forEach(x=>{const w=norm(x.w);if(d.recall[w])done++;if(d.speaking[w])done++;if(d.paraphrase[w])done++;if(d.collocation[w])done++;if(familyQuestion(x.w).answer&&d.family[w])done++;});
+  arr.forEach(x=>{const w=norm(x.w);if(d.recall[w])done++;if(d.speaking[w])done++;if(d.paraphrase[w])done++;if(d.collocation[w])done++;if(familyQuestion(x.w,k).answer&&d.family[w])done++;});
   if(d.writing)done++;
   return {done,total,pct:Math.round(done/total*100)};
 }
@@ -152,23 +167,25 @@ function wordRow(x,k,selected){
     '<button class="vocabSpeakModel" data-word="'+esc(x.w)+'" title="Nghe phát âm">🔊</button>'+
   '</div>';
 }
-function familyQuestion(word){
-  const card=wordCard(word),q=card.familyExercise;
+function familyQuestion(word,k){
+  const card=wordCard(word,k),q=card.familyExercise;
   if(q?.answer&&q?.sentence_with_blank)return {cue:String(q.sentence_with_blank),answer:String(q.answer),hint:String(q.hint_vi||''),why:String(q.explanation_vi||'')};
   const related=(card.wordFamily||[]).find(x=>x.word&&norm(x.word)!==norm(word));
   return related?{cue:'Viết dạng từ phù hợp: '+String(related.part_of_speech||'word form')+' · '+String(related.meaning_vi||'cùng họ với '+word),answer:String(related.word),hint:'Dựa vào từ loại và nghĩa, không chỉ thêm đuôi ngẫu nhiên.',why:''}:{cue:'',answer:''};
 }
-function contextChanged(word,context){
-  const card=wordCard(word);
+function contextChanged(word,context,k){
+  const card=wordCard(word,k);
   return !!(card.aiGeneratedAt&&card.aiContext!==undefined&&card.aiContext!==String(context||''));
 }
 function studyCardHTML(k,x){
-  const card=wordCard(x.w),family=(card.wordFamily||[]).slice(0,6),q=familyQuestion(x.w);
-  const stale=contextChanged(x.w,x.context);
+  const card=wordCard(x.w,k),family=(card.wordFamily||[]).slice(0,6),q=familyQuestion(x.w,k);
+  const stale=contextChanged(x.w,x.context,k);
   return '<section class="vocabStudyCard">'+
     '<div class="vocabStudyTop"><div><span class="phase">TỪ ĐANG HỌC</span><h3>'+esc(x.w)+'</h3><p>'+esc(stale?x.m:(card.meaningVi||x.m||'Chưa có nghĩa tiếng Việt'))+'</p></div><button type="button" class="btn primary vocabSuggestPhrases" data-word="'+esc(x.w)+'" '+(card.aiGeneratedAt&&!stale?'disabled':'')+'>'+(stale?'✨ Tạo lại cho câu mới':card.aiGeneratedAt?'✓ Bài học AI đã lưu':'✨ Tạo bài học AI cho từ này')+'</button></div>'+
+    (k.startsWith("task:")?'<p class="vocabSourceMeaning"><b>Nghĩa trong bài đọc:</b> '+esc(x.m||'Chưa có nghĩa')+'</p>':'')+
     '<div class="vocabPhraseStatus" aria-live="polite">'+(stale?'Câu đã lưu thay đổi. Gợi ý cũ có thể không đúng ngữ cảnh mới; tạo lại nếu cần.':card.aiGeneratedAt?'Đã lưu bài học; mở lại không tốn thêm lượt AI.':'AI chỉ được gọi khi bạn bấm nút này. Bạn vẫn có thể tự nhập cụm bên dưới.')+'</div>'+
     (x.context?'<div class="vocabStudyContext"><small>CÂU BẠN GẶP TRONG BÀI</small><p>'+highlightContext(x.context,x.w)+'</p>'+(!stale&&card.sentenceTranslation?'<span>→ '+esc(card.sentenceTranslation)+'</span>':'')+(!stale&&card.contextReason?'<p class="vocabStudyWhy"><b>Tại sao dùng nghĩa này?</b> '+esc(card.contextReason)+'</p>':'')+'</div>':'')+
+    (x.example?'<div class="vocabStudyExample"><small>VÍ DỤ TỪ TỪ ĐIỂN</small><p>'+esc(x.example)+'</p></div>':'')+
     (!stale&&card.usageExample?'<div class="vocabStudyExample"><small>THỬ NHỚ CÁCH DÙNG</small><p>'+esc(card.usageExample)+'</p></div>':'')+
     (!stale&&card.memoryTip?'<p class="vocabStudyTip"><b>Mẹo nhớ:</b> '+esc(card.memoryTip)+'</p>':'')+
     (family.length?'<div class="vocabStudyFamily"><h4>Word family · đổi từ loại</h4><div class="vocabFamilyRows">'+family.map(f=>'<div><b>'+esc(f.word)+'</b><small>'+esc(f.part_of_speech||'')+'</small><span>'+esc(f.meaning_vi||'')+'</span></div>').join('')+'</div>'+
@@ -178,7 +195,7 @@ function studyCardHTML(k,x){
 function phraseHTML(k,arr){
   return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>02</span><div><b>Paraphrase + Collocation</b><small>Viết cách diễn đạt cùng nghĩa và hoàn thành cụm từ tự nhiên.</small></div></div>'+
     '<div class="vocabPhraseList">'+arr.map(x=>{
-      const card=wordCard(x.w),stale=contextChanged(x.w,x.context),ready=!!(card.paraphrases?.length&&card.collocations?.length&&!stale);
+      const card=wordCard(x.w,k),stale=contextChanged(x.w,x.context,k),ready=!!(card.paraphrases?.length&&card.collocations?.length&&!stale);
       const coll=ready?collocationPrompt(x.w,card.collocations[0]):null;
       return '<article class="vocabPhraseCard" data-word="'+esc(x.w)+'">'+
         '<div class="vocabPhraseHead"><div><b>'+esc(x.w)+'</b><small>'+esc(x.m||'Chưa có nghĩa phù hợp — hãy sửa hoặc tạo gợi ý')+'</small></div><span>'+(stale?'Cần cập nhật ngữ cảnh':card.rounds>=4?'✓ Đã qua 4 lượt':dueCard(card)?'Đến lượt ôn':card.reviewAt?'Ôn lại '+new Date(card.reviewAt).toLocaleDateString('vi-VN'):'Chưa có bài')+'</span></div>'+ 
@@ -210,7 +227,7 @@ function speakingHTML(k,arr){
       return '<article class="vocabSpeakCard '+(ok?"passed":"")+'" data-word="'+esc(x.w)+'">'+
         '<div class="vocabSpeakCardTop"><div><b>'+esc(x.w)+'</b><small>'+esc(x.m||"")+'</small></div><button class="vocabSpeakModel" data-word="'+esc(x.w)+'">🔊 Mẫu</button></div>'+
         (x.context?'<p class="vocabSourceContext">Trong bài: '+highlightContext(x.context,x.w)+'</p>':'')+
-        '<p class="vocabSpeakCue">'+esc(!contextChanged(x.w,x.context)&&wordCard(x.w).speakingTask||('Nói 1 câu mới có '+x.w+'.'))+(!contextChanged(x.w,x.context)&&wordCard(x.w).collocations?.[0]?' Thử dùng cụm <b>'+esc(wordCard(x.w).collocations[0])+'</b>.':'')+' Cố gắng 6–15 từ.</p>'+
+        '<p class="vocabSpeakCue">'+esc(!contextChanged(x.w,x.context,k)&&wordCard(x.w,k).speakingTask||('Nói 1 câu mới có '+x.w+'.'))+(!contextChanged(x.w,x.context,k)&&wordCard(x.w,k).collocations?.[0]?' Thử dùng cụm <b>'+esc(wordCard(x.w,k).collocations[0])+'</b>.':'')+' Cố gắng 6–15 từ.</p>'+
         '<button class="btn primary vocabStartSpeech" data-day="'+k+'" data-word="'+esc(x.w)+'">🎙️ '+(ok?"Nói lại":"Bắt đầu nói")+'</button>'+
         '<div class="vocabSpeechTranscript">'+(ok?"✓ Đã dùng được từ này trong câu nói.":"")+'</div>'+
       '</article>';
@@ -219,7 +236,7 @@ function speakingHTML(k,arr){
 function writingHTML(k,arr,focus){
   const d=dayState(k),need=Math.min(3,arr.length),targets=arr.slice(0,Math.max(need,1));
   return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>04</span><div><b>Mini Writing</b><small>Dùng từ trong đoạn ngắn để biến “biết nghĩa” thành “biết dùng”.</small></div></div>'+
-    '<div class="vocabWritingTask"><p>'+esc(!contextChanged(focus.w,focus.context)&&wordCard(focus.w).writingTask||'Viết một đoạn ngắn về trải nghiệm học tập hoặc sinh hoạt của bạn.')+' Viết <strong>2–4 câu</strong> (ít nhất 20 từ) và dùng ít nhất <strong>'+need+' từ</strong> trong bộ hôm nay. Thử dùng một collocation đã học.</p>'+
+    '<div class="vocabWritingTask"><p>'+esc(!contextChanged(focus.w,focus.context,k)&&wordCard(focus.w,k).writingTask||'Viết một đoạn ngắn về trải nghiệm học tập hoặc sinh hoạt của bạn.')+' Viết <strong>2–4 câu</strong> (ít nhất 20 từ) và dùng ít nhất <strong>'+need+' từ</strong> trong bộ hôm nay. Thử dùng một collocation đã học.</p>'+
       '<div class="vocabTargetChips">'+targets.map(x=>'<span>'+esc(x.w)+'</span>').join("")+'</div>'+
       '<textarea class="vocabWritingInput" data-day="'+k+'" rows="5" placeholder="Viết một đoạn ngắn về học tập, công nghệ, cuộc sống hằng ngày...">'+esc(d.writingText||"")+'</textarea>'+
       '<div class="vocabWritingBottom"><button class="btn primary vocabCheckWriting" data-day="'+k+'">Check đoạn viết</button><div class="vocabWritingFeedback">'+(d.writing?"✓ Hoàn thành mini writing của ngày này.":"")+'</div></div>'+
@@ -227,12 +244,14 @@ function writingHTML(k,arr,focus){
 }
 function renderDay(k,arr){
   const d=dayState(k),p=progressOf(k,arr);
+  const isTask=k.startsWith("task:");
   const focus=arr.find(x=>norm(x.w)===norm(d.focusWord))||arr[0];
   return '<section class="vocabDayCard '+(d.open?"open":"")+'" data-vocab-day="'+k+'">'+
     '<button class="vocabDayHeader" data-toggle-day="'+k+'">'+
-      '<div><span class="vocabDatePill">'+formatDay(k)+'</span><h3>'+arr.length+' từ đã lưu</h3><p>'+arr.slice(0,5).map(x=>esc(x.w)).join(" · ")+(arr.length>5?" · …":"")+'</p></div>'+
+      '<div><span class="vocabDatePill">'+(isTask?esc(k.slice(5))+' · Reading Task':formatDay(k))+'</span><h3>'+(isTask?esc(arr[0].taskTitle||"Reading")+" Vocabulary":arr.length+' từ đã lưu')+'</h3><p>'+(isTask?esc(arr[0].passageTitle||"")+" · "+arr.length+" words":arr.slice(0,5).map(x=>esc(x.w)).join(" · ")+(arr.length>5?" · …":""))+'</p></div>'+
       '<div class="vocabDayProgress"><b>'+p.pct+'%</b><span>'+p.done+'/'+p.total+' hoạt động</span><i><em style="width:'+p.pct+'%"></em></i></div>'+
     '</button>'+
+    (isTask?'<button type="button" class="btn primary vocabStartReview" data-start-review="'+esc(k)+'">Start Review · '+arr.length+' words</button>':'')+
     '<div class="vocabDayBody">'+
       '<div class="vocabWordShelf">'+arr.map(x=>wordRow(x,k,x===focus)).join("")+'</div>'+
        studyCardHTML(k,focus)+
@@ -244,19 +263,25 @@ function renderDay(k,arr){
 function render(){
   const host=document.getElementById("savedWords");if(!host)return;
   const groups=wordsByDay(),keys=Object.keys(groups).sort((a,b)=>{
+    if(a.startsWith("task:")!==b.startsWith("task:"))return a.startsWith("task:")?-1:1;
+    if(a.startsWith("task:"))return (groups[b][0]?.savedAt||0)-(groups[a][0]?.savedAt||0);
     if(a==="legacy")return 1;if(b==="legacy")return -1;return b.localeCompare(a);
   });
   if(!keys.length){
-    host.innerHTML='<div class="vocabEmpty"><b>Chưa lưu từ nào.</b><p>Tra từ trong Reading/Listening rồi bấm ⭐ Lưu ôn. Từ mới sẽ tự vào đúng ngày bạn lưu.</p></div>';
+    host.innerHTML='<div class="vocabEmpty"><b>Chưa lưu từ nào.</b><p>Tra từ trong bài Reading rồi bấm ⭐ Lưu từ để tạo Vocabulary Task riêng cho bài đó.</p></div>';
     return;
   }
   const total=keys.reduce((n,k)=>n+groups[k].length,0);
   host.innerHTML=
-     '<section class="vocabHero"><div><span class="phase">VOCABULARY REVIEW</span><h2>Mỗi lần học kỹ một từ</h2><p>Chọn từ trong ngày, tạo bài học AI khi cần, rồi luyện ngữ cảnh, cụm từ, word family, nói và viết. Nội dung đã tạo được lưu lại.</p></div><div class="vocabHeroStat"><b>'+total+'</b><span>từ đã lưu</span><small>'+keys.length+' ngày học</small></div></section>'+
+     '<section class="vocabHero"><div><span class="phase">VOCABULARY REVIEW</span><h2>Ôn từ theo từng bài đọc</h2><p>Mỗi Reading Task có bộ từ và tiến độ riêng. Từ đã lưu trước đây vẫn nằm trong nhóm theo ngày bên dưới.</p></div><div class="vocabHeroStat"><b>'+total+'</b><span>lượt từ đã lưu</span><small>'+keys.filter(k=>k.startsWith("task:")).length+' Reading Tasks</small></div></section>'+
     '<div class="vocabDayList">'+keys.map(k=>renderDay(k,groups[k])).join("")+'</div>';
   bind();
 }
 function bind(){
+  document.querySelectorAll("[data-start-review]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.startReview,d=dayState(k);d.open=true;saveLab();render();
+    document.querySelector('[data-vocab-day="'+CSS.escape(k)+'"] .vocabDayBody')?.scrollIntoView({block:"start",behavior:"smooth"});
+  });
   document.querySelectorAll("[data-toggle-day]").forEach(b=>b.onclick=()=>{
     const d=dayState(b.dataset.toggleDay);d.open=!d.open;saveLab();render();
   });
@@ -280,13 +305,13 @@ function bind(){
     if(e.key==="Enter"){e.preventDefault();inp.closest(".vocabRecallItem")?.querySelector(".vocabRecallCheck")?.click();}
   }));
   document.querySelectorAll('.vocabSavePhrases').forEach(b=>b.onclick=()=>{
-    const card=b.closest('.vocabPhraseCard'),item=wordCard(b.dataset.word);
+    const card=b.closest('.vocabPhraseCard'),item=wordCard(b.dataset.word,b.closest("[data-vocab-day]")?.dataset.vocabDay);
     item.meaningVi=card.querySelector('.vocabMeaningEdit').value.trim();
     item.paraphrases=card.querySelector('.vocabParaEdit').value.split(';').map(x=>x.trim()).filter(Boolean).slice(0,5);
     item.collocations=card.querySelector('.vocabCollEdit').value.split(';').map(x=>x.trim()).filter(Boolean).slice(0,5);
     item.manualEdited=true;
-    const saved=Object.values(loadApp().saved||{}).find(x=>norm(x.w)===norm(b.dataset.word));
-    if(contextChanged(b.dataset.word,saved?.context)){
+    const k=b.closest("[data-vocab-day]")?.dataset.vocabDay,saved=savedWord(k,b.dataset.word);
+    if(contextChanged(b.dataset.word,saved?.context,k)){
       item.aiGeneratedAt=0;item.sentenceTranslation='';item.contextReason='';item.usageExample='';
       item.speakingTask='';item.writingTask='';item.memoryTip='';item.familyExercise=null;item.wordFamily=[];
     }
@@ -303,7 +328,7 @@ function bind(){
   document.querySelectorAll(".vocabCheckWriting").forEach(b=>b.onclick=()=>checkWriting(b));
 }
 function checkFamily(btn){
-  const row=btn.closest('.vocabFamilyQuiz'),q=familyQuestion(btn.dataset.word),value=row.querySelector('input').value.trim();
+  const row=btn.closest('.vocabFamilyQuiz'),q=familyQuestion(btn.dataset.word,btn.dataset.day),value=row.querySelector('input').value.trim();
   const fb=row.querySelector('.vocabFamilyFeedback');
   if(!value){fb.textContent='Gõ dạng từ trước khi kiểm tra.';return;}
   const ok=same(value,q.answer);row.classList.toggle('passed',ok);row.classList.toggle('failed',!ok);
@@ -312,8 +337,8 @@ function checkFamily(btn){
 }
 async function suggestPhrases(btn){
   const word=btn.dataset.word,card=btn.closest('.vocabStudyCard'),status=card?.querySelector('.vocabPhraseStatus');
-  const saved=Object.values(loadApp().saved||{}).find(x=>norm(x.w)===norm(word))||{};
-  const item=wordCard(word);
+  const k=btn.closest("[data-vocab-day]")?.dataset.vocabDay,saved=savedWord(k,word);
+  const item=wordCard(word,k);
   if(item.aiGeneratedAt&&(item.aiContext===undefined||item.aiContext===String(saved.context||''))){if(status)status.textContent='Bài học này đã được lưu; không gọi AI lại.';return;}
   const endpoint=window.VOCAB_AI_ENDPOINT||window.DICTIONARY_AI_ENDPOINT;
   if(!endpoint){status.textContent='Chưa có dịch vụ gợi ý; bạn vẫn có thể thêm cụm thủ công.';return}
@@ -351,7 +376,7 @@ async function suggestPhrases(btn){
   }catch(e){status.textContent=e.name==='AbortError'?'Hết thời gian chờ. Thử lại sau.':String(e.message||e)}finally{btn.disabled=false}
 }
 function checkPhrase(btn){
-  const word=btn.dataset.word,k=btn.dataset.day,card=btn.closest('.vocabPhraseCard'),item=wordCard(word);
+  const word=btn.dataset.word,k=btn.dataset.day,card=btn.closest('.vocabPhraseCard'),item=wordCard(word,k);
   const isPara=btn.classList.contains('vocabParaCheck');
   const row=btn.closest('.vocabPhraseQuiz'),value=row.querySelector('input').value;
   const expected=isPara?item.paraphrases:[collocationPrompt(word,item.collocations[0]).answer];

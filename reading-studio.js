@@ -259,7 +259,9 @@
     var word=(text.match(/[A-Za-z'-]+/)||[])[0];
     if(!word)return;
     try{
-      if(typeof window.lookupDictionary==="function")window.lookupDictionary(word);
+      if(typeof window.lookupDictionary==="function")
+        window.lookupDictionary(word,"dictResult",typeof sentenceContext==="function"?sentenceContext():"",
+          document.getElementById("rsPassagePane")?.contains(window.getSelection()?.anchorNode)?window.__readingVocabSource:null);
       else{
         var inp=document.getElementById("dictInput");
         if(inp){inp.value=word;var btn=document.getElementById("dictSearch");if(btn)btn.click();}
@@ -481,6 +483,12 @@
     RS.day=d;
     RS.pack=getPack(d);
     if(!RS.pack)return;
+    var task=window.__readingTaskInfo;
+    window.__readingVocabSource={
+      taskId:task&&task.id||"reading-day-"+d,
+      taskTitle:task&&task.title||"Reading Day "+d,
+      passageTitle:RS.pack.title||"Reading passage"
+    };
     RS.answers={};
     RS.startTime=Date.now();
     RS.elapsed=0;
@@ -502,6 +510,6 @@
   };
 
   var close=document.getElementById("lessonClose");
-  if(close)close.addEventListener("click",function(){stopTimer();});
+  if(close)close.addEventListener("click",function(){stopTimer();window.__readingVocabSource=null;});
 
 })();
