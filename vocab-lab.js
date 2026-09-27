@@ -165,7 +165,32 @@ function wordRow(x,k,selected){
   return '<div class="vocabDayWord '+(selected?'vocabWordSelected':'')+'">'+
     '<button type="button" class="vocabPickWord" data-day="'+esc(k)+'" data-word="'+esc(x.w)+'"><b>'+esc(x.w)+'</b><span>'+esc(x.m||"Chưa có nghĩa rõ — sửa trong thẻ học")+'</span></button>'+ 
     '<button class="vocabSpeakModel" data-word="'+esc(x.w)+'" title="Nghe phát âm">🔊</button>'+
+    '<button type="button" class="vocabRemoveWord" data-day="'+esc(k)+'" data-word="'+esc(x.w)+'" aria-label="Huỷ lưu '+esc(x.w)+'">Huỷ lưu</button>'+
   '</div>';
+}
+function removeSavedWord(k,word){
+  const app=loadApp(),taskId=k.startsWith("task:")?k.slice(5):null;
+  const words=taskId?app.vocabTasks?.[taskId]?.words:app.saved;
+  const key=Object.keys(words||{}).find(x=>norm(x)===norm(word));
+  if(!key)return;
+  delete words[key];
+  if(taskId&&!Object.keys(words).length)delete app.vocabTasks[taskId];
+  saveApp(app);
+  // app.js also holds the data in memory; keep it aligned with localStorage.
+  if(typeof st!=="undefined"){
+    st.saved=app.saved||{};
+    st.vocabTasks=app.vocabTasks||{};
+  }
+  const d=lab.days[k],w=norm(word);
+  if(d){
+    for(const field of ["recall","speaking","paraphrase","collocation","family"])delete d[field]?.[w];
+    if(norm(d.focusWord)===w)d.focusWord="";
+    d.writing=false;
+  }
+  delete lab.cards[taskId?k+"|"+w:w];
+  if(taskId&&!app.vocabTasks[taskId])delete lab.days[k];
+  saveLab();
+  render();
 }
 function familyQuestion(word,k){
   const card=wordCard(word,k),q=card.familyExercise;
@@ -278,6 +303,7 @@ function render(){
   bind();
 }
 function bind(){
+  document.querySelectorAll(".vocabRemoveWord").forEach(b=>b.onclick=()=>removeSavedWord(b.dataset.day,b.dataset.word));
   document.querySelectorAll("[data-start-review]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.startReview,d=dayState(k);d.open=true;saveLab();render();
     document.querySelector('[data-vocab-day="'+CSS.escape(k)+'"] .vocabDayBody')?.scrollIntoView({block:"start",behavior:"smooth"});
