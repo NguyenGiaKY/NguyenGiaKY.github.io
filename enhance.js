@@ -19,6 +19,7 @@ function englishVoices(){
   try{return (speechSynthesis.getVoices()||[]).filter(function(v){return /^en[-_]/i.test(v.lang||'')||/^English/i.test(v.name||'')})}catch(e){return[]}
 }
 function voiceScore(v,accent,gender){
+  if(window.GKYVoice)return window.GKYVoice.score(v,accent==='US'?'en-US':'en-GB');
   var n=(v.name||'').toLowerCase(),lang=(v.lang||'').toLowerCase(),score=0,want=accent==='US'?'en-us':'en-gb';
   if(lang===want)score+=30; else if(lang.indexOf('en')===0)score+=10;
   if(/google/.test(n))score+=15;
@@ -31,6 +32,10 @@ function voiceScore(v,accent,gender){
   return score;
 }
 function chooseVoice(mode,speaker){
+  if(window.GKYVoice){
+    var choice=mode&&mode.indexOf('voice:')===0?decodeURIComponent(mode.slice(6)):'auto';
+    return window.GKYVoice.pick(choice,speaker==='M'?'male':speaker==='F'?'female':'Lecturer',mode==='auto-us'?'en-US':'en-GB');
+  }
   var vs=englishVoices(); if(!vs.length) return null;
   var accent=mode==='auto-us'?'US':'UK';
   if(mode&&mode.indexOf('voice:')===0&&speaker!=='M'&&speaker!=='F'){
