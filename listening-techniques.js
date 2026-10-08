@@ -253,7 +253,7 @@ function render(){
  const st=current;if(!st)return;
  const host=document.getElementById("lessonBody");if(!host)return;
  const old=findHistory(st.id);
- let h='<div class="ltStudio"><div class="ltIntro"><div><span class="ltEyebrow">'+escapeHTML(st.pack.part)+'</span><h3>'+escapeHTML(st.pack.focus)+'</h3><p>Prediction → Listen → Check → Evidence → Fix → Review</p></div><span class="ltLabel">Technique Studio</span></div>';
+ let h='<div class="ltStudio"><div class="ltIntro"><div><span class="ltEyebrow">'+escapeHTML(st.pack?st.pack.part:"Listening Review")+'</span><h3>'+escapeHTML(st.pack?st.pack.focus:st.title)+'</h3><p>Prediction → Listen → Check → Evidence → Fix → Review</p></div><span class="ltLabel">Technique Studio</span></div>';
  if(st.reviewTask){
   h+='<div class="ltGuide"><strong>'+escapeHTML(st.id==="L6b"?"Deep correction":"Redo wrong questions")+'</strong><p>'+escapeHTML(st.id==="L6b"?"Mở Error Lab để xem bằng chứng, phát lại đoạn sai và hoàn thành Fix Pack theo từng lỗi nghe.":"Ôn lại những câu đã sai trong Error Lab. Hoàn thành bài Retry mà không nhìn đáp án trước.")+'</p><button class="btn primary" data-errors="1">Mở Error Lab →</button><button class="btn" data-finish="1">✓ Hoàn thành task</button></div></div>';
   host.innerHTML=h;return;
