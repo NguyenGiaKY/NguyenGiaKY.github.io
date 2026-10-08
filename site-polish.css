@@ -1,0 +1,75 @@
+/* UX refresh — readability, touch controls, navigation and listening audio. */
+:root{--focus:#2761cc;--reading-width:1020px}
+html{scroll-padding-top:18px}
+body{line-height:1.5}
+.sidebar .nav,.btn{transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--focus)!important;outline-offset:3px}
+button:disabled{cursor:not-allowed;opacity:.58}
+.sidebar{scrollbar-width:thin}
+.sidebar .nav{min-height:40px}
+.sidebar .nav.active{box-shadow:inset 3px 0 var(--blue)}
+.panel{min-width:0}
+.lessonBody{line-height:1.65}
+.lessonTop{gap:12px;box-shadow:0 3px 15px rgba(24,35,66,.04)}
+.lessonTop button{flex:none}
+.learnBox,.quizBox,.writeBox,.q{line-height:1.6}
+.grammarCard,.flexTask,.skillCard{overflow-wrap:anywhere}
+textarea{max-width:100%}
+textarea,input,select{color:var(--ink)}
+button,.btn{touch-action:manipulation}
+a{overflow-wrap:anywhere}
+.ltStudio{max-width:var(--reading-width);font-size:15px}
+.ltPlayer{box-shadow:0 10px 27px rgba(38,70,137,.045)}
+.ltQuality{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid #dee7f5}
+.ltQuality label{font-size:.87rem;white-space:nowrap}
+.ltQuality select{max-width:min(100%,410px);min-width:190px;flex:1;padding:10px;border-radius:10px;border:1px solid #bfcee5;background:white;color:var(--ink)}
+.ltFileLabel{padding:10px 12px;border:1px solid #cbd6eb;border-radius:10px;background:white;color:#204d9c;font-weight:700;cursor:pointer}
+.ltFileLabel:hover{background:#f0f5ff}
+.ltFileInput{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
+.ltRecording{color:#176241;font-size:.86rem;font-weight:650;overflow-wrap:anywhere}
+.ltPlayerActions .btn,.ltModeButtons .btn,.ltActions .btn{min-height:43px}
+.ltQuality .btn{min-height:42px}
+.ltQuestion{scroll-margin-top:80px}
+.ltPick{min-height:50px}
+.ltChoiceRow .ltEliminate{min-height:48px}
+.ltPlayer small{font-size:.83rem}
+.ltTranscriptRow .btn{font-size:.8rem}
+.ltIntro,.ltMap,.ltMode,.ltPlayer,.ltQuestion,.ltTranscript,.ltGuide{box-shadow:0 2px 13px rgba(17,36,67,.035)}
+.ltIntro{background:linear-gradient(135deg,#edf5ff,#fbfdff)}
+.ltMapGrid span{min-height:62px;display:grid;place-items:center}
+.ltMapGrid span:nth-child(5){background:#e3f2ec;border-color:#a7caba}
+.ltStudio .ltQuestionTop span{border:1px solid #d5e2fa;background:#f3f7ff;border-radius:20px;padding:3px 8px}
+.ltStudio .ltQuestion p{font-size:1.04rem}
+@media (max-width:1000px){
+ .hero{margin:8px 10px 12px;padding:18px;border-radius:18px}
+ .layout{padding:0 10px 16px;gap:12px}
+ .sidebar{position:relative;top:auto;height:auto;overflow:visible;padding:10px}
+ .sidebar nav{display:flex;overflow-x:auto;gap:5px;scrollbar-width:thin;padding-bottom:8px}
+ .sidebar .nav{flex:none;width:auto;white-space:nowrap;margin:0;padding:10px 13px}
+ .sidebar .nav.active{box-shadow:inset 0 -3px var(--blue)}
+ .panel{padding:16px}
+}
+@media(max-width:650px){
+ .hero{padding:15px;gap:10px}
+ .hero h1{font-size:32px}
+ .progressCard strong{font-size:34px}
+ .layout{padding:0 8px 12px}
+ .sidebar{padding:8px}
+ .panel{padding:13px}
+ .lessonTop{padding:10px 12px}
+ .lessonTop h2{font-size:1.12rem}
+ .lessonBody{width:calc(100vw - 18px);margin:12px auto 85px}
+ .ltPlayerActions,.ltModeButtons{width:100%}
+ .ltPlayerActions .btn{flex:1}
+ .ltQuality{align-items:stretch}
+ .ltQuality label[for="ltVoice"]{width:100%}
+ .ltQuality select{flex-basis:100%;min-width:0}
+ .ltQuality .btn,.ltFileLabel{flex:1;text-align:center}
+ .ltStudio .ltQuestion p{font-size:1rem}
+ .ltMapGrid span{font-size:.66rem;padding:8px 2px}
+ .dictButton{bottom:12px;right:10px;font-size:12px;padding:10px 12px}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important}
+}
