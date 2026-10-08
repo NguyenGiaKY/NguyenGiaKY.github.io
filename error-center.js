@@ -326,7 +326,7 @@ function maybeFinishPack(card,it){
 }
 function speak(text){
   text=String(text||"").trim();if(!text)return;
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-GB";u.rate=.82;speechSynthesis.speak(u);}catch(e){}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-GB";u.rate=.92;u.pitch=1;const v=window.GKYVoice&&window.GKYVoice.pick(null,"Lecturer");if(v){u.voice=v;u.lang=v.lang||"en-GB"}speechSynthesis.speak(u);}catch(e){}
 }
 
 function bind(){
