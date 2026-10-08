@@ -229,7 +229,7 @@ function questionsHTML(st){
   if(st.mode==="learning"&&!st.graded&&q.type==="fill")h+='<label class="ltPredict">Dự đoán loại từ (không chấm)<input data-predict="'+i+'" value="'+escapeHTML(st.prediction[i]||"")+'" placeholder="noun / number / plural..."></label>';
   if(q.type==="mcq"){
    h+='<div class="ltChoices">'+q.options.map((op,k)=>{
-    const isCrossed=crossed.includes(k),isSelected=Number(val)===k;
+    const isCrossed=crossed.includes(k),isSelected=val!=null&&Number(val)===k;
     return '<div class="ltChoiceRow"><button type="button" class="ltPick '+(isSelected?"ltSelected ":"")+(isCrossed?"ltCrossed":"")+'" data-pick="'+i+':'+k+'" '+(st.graded?"disabled":"")+'><b>'+String.fromCharCode(65+k)+'</b><span>'+escapeHTML(op)+'</span></button><button type="button" class="ltEliminate '+(isCrossed?"ltActive":"")+'" data-strike="'+i+':'+k+'" title="Loại trừ đáp án" aria-label="Loại trừ đáp án '+String.fromCharCode(65+k)+'" '+(st.graded?"disabled":"")+'>×</button></div>'
    }).join("")+'</div>';
   }else h+='<input class="ltAnswer" data-answer="'+i+'" value="'+escapeHTML(val||"")+'" placeholder="Your answer" '+(st.graded?"disabled":"")+'>';
