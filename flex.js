@@ -925,8 +925,8 @@ window.finishListeningStudioTask=function(id){
  const t=taskById(id);if(!t)return;
  fs.done[id]=true;fs.queue=(fs.queue||[]).filter(x=>x!==id);
  const p=taskProgressRecord(id);
- if(p.completed===0)completeTaskSession(id,'Hoàn thành Listening Technique Studio');
- else finishTaskTime(id);
+ finishTaskTime(id);
+ if(p.completed===0){p.completed=1;p.lastStudied=Date.now();p.history.push({at:Date.now(),kind:'completion',note:'Hoàn thành Listening Technique Studio'});p.history=p.history.slice(-30);}
  saveFlex();renderFlexHome();renderAllModules();renderCarry();renderProgressHub();updateHero();
 };
 function openCheckpoint(t){
