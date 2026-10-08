@@ -1006,6 +1006,7 @@ function renderSkill(skill){
  const el=document.getElementById(skill+'Modules');if(!el)return;
  const m=skillMeta[skill],ms=modules[skill];
  el.innerHTML='<div class="skillHead"><div><span class="phase">TARGET '+m.target+'</span><h2>'+m.label+'</h2><p class="muted">Hoàn thành theo năng lực, không theo ngày. Có thể dừng ở bất kỳ module nào và quay lại tiếp.</p></div><strong>'+pctSkill(skill)+'%</strong></div>'+
+ (skill==='listening'?'<div class="authAudioPanel"><div><span class="phase">REAL AUDIO · OFFICIAL</span><h3>Nghe người thật, không chỉ giọng máy</h3><p>Technique Studio giúp tập chiến thuật. Để luyện giọng tự nhiên, nối âm và tốc độ IELTS thật, hãy làm song song các bài sample có audio chính thức. Hai trang bên dưới chứa đề, recordings, đáp án và transcript.</p></div><div class="authAudioLinks"><a href="https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests/academic/listening" target="_blank" rel="noopener noreferrer">🎧 British Council · Listening samples ↗</a><a href="https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test" target="_blank" rel="noopener noreferrer">🎧 IELTS Official · 4-part practice ↗</a></div></div>':'')+
  (skill!=='support'?scoreBox(skill):'')+
  '<div class="moduleStack">'+ms.map(mod=>{
    let done=mod.tasks.filter(t=>fs.done[t[0]]).length;
