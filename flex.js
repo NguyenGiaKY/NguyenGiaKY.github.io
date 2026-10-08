@@ -448,7 +448,8 @@ function speakListeningWord(word){
    const u=new SpeechSynthesisUtterance(word);
    u.lang='en-GB';u.rate=.78;u.pitch=1;
    const voices=speechSynthesis.getVoices();
-   u.voice=voices.find(v=>/en-GB/i.test(v.lang)&&/Google|Siri|Daniel|Serena|Kate|Premium|Enhanced/i.test(v.name))
+   u.voice=(window.GKYVoice&&window.GKYVoice.pick(null,'Lecturer'))
+     ||voices.find(v=>/en-GB/i.test(v.lang)&&/Google|Siri|Daniel|Serena|Kate|Premium|Enhanced/i.test(v.name))
      ||voices.find(v=>/en-GB/i.test(v.lang))
      ||voices.find(v=>/^en/i.test(v.lang))
      ||null;
