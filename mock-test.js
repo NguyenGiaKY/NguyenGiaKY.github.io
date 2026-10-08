@@ -183,7 +183,7 @@
     }
     utterance=new SpeechSynthesisUtterance(exam.listening.script);
     utterance.lang="en-GB";utterance.rate=.94;utterance.pitch=1;
-    const v=bestVoice();if(v)utterance.voice=v;
+    const v=(window.GKYVoice&&window.GKYVoice.pick(null,"Lecturer"))||bestVoice();if(v){utterance.voice=v;utterance.lang=v.lang||"en-GB";}
     utterance.onend=()=>{if(btn)btn.textContent="✓ Audio đã phát xong";};
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
