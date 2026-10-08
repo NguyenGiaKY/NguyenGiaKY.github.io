@@ -898,6 +898,9 @@ function openFlexTask(t){
  window.__readingTaskInfo=t.skill==='reading'
    ?{id:t.id,title:t.title,moduleTitle:t.moduleTitle}:null;
  if(t.day==='checkpoint'){openCheckpoint(t);return;}
+ if(t.skill==='listening'&&typeof window.openListeningStudioTask==='function'&&window.openListeningStudioTask(t)){
+   return;
+ }
  if(typeof window.openLesson==='function'){
   window.openLesson(t.day,t.index);
   setTimeout(()=>{
@@ -918,6 +921,14 @@ function openFlexTask(t){
   },0);
  }
 }
+window.finishListeningStudioTask=function(id){
+ const t=taskById(id);if(!t)return;
+ fs.done[id]=true;fs.queue=(fs.queue||[]).filter(x=>x!==id);
+ const p=taskProgressRecord(id);
+ if(p.completed===0)completeTaskSession(id,'Hoàn thành Listening Technique Studio');
+ else finishTaskTime(id);
+ saveFlex();renderFlexHome();renderAllModules();renderCarry();renderProgressHub();updateHero();
+};
 function openCheckpoint(t){
  const skill=t.index,meta=skillMeta[skill],overlay=document.getElementById('lessonOverlay');
  document.getElementById('lessonTitle').innerHTML='<div class="phase">'+meta.label.toUpperCase()+' CHECKPOINT</div><h2>'+t.title+'</h2>';
