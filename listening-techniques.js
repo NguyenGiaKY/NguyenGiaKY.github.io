@@ -158,19 +158,17 @@ const PACKS={
 const escapeHTML=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let current=null;
 let playToken=0;
+let attachedAudio=null;
+let attachUrl=null;
 function halt(){
  playToken++;
  if(typeof speechSynthesis!=="undefined"){try{speechSynthesis.cancel()}catch(e){}}
+ if(attachedAudio){try{attachedAudio.pause();attachedAudio.currentTime=0;}catch(e){}attachedAudio=null;}
  if(current){current.playing=false;current.paused=false}
 }
 function voiceFor(speaker){
- if(typeof speechSynthesis==="undefined")return null;
- const voices=speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang||""));
- if(!voices.length)return null;
- const list=voices.filter(v=>/en[-_]GB/i.test(v.lang||""));
- const pool=list.length>=2?list:voices;
- let n=0;for(let i=0;i<speaker.length;i++)n=(n+speaker.charCodeAt(i))%1000;
- return pool[n%pool.length];
+ if(window.GKYVoice)return window.GKYVoice.pick(window.GKYVoice.getPreferred(),speaker);
+ try{return speechSynthesis.getVoices().find(v=>/^en-GB$/i.test(v.lang))||speechSynthesis.getVoices().find(v=>/^en/i.test(v.lang))||null}catch(e){return null}
 }
 function playPart(indices){
  const st=current;
@@ -181,6 +179,17 @@ function playPart(indices){
  }
  halt();const token=playToken;
  st.playing=true;st.paused=false;
+ const all=indices.length===st.pack.segments.length&&indices.every((n,i)=>n===i);
+ if(all&&st.recordingURL){
+  try{
+   const a=new Audio(st.recordingURL);attachedAudio=a;
+   a.playbackRate=st.mode==="exam"?1:st.rate;
+   a.onended=()=>{if(playToken===token){st.playing=false;attachedAudio=null;refreshAudioButtons()}};
+   a.onerror=()=>{if(playToken===token){st.playing=false;attachedAudio=null;refreshAudioButtons();const t=document.getElementById("ltStatus");if(t)t.textContent="Không mở được file audio. Hãy thử MP3/WAV khác."}};
+   a.play().catch(()=>{if(playToken===token){st.playing=false;attachedAudio=null;refreshAudioButtons();const t=document.getElementById("ltStatus");if(t)t.textContent="Trình duyệt chặn hoặc không hỗ trợ file audio."}});
+   refreshAudioButtons();return;
+  }catch(e){st.playing=false;refreshAudioButtons();return}
+ }
  let pos=0;
  function next(){
   if(playToken!==token)return;
@@ -190,9 +199,9 @@ function playPart(indices){
   const voice=voiceFor(segment.speaker);
   if(voice){utterance.voice=voice;utterance.lang=voice.lang}else utterance.lang="en-GB";
   utterance.rate=st.mode==="exam"?1:st.rate;
-  utterance.pitch=segment.speaker==="Lecturer"?1:(segment.speaker==="Agent"?0.96:1.02);
+  utterance.pitch=1;utterance.volume=1;
   utterance.onend=next;
-  utterance.onerror=next;
+  utterance.onerror=e=>{if(playToken!==token)return;st.playing=false;refreshAudioButtons();const t=document.getElementById("ltStatus");if(t)t.textContent="Giọng đọc lỗi ("+(e.error||"unknown")+"). Hãy đổi giọng ở phần Audio.";};
   try{speechSynthesis.speak(utterance)}catch(e){st.playing=false;refreshAudioButtons()}
  }
  next();refreshAudioButtons();
@@ -206,7 +215,7 @@ function refreshAudioButtons(){
 }
 function normalized(x){return String(x==null?"":x).trim().toLowerCase().replace(/[’']/g,"'").replace(/[.,]/g,"").replace(/\s+/g," ")}
 function correct(q,value){
- if(q.type==="mcq")return Number(value)===q.answer;
+ if(q.type==="mcq")return value!==null&&value!==undefined&&value!==""&&Number(value)===q.answer;
  const v=normalized(value);return !!v&&[q.answer].concat(q.aliases||[]).some(a=>normalized(a)===v);
 }
 function correctText(q){return q.type==="mcq"?String.fromCharCode(65+q.answer)+". "+q.options[q.answer]:q.answer}
@@ -252,7 +261,7 @@ function render(){
  h+='<div class="ltMode"><div><b>Chế độ</b><p>Exam: một lần, không pause · Learning: nghe lại có mục đích</p></div><div class="ltModeButtons"><button type="button" class="btn '+(st.mode==="exam"?"primary":"")+'" data-mode="exam" '+(st.playing?"disabled":"")+'>Exam Mode</button><button type="button" class="btn '+(st.mode==="learning"?"primary":"")+'" data-mode="learning" '+(st.playing?"disabled":"")+'>Learning Mode</button></div></div>';
  h+='<div class="ltPlayer"><div class="ltPlayerLine"><b>🎧 '+escapeHTML(st.pack.part)+'</b><span id="ltStatus">Sẵn sàng</span></div><div class="ltPlayerActions"><button type="button" id="ltPlay" class="btn primary" data-play="1">▶ Phát audio</button><button type="button" id="ltPause" class="btn" data-pause="1" hidden>⏸ Tạm dừng</button>';
  if(st.mode==="learning")h+='<label>Tốc độ <select id="ltRate"><option value="0.85" '+(st.rate===0.85?"selected":"")+'>0.85×</option><option value="1" '+(st.rate===1?"selected":"")+'>1.0×</option><option value="1.15" '+(st.rate===1.15?"selected":"")+'>1.15×</option></select></label>';
- h+='</div><small>Audio mô phỏng bằng giọng đọc của trình duyệt; chưa phải bản thu IELTS thật. Exam Mode khóa phát lại trong lần làm bài.</small></div>';
+ h+='</div><div class="ltQuality"><label for="ltVoice"><b>Giọng đọc</b></label><select id="ltVoice">'+(window.GKYVoice?window.GKYVoice.options():'<option value="auto">Giọng hệ thống</option>')+'</select><button type="button" class="btn" data-preview="1">🔊 Thử giọng</button><label class="ltFileLabel" for="ltAudioFile">🎵 Dùng audio MP3/WAV</label><input type="file" accept="audio/*" id="ltAudioFile" class="ltFileInput">'+(st.recordingURL?'<span class="ltRecording">✓ '+escapeHTML(st.recordingName||"Audio đã chọn")+'</span><button class="btn" data-clear-audio="1">Bỏ file</button>':'')+'</div><small>'+(st.recordingURL?'Đang dùng bản thu bạn chọn khi phát cả bài. Nghe từng câu sau chấm vẫn dùng giọng hệ thống.':'Giọng mặc định là TTS trình duyệt, không phải bản ghi IELTS. Chọn giọng tốt nhất hoặc gắn bản thu riêng khớp transcript để âm thanh tự nhiên hơn.')+' Exam Mode chỉ phát toàn bài một lần trước khi chấm.</small></div>';
  if(st.pack.map)h+='<div class="ltMap"><b>Sơ đồ tham chiếu (ground floor)</b><div class="ltMapGrid"><span>CAFE</span><span>RECEPTION</span><span>STORE</span><span> </span><span>ENTRANCE (south)</span><span> </span></div><small>Giữ hướng nhìn từ lối vào để theo dõi lời hướng dẫn.</small></div>';
  h+='<div class="ltInstructions">'+escapeHTML(st.pack.instructions)+'</div>';
  if(old)h+='<p class="ltPrevious">Lần gần nhất: '+escapeHTML(old.score)+'/'+escapeHTML(old.total)+' · '+escapeHTML(old.mode==="exam"?"Exam":"Learning")+'</p>';
@@ -309,9 +318,21 @@ function handler(e){
   playPart(st.pack.segments.map((_,i)=>i));return;
  }
  if(button.dataset.pause){
-  if(typeof speechSynthesis==="undefined")return;
-  if(st.paused){speechSynthesis.resume();st.paused=false}else{speechSynthesis.pause();st.paused=true}
+  if(attachedAudio){
+   if(st.paused){attachedAudio.play().catch(()=>{});st.paused=false}else{attachedAudio.pause();st.paused=true}
+  }else{
+   if(typeof speechSynthesis==="undefined")return;
+   if(st.paused){speechSynthesis.resume();st.paused=false}else{speechSynthesis.pause();st.paused=true}
+  }
   refreshAudioButtons();return;
+ }
+ if(button.dataset.preview){
+  if(st.mode==="exam"&&st.played&&!st.graded)return;
+  halt();if(window.GKYVoice&&!window.GKYVoice.preview()){const t=document.getElementById("ltStatus");if(t)t.textContent="Không có giọng phù hợp trên trình duyệt."}
+  return;
+ }
+ if(button.dataset["clearAudio"]){
+  halt();if(attachUrl){URL.revokeObjectURL(attachUrl);attachUrl=null}st.recordingURL=null;st.recordingName="";render();return;
  }
  if(button.dataset.pick){
   const [i,k]=button.dataset.pick.split(":").map(Number);
@@ -341,7 +362,8 @@ function open(task){
  const reviewTask=id==="L6b"||id==="L6c";
  const pack=PACKS[TASK_PACK[id]];
  if(!pack&&!reviewTask)return false;
- current={id,title:task.title||id,pack:pack||null,reviewTask,mode:"learning",rate:1,graded:false,played:false,playing:false,paused:false,responses:{},prediction:{},crossed:{},lastScore:0};
+ if(attachUrl){URL.revokeObjectURL(attachUrl);attachUrl=null}
+ current={id,title:task.title||id,pack:pack||null,reviewTask,mode:"learning",rate:1,graded:false,played:false,playing:false,paused:false,responses:{},prediction:{},crossed:{},lastScore:0,recordingURL:null,recordingName:""};
  const overlay=document.getElementById("lessonOverlay"),title=document.getElementById("lessonTitle");
  if(!overlay||!title)return false;
  title.innerHTML='<div class="phase">LISTENING · '+escapeHTML(id)+'</div><h2>'+escapeHTML(current.title)+'</h2>';
@@ -349,6 +371,10 @@ function open(task){
  render();return true;
 }
 window.openListeningStudioTask=open;
+if(window.GKYVoice)window.GKYVoice.onVoices(()=>{
+ const sel=document.getElementById("ltVoice");if(!sel)return;
+ const was=sel.value;sel.innerHTML=window.GKYVoice.options();if([...sel.options].some(o=>o.value===was))sel.value=was;
+});
 document.addEventListener("click",handler);
 document.addEventListener("input",e=>{
  if(!current||current.graded)return;
@@ -357,8 +383,16 @@ document.addEventListener("input",e=>{
  if(n.predict!=null)current.prediction[Number(n.predict)]=e.target.value;
 });
 document.addEventListener("change",e=>{
- if(current&&e.target.id==="ltRate")current.rate=Number(e.target.value)||1;
+ if(current&&e.target.id==="ltRate"){current.rate=Number(e.target.value)||1;if(attachedAudio)attachedAudio.playbackRate=current.rate;}
+ if(current&&e.target.id==="ltVoice"&&window.GKYVoice){window.GKYVoice.setPreferred(e.target.value);current.played=false;}
+ if(current&&e.target.id==="ltAudioFile"){
+  const file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  if(!/^audio\//.test(file.type)&&!/(mp3|m4a|wav|ogg|webm)$/i.test(file.name)){alert("Chỉ chọn file audio MP3, M4A, WAV, OGG hoặc WebM.");return;}
+  halt();if(attachUrl)URL.revokeObjectURL(attachUrl);
+  attachUrl=URL.createObjectURL(file);current.recordingURL=attachUrl;current.recordingName=file.name;current.played=false;render();
+ }
 });
-document.getElementById("lessonClose")?.addEventListener("click",()=>{halt();current=null});
+document.getElementById("lessonClose")?.addEventListener("click",()=>{halt();if(attachUrl){URL.revokeObjectURL(attachUrl);attachUrl=null}current=null});
 window.addEventListener("pagehide",halt);
 })();
