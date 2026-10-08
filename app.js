@@ -269,6 +269,7 @@ function listeningVoices(){
  try{return speechSynthesis.getVoices()||[]}catch(e){return[]}
 }
 function voiceQualityScore(v,accent){
+ if(window.GKYVoice)return window.GKYVoice.score(v,accent==='US'?'en-US':'en-GB');
  let n=(v.name||'').toLowerCase(),lang=(v.lang||'').toLowerCase(),score=0;
  let want=accent==='US'?'en-us':'en-gb';
  if(lang===want)score+=30;
@@ -280,6 +281,10 @@ function voiceQualityScore(v,accent){
  return score;
 }
 function chooseListeningVoice(mode){
+ if(window.GKYVoice){
+   const selected=mode&&mode.startsWith('voice:')?decodeURIComponent(mode.slice(6)):(mode==='auto-us'?'auto':'auto');
+   return window.GKYVoice.pick(selected,'Lecturer',mode==='auto-us'?'en-US':'en-GB');
+ }
  let vs=listeningVoices();
  if(!vs.length)return null;
  if(mode&&mode.startsWith('voice:')){
