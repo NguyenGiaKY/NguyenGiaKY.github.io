@@ -310,6 +310,7 @@ function handler(e){
  if(!button||!document.getElementById("lessonBody").contains(button))return;
  const st=current;
  if(button.dataset.mode){
+  if(st.mode==="exam"&&st.played&&!st.graded)return;
   halt();st.mode=button.dataset.mode;st.played=false;render();return;
  }
  if(button.dataset.play){
@@ -332,6 +333,7 @@ function handler(e){
   return;
  }
  if(button.dataset["clearAudio"]){
+  if(st.mode==="exam"&&st.played&&!st.graded)return;
   halt();if(attachUrl){URL.revokeObjectURL(attachUrl);attachUrl=null}st.recordingURL=null;st.recordingName="";render();return;
  }
  if(button.dataset.pick){
@@ -384,13 +386,13 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("change",e=>{
  if(current&&e.target.id==="ltRate"){current.rate=Number(e.target.value)||1;if(attachedAudio)attachedAudio.playbackRate=current.rate;}
- if(current&&e.target.id==="ltVoice"&&window.GKYVoice){window.GKYVoice.setPreferred(e.target.value);current.played=false;}
+ if(current&&e.target.id==="ltVoice"&&window.GKYVoice){window.GKYVoice.setPreferred(e.target.value);}
  if(current&&e.target.id==="ltAudioFile"){
   const file=e.target.files&&e.target.files[0];
   if(!file)return;
   if(!/^audio\//.test(file.type)&&!/(mp3|m4a|wav|ogg|webm)$/i.test(file.name)){alert("Chỉ chọn file audio MP3, M4A, WAV, OGG hoặc WebM.");return;}
   halt();if(attachUrl)URL.revokeObjectURL(attachUrl);
-  attachUrl=URL.createObjectURL(file);current.recordingURL=attachUrl;current.recordingName=file.name;current.played=false;render();
+  attachUrl=URL.createObjectURL(file);current.recordingURL=attachUrl;current.recordingName=file.name;render();
  }
 });
 document.getElementById("lessonClose")?.addEventListener("click",()=>{halt();if(attachUrl){URL.revokeObjectURL(attachUrl);attachUrl=null}current=null});
