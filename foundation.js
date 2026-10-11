@@ -25,7 +25,7 @@ function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const k=Mat
 function generate(l){return shuffled(l.quiz.map(q=>({prompt:q[0],correct:q[1],options:shuffled(q.slice(1,4)),reason:q[4]})));}
 function notice(x){const n=root.querySelector("#foundationNotice");if(n){n.hidden=false;n.textContent=x;}}
 function scrollInto(){root.scrollIntoView({block:"start",behavior:"smooth"});}
-function render(){if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else diagnostic();}
+function render(){if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else diagnostic();}
 function home(){
 const started=data.lessons.filter(l=>(entry(l.id).attempts||[]).length||state.drafts[l.id]).length;
 const mastered=data.lessons.filter(l=>levelStatus(l.id)==="mastered").length;
@@ -40,7 +40,8 @@ let h='<div class="f-wrap"><div class="f-cover"><div><div class="f-kicker">ENGLI
 '<div id="foundationNotice" hidden role="status"></div>'+
 '<div class="f-statbar"><div><small>Đã làm bài</small><strong>'+started+' / '+data.lessons.length+'</strong></div><div><small>Đã củng cố</small><strong>'+mastered+'</strong></div><div><small>Cần ôn</small><strong>'+due.length+'</strong></div></div>'+
 '<div class="f-guide"><b>5 bước học hiệu quả</b><p>Hiểu quy tắc → nghe và nhắc lại → trả lời câu hỏi → tự viết câu → ôn lại vào ngày khác. Mỗi ngày 1–2 bài, kết hợp thực hành nói thành tiếng.</p></div>'+
-'<section class="f-syntax-intro"><div class="f-syntax-symbol">Aa</div><div><span class="f-syntax-label">HỌC NGỮ PHÁP BẰNG TƯ DUY</span><h3>Giải mã câu: danh từ, tính từ, động từ, trạng từ & to be</h3><p>12 bài chuyên sâu: chạm vào từng từ để biết nó làm nhiệm vụ gì, vì sao đứng đó, tự sắp xếp câu và giải thích lỗi sai. Nên học song song từ bài A0.</p></div>'+button("syntax","Học tư duy cấu trúc câu →","primary")+'</section>';
+'<section class="f-syntax-intro"><div class="f-syntax-symbol">Aa</div><div><span class="f-syntax-label">HỌC NGỮ PHÁP BẰNG TƯ DUY</span><h3>Giải mã câu: danh từ, tính từ, động từ, trạng từ & to be</h3><p>12 bài chuyên sâu: chạm vào từng từ để biết nó làm nhiệm vụ gì, vì sao đứng đó, tự sắp xếp câu và giải thích lỗi sai. Nên học song song từ bài A0.</p></div>'+button("syntax","Học tư duy cấu trúc câu →","primary")+'</section>'+
+'<section class="f-syntax-intro"><div class="f-syntax-symbol">↗</div><div><span class="f-syntax-label">BẢN ĐỒ 4 LOẠI TỪ · TƯ DUY TRỰC QUAN</span><h3>Danh từ – Động từ – Tính từ – Trạng từ kết nối như thế nào?</h3><p>Khám phá 10 quan hệ qua 20 câu đối chiếu. Bấm một từ để thấy nó bổ nghĩa cho từ nào, tự xây câu và lý giải cách dùng — không học mẹo vị trí cứng nhắc.</p></div>'+button("relations","Mở bản đồ quan hệ →","primary")+'</section>';
 if(due.length){h+='<section class="f-due"><h3>↻ Đến lượt ôn lại</h3><div class="f-due-row">';due.slice(0,5).forEach(l=>h+='<button type="button" data-f-id="'+esc(l.id)+'" class="f-review-link">'+esc(l.title)+' <span>Ôn →</span></button>');h+='</div></section>';}
 h+='<div class="f-section-title"><div><h3>Lộ trình 4 chặng</h3><p>24 bài nhỏ, học từ dễ đến khó. Các bài khác vẫn có thể xem trước.</p></div></div>'+
 '<div class="f-levels"><button type="button" data-f-filter="all" class="'+(ui.filter==="all"?"on":"")+'" aria-pressed="'+(ui.filter==="all")+'">Tất cả<small>24 bài</small></button>';
@@ -79,6 +80,7 @@ else h+='<div class="f-next"><span class="f-hint">Đã chọn '+Object.keys(ui.a
 }
 if(ui.tab==="structure"){
 h+=window.GKSentenceLab?window.GKSentenceLab.lessonContent(l):'<p>Chưa tải được phần phân tích cấu trúc câu.</p>';
+if(window.GKRelationsLab)h+=window.GKRelationsLab.preview();
 }
 if(ui.tab==="apply"){
 const draft=state.drafts[l.id]||"";
@@ -140,6 +142,8 @@ else if(a==="diagnostic"){ui.page="placement";ui.placementAnswers={};ui.placemen
 else if(a==="checkDiagnostic"){const n=ui.diagnosticQuestions.reduce((sum,q,i)=>sum+(ui.placementAnswers[i]===q.correct?1:0),0);ui.placementResult={correct:n,level:n<=3?"A0":n<=5?"A1":"A2"};render();}
 else if(a==="startLevel"){ui.page="home";ui.filter=ui.placementResult.level;render();scrollInto();}
 else if(a==="syntax"||a==="syntaxTopic"){if(!window.GKSentenceLab)return;window.GKSentenceLab.select(a==="syntaxTopic"?b.dataset.fSyntaxId:null);ui.page="syntax";render();scrollInto();}
+else if(a==="relations"){if(!window.GKRelationsLab)return;window.GKRelationsLab.open(null);ui.page="relations";render();scrollInto();}
+else if(a==="relationsBack"){ui.page="home";render();scrollInto();}
 else if(a==="ielts"){const target=document.querySelector('.nav[data-view="today"]');if(target)target.click();else location.hash="#view-today";}
 else if(a==="learn"||a==="quiz"||a==="apply"){ui.tab=a;render();}
 else if(a==="transcript"){ui.transcript=!ui.transcript;render();}
