@@ -7,7 +7,7 @@ if(!root||!pack||!Array.isArray(pack.types))return;
 const KEY="gk_question_types_v1",byId=Object.fromEntries(pack.types.map(x=>[x.id,x]));
 let previous={};try{previous=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 const state={records:previous.records||{}};
-const ui={skill:"all",group:"all",query:"",id:null,choice:null,graded:false,tag:"",model:false};
+const ui={skill:"all",group:"all",query:"",id:null,choice:null,graded:false,tag:"",note:"",model:false,coreFilter:null,taskFilter:null};
 const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const per=id=>state.records[id]||(state.records[id]={attempts:[],draft:"",checks:{},errors:[],reflected:false});
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){notice("Không lưu được dữ liệu ở chế độ trình duyệt hiện tại.");}};
@@ -27,15 +27,15 @@ function coreProgress(t){
  }).join("");
 }
 function menuNav(v){const button=document.querySelector('.nav[data-view="'+v+'"]');if(button)button.click();}
-function returnToHome(){ui.id=null;ui.choice=null;ui.graded=false;ui.model=false;ui.tag="";render();}
-function open(id){if(!byId[id])return;ui.id=id;ui.choice=null;ui.graded=false;ui.model=false;ui.tag="";render();try{root.scrollIntoView({block:"start",behavior:"smooth"});}catch(e){}}
+function returnToHome(){ui.id=null;ui.choice=null;ui.graded=false;ui.model=false;ui.tag="";ui.note="";render();}
+function open(id){if(!byId[id])return;ui.id=id;ui.choice=null;ui.graded=false;ui.model=false;ui.tag="";ui.note="";render();try{root.scrollIntoView({block:"start",behavior:"smooth"});}catch(e){}}
 function hub(){
- const list=pack.types.filter(x=>ui.skill==="all"||x.skill===ui.skill).filter(x=>ui.group==="all"||x.group===ui.group);
+ const list=pack.types.filter(x=>ui.skill==="all"||x.skill===ui.skill).filter(x=>ui.group==="all"||x.group===ui.group).filter(x=>!ui.coreFilter||x.core.includes(ui.coreFilter)).filter(x=>!ui.taskFilter||x.tasks.includes(ui.taskFilter));
  const counts=pack.groups.map(g=>({skill:g.id,count:pack.types.filter(t=>t.skill===g.id).length}));
  let html='<div class="qt-wrap"><div class="qt-hero"><span>STAGE 3 · QUESTION TYPES → CORE SKILLS → 81 TASKS</span><h2>IELTS Question Types Hub</h2>'+
  '<p>Đây là <strong>bản đồ cách làm từng dạng bài</strong>, không phải Stage 4. Chọn dạng → xem Core Skills cần dùng → hiểu chiến thuật → luyện thử → ghi lỗi → mở đúng IELTS Task.</p></div>'+
  '<div class="qt-insight"><strong>Tiến độ không được tính ảo</strong><p>Một câu ví dụ chỉ cho biết kết quả của <b>một câu ví dụ</b>, không đại diện năng lực cả dạng. Chỉ số kỹ năng lấy trực tiếp từ Core Skills; điểm IELTS chỉ lấy từ task/test được chấm. Không tăng thanh 81 Tasks khi đọc hướng dẫn ở đây.</p></div>'+
- '<div class="qt-filters" role="group" aria-label="Lọc kỹ năng"><button type="button" data-qt-skill="all" aria-pressed="'+(ui.skill==="all")+'" class="'+(ui.skill==="all"?"selected":"")+'">Tất cả <small>'+pack.types.length+'</small></button>';
+ '<div id="qtNotice" role="status" hidden></div><div class="qt-filters" role="group" aria-label="Lọc kỹ năng"><button type="button" data-qt-skill="all" aria-pressed="'+(ui.skill==="all")+'" class="'+(ui.skill==="all"?"selected":"")+'">Tất cả <small>'+pack.types.length+'</small></button>';
  for(const g of pack.groups){html+='<button type="button" data-qt-skill="'+g.id+'" aria-pressed="'+(ui.skill===g.id)+'" class="'+(ui.skill===g.id?"selected":"")+'">'+g.title+' <small>'+g.count+'</small></button>';}
  html+='</div><div class="qt-search"><label for="qtSearch">Tìm dạng bài</label><input id="qtSearch" type="search" placeholder="Ví dụ: TFNG, map, essay, matching..." value="'+esc(ui.query)+'" aria-label="Tìm dạng bài IELTS"></div>';
  if(ui.skill==="writing"){html+='<div class="qt-subfilters"><button data-qt-group="all" aria-pressed="'+(ui.group==="all")+'" class="'+(ui.group==="all"?"on":"")+'">Tất cả Writing</button>';for(const g of ["Academic Task 1","General Training Task 1","Task 2 Essay"])html+='<button data-qt-group="'+esc(g)+'" aria-pressed="'+(ui.group===g)+'" class="'+(ui.group===g?"on":"")+'">'+esc(g)+'</button>';html+='</div>';}
@@ -53,7 +53,7 @@ function detail(){
  const t=byId[ui.id],r=per(t.id),p=t.practice;
  let html='<div class="qt-wrap qt-detail"><button type="button" data-qt-action="back" class="qt-back">← Question Types Hub</button>'+
  '<div class="qt-heading"><span>'+esc(t.skill.toUpperCase())+' · '+esc(t.group)+'</span><h2>'+esc(t.title)+'</h2><p>'+esc(t.aim)+'</p>'+stateTag(t)+'</div>'+
- '<div class="qt-columns"><div class="qt-primary"><section class="qt-panel"><div class="qt-step"><span>1</span><div><h3>Hiểu cách xử lý dạng bài</h3><p>Học chiến thuật từ mục tiêu của câu hỏi thay vì nhớ một công thức cứng.</p></div></div><ol class="qt-strategy">'+t.steps.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol><div class="qt-trap"><strong>Lỗi thường gặp</strong><p>'+esc(t.trap)+'</p></div></section>'+
+ '<div id="qtNotice" role="status" hidden></div><div class="qt-columns"><div class="qt-primary"><section class="qt-panel"><div class="qt-step"><span>1</span><div><h3>Hiểu cách xử lý dạng bài</h3><p>Học chiến thuật từ mục tiêu của câu hỏi thay vì nhớ một công thức cứng.</p></div></div><ol class="qt-strategy">'+t.steps.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol><div class="qt-trap"><strong>Lỗi thường gặp</strong><p>'+esc(t.trap)+'</p></div></section>'+
  '<section class="qt-panel"><div class="qt-step"><span>2</span><div><h3>Thử một ví dụ ngắn</h3><p>Đây là bài tập minh họa thao tác, không phải một phần thi IELTS hoàn chỉnh.</p></div></div>';
  if(p.kind==="choice")html+=choicePractice(t,r);
  else html+=productionPractice(t,r);
@@ -95,7 +95,7 @@ function errorPanel(t,r){
  const options=errorsBySkill[t.skill];
  let h='<div class="qt-error-options" role="group" aria-label="Nhãn lỗi thường gặp">';
  options.forEach(([id,label])=>h+='<button type="button" data-qt-tag="'+id+'" aria-pressed="'+(ui.tag===id)+'" class="'+(ui.tag===id?"active":"")+'">'+esc(label)+'</button>');
- h+='</div><label for="qtNote" class="qt-draft-label">Giải thích vì sao sai / cần sửa</label><textarea id="qtNote" rows="3" placeholder="Ví dụ: tao chọn False vì suy luận, nhưng bài không đủ chứng cứ..."></textarea><div class="qt-actions">'+button("saveError","Lưu lỗi & xem kỹ năng cần ôn","outline")+'</div>';
+ h+='</div><label for="qtNote" class="qt-draft-label">Giải thích vì sao sai / cần sửa</label><textarea id="qtNote" rows="3" placeholder="Ví dụ: tao chọn False vì suy luận, nhưng bài không đủ chứng cứ...">'+esc(ui.note)+'</textarea><div class="qt-actions">'+button("saveError","Lưu lỗi & xem kỹ năng cần ôn","outline")+'</div>';
  if(r.errors.length){h+='<div class="qt-history"><strong>Lỗi đã lưu</strong>';r.errors.slice(-4).reverse().forEach(e=>{const meta=options.find(x=>x[0]===e.tag);h+='<p><b>'+esc(meta?.[1]||e.tag)+'</b> · '+esc(e.note||"Chưa ghi giải thích")+'</p>';});h+='</div>';}
  return h;
 }
@@ -122,9 +122,10 @@ root.addEventListener("click",function(e){
   const synth=window.speechSynthesis;if(!synth||typeof window.SpeechSynthesisUtterance!=="function"){notice("Trình duyệt không hỗ trợ đọc tự động. Hãy dùng transcript sau khi chấm.");return;}
   try{synth.cancel();const talk=new window.SpeechSynthesisUtterance(t.practice.stimulus);talk.lang="en-NZ";talk.rate=.85;synth.speak(talk);}catch(e){notice("Không thể phát giọng đọc trên thiết bị này.");}return;}
  if(a==="model"){ui.model=!ui.model;render();return;}
- if(a==="saveError"){const note=root.querySelector("#qtNote")?.value?.trim()||"";if(!ui.tag){notice("Hãy chọn một nhãn lỗi trước khi lưu.");return;}if(!note){notice("Viết ngắn nguyên nhân lỗi trước khi lưu.");return;}per(ui.id).errors.push({tag:ui.tag,note,at:Date.now()});save();ui.tag="";render();return;}
+ if(a==="saveError"){const note=root.querySelector("#qtNote")?.value?.trim()||"";if(!ui.tag){notice("Hãy chọn một nhãn lỗi trước khi lưu.");return;}if(!note){notice("Viết ngắn nguyên nhân lỗi trước khi lưu.");return;}per(ui.id).errors.push({tag:ui.tag,note,at:Date.now()});save();ui.tag="";ui.note="";render();return;}
 });
 root.addEventListener("input",function(e){
+ if(e.target.id==="qtNote"){ui.note=e.target.value;return;}
  if(e.target.id==="qtSearch"){ui.query=e.target.value;const term=ui.query.toLocaleLowerCase();let n=0;root.querySelectorAll(".qt-type").forEach(el=>{el.hidden=!el.dataset.qtSearchtext.includes(term);if(!el.hidden)n++;});const count=root.querySelector("#qtCount");if(count)count.textContent=n+" dạng";return;}
  if(e.target.id==="qtDraft"&&ui.id){per(ui.id).draft=e.target.value;save();}
 });
