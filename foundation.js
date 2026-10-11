@@ -8,7 +8,7 @@ const KEY="gk_foundation_v1";
 let stored={};
 try{stored=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 const state={records:stored.records||{},drafts:stored.drafts||{}};
-const ui={page:"home",filter:"all",id:null,tab:"learn",questions:[],answers:{},graded:false,score:0,transcript:false,model:false,placementAnswers:{},placementResult:null};
+const ui={page:"home",filter:"all",id:null,tab:"learn",questions:[],answers:{},graded:false,score:0,transcript:false,model:false,placementAnswers:{},placementResult:null,diagnosticQuestions:[]};
 const index=Object.fromEntries(data.lessons.map(x=>[x.id,x]));
 function esc(x){return String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){notice("Không lưu được dữ liệu trên thiết bị này. Hãy kiểm tra chế độ riêng tư hoặc bộ nhớ trình duyệt.");}}
@@ -95,7 +95,7 @@ root.innerHTML=h;
 }
 function diagnostic(){
 const sample=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]];
-const questions=sample.map(l=>({prompt:l.quiz[0][0],options:[l.quiz[0][1],l.quiz[0][2],l.quiz[0][3]],correct:l.quiz[0][1]}));
+const questions=ui.diagnosticQuestions;
 let h='<div class="f-wrap"><button class="f-back" type="button" data-f-action="home">← Quay lại</button><div class="f-lesson-header"><span>STARTING POINT · SELF CHECK</span><h2>Kiểm tra điểm bắt đầu</h2><p>8 câu ngắn định hướng nên học từ đâu. Không phải bài kiểm tra CEFR hay IELTS chính thức. Nếu chưa biết, cứ chọn câu mình nghĩ đúng.</p></div>';
 questions.forEach((q,i)=>{
 h+='<fieldset class="f-question"><legend><span>Câu '+(i+1)+'</span> '+esc(q.prompt)+'</legend><div class="f-options">';
@@ -127,13 +127,13 @@ if(b.hasAttribute("data-f-id")){open(b.dataset.fId);return;}
 if(b.hasAttribute("data-f-tab")){ui.tab=b.dataset.fTab;render();return;}
 if(b.hasAttribute("data-f-speak")){speak(index[ui.id].examples[Number(b.dataset.fSpeak)][0],false);return;}
 if(b.hasAttribute("data-f-q")&&!ui.graded){const q=ui.questions[Number(b.dataset.fQ)];ui.answers[Number(b.dataset.fQ)]=q.options[Number(b.dataset.fOpt)];render();return;}
-if(b.hasAttribute("data-f-diag")&&!ui.placementResult){const set=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]];ui.placementAnswers[Number(b.dataset.fDiag)]=set[Number(b.dataset.fDiag)].quiz[0][1+Number(b.dataset.fOpt)];render();return;}
+if(b.hasAttribute("data-f-diag")&&!ui.placementResult){ui.placementAnswers[Number(b.dataset.fDiag)]=ui.diagnosticQuestions[Number(b.dataset.fDiag)].options[Number(b.dataset.fOpt)];render();return;}
 const a=b.dataset.fAction;
 if(!a)return;
 if(a==="home"){ui.page="home";render();scrollInto();}
 else if(a==="continue"){open((data.lessons.find(l=>isDue(l.id))||data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0]).id);}
-else if(a==="diagnostic"){ui.page="placement";ui.placementAnswers={};ui.placementResult=null;render();scrollInto();}
-else if(a==="checkDiagnostic"){const subset=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]];const n=subset.reduce((sum,l,i)=>sum+(ui.placementAnswers[i]===l.quiz[0][1]?1:0),0);ui.placementResult={correct:n,level:n<=3?"A0":n<=5?"A1":"A2"};render();}
+else if(a==="diagnostic"){ui.page="placement";ui.placementAnswers={};ui.placementResult=null;ui.diagnosticQuestions=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]].map(l=>({prompt:l.quiz[0][0],options:shuffled(l.quiz[0].slice(1,4)),correct:l.quiz[0][1]}));render();scrollInto();}
+else if(a==="checkDiagnostic"){const n=ui.diagnosticQuestions.reduce((sum,q,i)=>sum+(ui.placementAnswers[i]===q.correct?1:0),0);ui.placementResult={correct:n,level:n<=3?"A0":n<=5?"A1":"A2"};render();}
 else if(a==="startLevel"){ui.page="home";ui.filter=ui.placementResult.level;render();scrollInto();}
 else if(a==="ielts"){const target=document.querySelector('.nav[data-view="today"]');if(target)target.click();else location.hash="#view-today";}
 else if(a==="learn"||a==="quiz"||a==="apply"){ui.tab=a;render();}
