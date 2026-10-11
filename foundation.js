@@ -168,6 +168,7 @@ if(e.target&&e.target.id==="foundationDraft"){state.drafts[ui.id]=e.target.value
 root.addEventListener("change",function(e){
 if(e.target&&e.target.id==="foundationSelfCheck"){if(!state.records[ui.id])state.records[ui.id]={attempts:[],selfChecked:false};state.records[ui.id].selfChecked=e.target.checked;save();}
 });
+window.GKFoundationOpenLesson=open;
 document.querySelectorAll('.nav[data-view="foundation"]').forEach(b=>b.addEventListener("click",()=>{if(ui.page==="home")render();}));
 render();
 })();
