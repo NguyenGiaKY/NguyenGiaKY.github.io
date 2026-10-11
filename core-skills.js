@@ -66,7 +66,7 @@ h+='<div class="cs-step-head"><span>04</span><div><h3>Tự chuyển kỹ năng s
 if(ui.showSample){h+='<div class="cs-sample"><strong>Ví dụ tham khảo</strong><p>'+escape(u.sample)+'</p><small>Không cần giống hệt; phải biết giải thích vì sao cách dùng đó phù hợp.</small></div>'+
 '<label class="cs-check"><input id="csReflection" type="checkbox" '+(r.reflection?"checked":"")+'/> Tao đã tự làm, đối chiếu và sửa lỗi mà mình nhận ra.</label>';}
 const attempts=(r.history||[]).filter(x=>x.answered===t&&x.correct===t);
-h+='<div class="cs-skill-links"><strong>Áp dụng sang IELTS tasks</strong><div class="cs-related-buttons">'+u.related.map(id=>'<button type="button" data-cs-ielts="'+escape(id)+'">'+escape(id)+' ↗</button>').join("")+'</div><small>Chỉ mở task tương ứng; không tự đánh dấu đã học.</small></div>'+
+h+='<div class="cs-skill-links"><strong>Áp dụng vào dạng bài và 81 IELTS Tasks</strong><div class="cs-related-buttons"><button type="button" data-cs-types="'+escape(u.id)+'">Xem các dạng IELTS cần kỹ năng này ↗</button>'+u.related.map(id=>'<button type="button" data-cs-ielts="'+escape(id)+'">'+escape(id)+' ↗</button>').join("")+'</div><small>Chỉ mở task tương ứng; không tự đánh dấu đã học.</small></div>'+
 '<p class="cs-subdued">Đạt 2/'+t+' ở ít nhất hai ngày khác nhau cùng phần tự kiểm tra sẽ được ghi nhận là đã luyện qua hai ngày (không phải band IELTS).</p>'+
 '<div class="cs-actions">'+btn("home","Danh sách bài →","outline")+btn("next","Bài tiếp theo →","primary")+'</div>';
 }
@@ -80,6 +80,7 @@ if(b.dataset.csArea){ui.area=b.dataset.csArea;render();return;}
 if(b.dataset.csOpen){open(b.dataset.csOpen);return;}
 if(b.dataset.csTab){ui.tab=b.dataset.csTab;render();return;}
 if(b.dataset.csIelts){if(window.GKOpenIELTSTask)window.GKOpenIELTSTask(b.dataset.csIelts);return;}
+if(b.dataset.csTypes){if(window.GKQuestionTypes?.openForCore)window.GKQuestionTypes.openForCore(b.dataset.csTypes);return;}
 if(b.dataset.csQ!==undefined){const q=index[ui.id].questions[Number(b.dataset.csQ)],o=q.options[Number(b.dataset.csO)];answer(ui.id,Number(b.dataset.csQ),o);return;}
 const a=b.dataset.csAction;
 if(a==="continue"){const n=pack.units.find(u=>!completed(u.id))||pack.units[0];open(n.id);}
