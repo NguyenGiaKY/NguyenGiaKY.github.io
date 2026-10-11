@@ -38,6 +38,7 @@ function hub(){
  '<div id="qtNotice" role="status" hidden></div><div class="qt-filters" role="group" aria-label="Lọc kỹ năng"><button type="button" data-qt-skill="all" aria-pressed="'+(ui.skill==="all")+'" class="'+(ui.skill==="all"?"selected":"")+'">Tất cả <small>'+pack.types.length+'</small></button>';
  for(const g of pack.groups){html+='<button type="button" data-qt-skill="'+g.id+'" aria-pressed="'+(ui.skill===g.id)+'" class="'+(ui.skill===g.id?"selected":"")+'">'+g.title+' <small>'+g.count+'</small></button>';}
  html+='</div><div class="qt-search"><label for="qtSearch">Tìm dạng bài</label><input id="qtSearch" type="search" placeholder="Ví dụ: TFNG, map, essay, matching..." value="'+esc(ui.query)+'" aria-label="Tìm dạng bài IELTS"></div>';
+ if(ui.coreFilter||ui.taskFilter)html+='<div class="qt-active-filter"><strong>Đang lọc theo '+(ui.coreFilter?'Core Skill '+esc(ui.coreFilter):'IELTS Task '+esc(ui.taskFilter))+'</strong>'+button("clearLinks","Xóa bộ lọc liên kết","outline")+'</div>';
  if(ui.skill==="writing"){html+='<div class="qt-subfilters"><button data-qt-group="all" aria-pressed="'+(ui.group==="all")+'" class="'+(ui.group==="all"?"on":"")+'">Tất cả Writing</button>';for(const g of ["Academic Task 1","General Training Task 1","Task 2 Essay"])html+='<button data-qt-group="'+esc(g)+'" aria-pressed="'+(ui.group===g)+'" class="'+(ui.group===g?"on":"")+'">'+esc(g)+'</button>';html+='</div>';}
  if(ui.skill==="speaking"){html+='<div class="qt-themes"><strong>Nhóm câu hỏi Speaking để áp dụng trong Part 1–3</strong><div>'+pack.speakingThemes.map(s=>'<span>'+esc(s)+'</span>').join("")+'</div><p>Đây là nhóm chủ đề/câu hỏi thường luyện, không phải 12 phần thi riêng.</p></div>';}
  html+='<div class="qt-list-head"><div><h3>Chọn một dạng bài</h3><p>Mỗi dạng kết nối tới bài Stage 2 và task Stage 3 liên quan.</p></div><span id="qtCount">'+list.length+' dạng</span></div><div class="qt-type-list">';
@@ -100,14 +101,11 @@ function errorPanel(t,r){
  return h;
 }
 function render(){root.innerHTML=ui.id?detail():hub();}
-function openForTask(id){
- const candidates=pack.types.filter(x=>x.tasks.includes(id));
- if(!candidates.length)return false;
- menuNav("question-types");open(candidates[0].id);return true;
-}
+function openForTask(id){const related=pack.types.filter(x=>x.tasks.includes(id));if(!related.length)return false;ui.skill="all";ui.group="all";ui.coreFilter=null;ui.taskFilter=id;ui.query="";ui.id=null;menuNav("question-types");render();return true;}
+function openForCore(id){const related=pack.types.filter(x=>x.core.includes(id));if(!related.length)return false;ui.skill="all";ui.group="all";ui.taskFilter=null;ui.coreFilter=id;ui.query="";ui.id=null;menuNav("question-types");render();return true;}
 root.addEventListener("click",function(e){
  const b=e.target.closest("button");if(!b||!root.contains(b))return;
- if(b.dataset.qtSkill){ui.skill=b.dataset.qtSkill;ui.group="all";ui.query="";returnToHome();return;}
+ if(b.dataset.qtSkill){ui.skill=b.dataset.qtSkill;ui.group="all";ui.coreFilter=null;ui.taskFilter=null;ui.query="";returnToHome();return;}
  if(b.dataset.qtGroup){ui.group=b.dataset.qtGroup;ui.query="";returnToHome();return;}
  if(b.dataset.qtOpen){open(b.dataset.qtOpen);return;}
  if(b.dataset.qtCore){menuNav("core");window.GKCoreSkills?.open?.(b.dataset.qtCore);return;}
@@ -116,6 +114,7 @@ root.addEventListener("click",function(e){
  if(b.dataset.qtTag){ui.tag=b.dataset.qtTag;render();return;}
  const a=b.dataset.qtAction;if(!a)return;
  if(a==="back"){returnToHome();return;}
+ if(a==="clearLinks"){ui.coreFilter=null;ui.taskFilter=null;ui.query="";returnToHome();return;}
  if(a==="grade"){const t=byId[ui.id];if(ui.choice===null)return;ui.graded=true;per(t.id).attempts.push({at:Date.now(),selected:ui.choice,correct:ui.choice===t.practice.correct});per(t.id).attempts=per(t.id).attempts.slice(-60);save();render();return;}
  if(a==="reset"){ui.choice=null;ui.graded=false;render();return;}
  if(a==="listen"){const t=byId[ui.id];if(!t||t.skill!=="listening")return;
@@ -133,6 +132,6 @@ root.addEventListener("change",function(e){
  if(e.target.dataset.qtCheck!==undefined&&ui.id){per(ui.id).checks[e.target.dataset.qtCheck]=!!e.target.checked;save();}
 });
 document.querySelector('.nav[data-view="question-types"]')?.addEventListener("click",render);
-window.GKQuestionTypes={render,open,openForTask,getTypes:()=>pack.types,getRecord:id=>per(id)};
+window.GKQuestionTypes={render,open,openForTask,openForCore,getTypes:()=>pack.types,getRecord:id=>per(id)};
 render();
 })();
