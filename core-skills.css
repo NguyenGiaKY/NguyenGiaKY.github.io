@@ -1,0 +1,97 @@
+/* Core Skills: quiet learning UI, distinct progress coverage and correctness. */
+#view-core .core-surface,#view-journey .journey-surface{background:transparent;border:0;box-shadow:none;padding:0}
+#coreSkillsRoot{max-width:1100px;margin:0 auto;color:#1b2e4b;scroll-margin-top:20px}
+#coreSkillsRoot *{box-sizing:border-box}
+#coreSkillsRoot .cs-layout{display:flex;flex-direction:column;gap:19px}
+#coreSkillsRoot .cs-hero{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:25px;align-items:center;background:linear-gradient(115deg,#f7fbff,#eaf2ff);border:1px solid #d8e5fc;border-radius:21px;padding:29px}
+#coreSkillsRoot .cs-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#365bc0}
+#coreSkillsRoot .cs-hero h2{font-size:clamp(25px,3vw,34px);margin:9px 0;color:#1b325b}
+#coreSkillsRoot .cs-hero p{font-size:14px;line-height:1.8;color:#526584;margin:0}
+#coreSkillsRoot .cs-hero-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:21px}
+#coreSkillsRoot .cs-btn{border:1px solid #d4dff0;border-radius:11px;padding:10px 14px;min-height:42px;background:white;color:#315189;font-weight:800;font-size:13px}
+#coreSkillsRoot .cs-btn.primary{background:#3157d5;border-color:#3157d5;color:white}
+#coreSkillsRoot .cs-btn:disabled{opacity:.48;cursor:not-allowed}
+#coreSkillsRoot .cs-btn:hover:not(:disabled){border-color:#7f99e0}
+#coreSkillsRoot .cs-hero-progress{background:white;border:1px solid #dbe4f4;border-radius:15px;padding:18px;display:flex;flex-direction:column;gap:8px}
+#coreSkillsRoot .cs-hero-progress>strong{font-size:32px;color:#3157d5}
+#coreSkillsRoot .cs-hero-progress>span{font-size:12px;color:#536985}
+#coreSkillsRoot .cs-hero-progress>small{font-size:11px;color:#718096;line-height:1.6}
+#coreSkillsRoot .cs-track,#coreSkillsRoot .cs-tiny-track{height:8px;border-radius:100px;background:#e7edf6;overflow:hidden;display:block}
+#coreSkillsRoot .cs-track>i,#coreSkillsRoot .cs-tiny-track>i{display:block;height:100%;background:#3157d5;border-radius:100px;max-width:100%}
+#coreSkillsRoot .cs-method{padding:15px 18px;background:#f5f9ff;border-left:3px solid #3157d5;border-radius:0 12px 12px 0}
+#coreSkillsRoot .cs-method>b{color:#2b477c}
+#coreSkillsRoot .cs-method p{font-size:13px;line-height:1.7;color:#526885;margin:7px 0 0}
+#coreSkillsRoot .cs-group-head h3{font-size:21px;color:#1c3659;margin:0 0 6px}
+#coreSkillsRoot .cs-group-head p{font-size:13px;color:#68788c;margin:0}
+#coreSkillsRoot .cs-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#coreSkillsRoot .cs-group{text-align:left;border:1px solid #dce4f0;border-radius:13px;min-height:75px;background:white;padding:12px 15px;display:flex;flex-direction:column;gap:7px}
+#coreSkillsRoot .cs-group.active{background:#ecf2ff;border-color:#819fe7}
+#coreSkillsRoot .cs-group strong{font-size:14px;color:#243d61}
+#coreSkillsRoot .cs-group span{font-size:12px;color:#667a95}
+#coreSkillsRoot .cs-lessons{display:flex;flex-direction:column;gap:9px}
+#coreSkillsRoot .cs-lesson{text-align:left;display:flex;align-items:center;gap:13px;min-width:0;border:1px solid #dfe7f1;background:white;border-radius:14px;padding:14px}
+#coreSkillsRoot .cs-lesson:hover{background:#fcfdff;border-color:#7698e2}
+#coreSkillsRoot .cs-number{flex:none;font-size:12px;font-weight:850;color:#3157d5;background:#edf3ff;border-radius:9px;min-width:48px;text-align:center;padding:10px 8px}
+#coreSkillsRoot .cs-lesson-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+#coreSkillsRoot .cs-lesson-main small{color:#5875a3;font-size:11px;font-weight:800}
+#coreSkillsRoot .cs-lesson-main strong{color:#253d60;font-size:15px}
+#coreSkillsRoot .cs-lesson-main em{color:#697a8e;font-size:12px;line-height:1.5;font-style:normal}
+#coreSkillsRoot .cs-lesson-end{width:165px;display:flex;align-items:flex-end;flex-direction:column;gap:8px}
+#coreSkillsRoot .cs-lesson-end>span:nth-child(2){font-size:13px;color:#3f5cb2;font-weight:800}
+#coreSkillsRoot .cs-lesson-end .cs-tiny-track{width:100%}
+#coreSkillsRoot .cs-status{font-size:11px;font-weight:750;border:1px solid #dce4ee;border-radius:99px;padding:5px 9px;background:#f7f9fc;color:#617083;white-space:nowrap}
+#coreSkillsRoot .cs-status.learning{background:#edf4ff;border-color:#ccdcf6;color:#315ba7}
+#coreSkillsRoot .cs-status.mastered{background:#effbf2;border-color:#c0e3c9;color:#1e7448}
+#coreSkillsRoot .cs-bridge{display:flex;justify-content:space-between;align-items:center;gap:18px;border:1px solid #dfe9f5;border-radius:15px;padding:20px;background:#f7faff}
+#coreSkillsRoot .cs-bridge h3{font-size:17px;margin:0 0 7px}
+#coreSkillsRoot .cs-bridge p{font-size:13px;color:#63738a;line-height:1.7;margin:0}
+#coreSkillsRoot .cs-bridge .cs-btn{flex:none}
+#coreSkillsRoot .cs-back{font-weight:800;color:#3157bf;border:0;background:transparent;padding:4px 0;align-self:flex-start;text-align:left}
+#coreSkillsRoot .cs-lesson-header{background:linear-gradient(112deg,#f3f8ff,#edf4ff);border:1px solid #dbe6f5;border-radius:19px;padding:24px}
+#coreSkillsRoot .cs-lesson-header>span{font-size:11px;font-weight:900;letter-spacing:.07em;color:#3157b5}
+#coreSkillsRoot .cs-lesson-header h2{font-size:clamp(24px,3vw,31px);margin:9px 0;color:#1b355b}
+#coreSkillsRoot .cs-lesson-header p{font-size:14px;color:#4e6680;line-height:1.7;margin:0}
+#coreSkillsRoot .cs-inline-progress{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:16px}
+#coreSkillsRoot .cs-inline-progress>span:first-child{font-size:12px;font-weight:800;color:#3159ac}
+#coreSkillsRoot .cs-inline-progress .cs-track{flex:1;min-width:100px}
+#coreSkillsRoot .cs-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#coreSkillsRoot .cs-tabs button{background:white;color:#60728b;border:1px solid #dce4ef;border-radius:11px;padding:11px 8px;font-weight:750;font-size:13px}
+#coreSkillsRoot .cs-tabs button.on{background:#3157d5;color:#fff;border-color:#3157d5}
+#coreSkillsRoot .cs-panel{border:1px solid #dfe7f1;background:white;border-radius:17px;padding:24px}
+#coreSkillsRoot .cs-step-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+#coreSkillsRoot .cs-step-head>span{width:35px;height:35px;display:grid;place-items:center;border-radius:10px;background:#eaf1ff;color:#3157d5;flex:none;font-weight:900}
+#coreSkillsRoot .cs-step-head h3{font-size:19px;color:#253d5b;margin:0 0 5px}
+#coreSkillsRoot .cs-step-head p{font-size:13px;color:#67768d;line-height:1.6;margin:0}
+#coreSkillsRoot .cs-concept{background:#f7faff;border:1px solid #dfe9f9;border-radius:12px;padding:17px;line-height:1.9;font-size:15px;color:#394e6b;margin-bottom:25px}
+#coreSkillsRoot .cs-example{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#f5f7fb;border:1px solid #e0e7f0;border-radius:12px;padding:16px}
+#coreSkillsRoot .cs-example strong{line-height:1.75;color:#243b5a}
+#coreSkillsRoot .cs-example button{border:1px solid #ced9ea;border-radius:9px;padding:9px;background:white;font-size:12px;color:#3156a4;flex:none}
+#coreSkillsRoot .cs-note{margin-top:15px;padding:16px;border:1px solid #e9dcbe;background:#fffbf2;border-radius:12px}
+#coreSkillsRoot .cs-note strong{color:#885c20}
+#coreSkillsRoot .cs-note p{font-size:13px;line-height:1.8;color:#6d5b3f;margin:7px 0 0}
+#coreSkillsRoot .cs-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:9px;margin-top:22px}
+#coreSkillsRoot .cs-subdued{font-size:12px;color:#728199;line-height:1.6}
+#coreSkillsRoot .cs-question{margin:17px 0;border:1px solid #e1e7f0;border-radius:13px;padding:15px;min-width:0}
+#coreSkillsRoot .cs-question legend{font-weight:800;font-size:14px;line-height:1.65;padding:0 7px;max-width:100%}
+#coreSkillsRoot .cs-options{display:grid;grid-template-columns:1fr;gap:9px;margin-top:7px}
+#coreSkillsRoot .cs-option{background:white;border:1px solid #dce4ef;border-radius:10px;padding:11px 13px;text-align:left;font-size:14px;color:#41536d;min-height:42px}
+#coreSkillsRoot .cs-option.selected{background:#f0f4ff;border-color:#4d78d6}
+#coreSkillsRoot .cs-option.correct{background:#eefaf2;border-color:#81cba1}
+#coreSkillsRoot .cs-option.wrong{background:#fff3f2;border-color:#dfaaa4}
+#coreSkillsRoot .cs-explain{background:#f5f8ff;border-left:3px solid #5e81cc;padding:11px;font-size:13px;line-height:1.75;color:#435875}
+#coreSkillsRoot .cs-assignment{padding:17px;background:#f4f8ff;border:1px solid #dce8fa;border-radius:12px;margin-bottom:18px}
+#coreSkillsRoot .cs-assignment strong{color:#31599b}
+#coreSkillsRoot .cs-assignment p{line-height:1.8;margin:8px 0 0;color:#445b78}
+#coreSkillsRoot .cs-draft-label{display:block;font-weight:850;color:#31507b;margin-bottom:9px}
+#coreSkillsRoot #csDraft{width:100%;max-width:100%;border:1px solid #cad7ea;border-radius:11px;padding:13px;font:inherit;line-height:1.7;min-height:135px;resize:vertical}
+#coreSkillsRoot .cs-sample{padding:15px;border:1px solid #d6e2f0;border-radius:12px;margin:13px 0;background:#f7fbff}
+#coreSkillsRoot .cs-sample p{line-height:1.75;color:#3f5674}
+#coreSkillsRoot .cs-sample small{font-size:12px;color:#6a7c91}
+#coreSkillsRoot .cs-check{display:flex;gap:10px;padding:14px;border:1px solid #e0e7f0;border-radius:10px;font-size:13px;color:#46607e}
+#coreSkillsRoot .cs-check input{accent-color:#3157d5}
+#coreSkillsRoot .cs-skill-links{padding:15px;background:#f8faff;border:1px solid #dfe8f6;border-radius:12px;margin-top:14px}
+#coreSkillsRoot .cs-skill-links strong{color:#31599f}
+#coreSkillsRoot .cs-skill-links p{margin:7px 0;color:#49617f;line-height:1.6}
+#coreSkillsRoot .cs-skill-links small{color:#7a8ca0}
+@media(max-width:800px){#coreSkillsRoot .cs-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){#coreSkillsRoot .cs-hero{grid-template-columns:1fr;padding:20px;gap:13px}#coreSkillsRoot .cs-hero-progress{padding:12px}#coreSkillsRoot .cs-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#coreSkillsRoot .cs-lesson{gap:8px;padding:11px}#coreSkillsRoot .cs-number{min-width:40px;padding:8px 5px}#coreSkillsRoot .cs-lesson-main strong{font-size:13px}#coreSkillsRoot .cs-lesson-end{width:95px}#coreSkillsRoot .cs-lesson-end .cs-status{font-size:10px;white-space:normal;text-align:right}#coreSkillsRoot .cs-bridge{flex-direction:column;align-items:stretch}#coreSkillsRoot .cs-panel{padding:15px}#coreSkillsRoot .cs-tabs button{font-size:11px;line-height:1.35}#coreSkillsRoot .cs-example{flex-direction:column;align-items:flex-start}#coreSkillsRoot .cs-actions .cs-btn{flex:1}}
