@@ -25,7 +25,7 @@ function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const k=Mat
 function generate(l){return shuffled(l.quiz.map(q=>({prompt:q[0],correct:q[1],options:shuffled(q.slice(1,4)),reason:q[4]})));}
 function notice(x){const n=root.querySelector("#foundationNotice");if(n){n.hidden=false;n.textContent=x;}}
 function scrollInto(){root.scrollIntoView({block:"start",behavior:"smooth"});}
-function render(){if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else diagnostic();}
+function render(){if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else diagnostic();}
 function home(){
 const started=data.lessons.filter(l=>(entry(l.id).attempts||[]).length||state.drafts[l.id]).length;
 const mastered=data.lessons.filter(l=>levelStatus(l.id)==="mastered").length;
@@ -39,7 +39,8 @@ let h='<div class="f-wrap"><div class="f-cover"><div><div class="f-kicker">ENGLI
 '<div class="f-cover-progress"><div class="f-circle" style="--value:'+pct+'%"><strong>'+pct+'%</strong><small>Đã thực hành</small></div><span>Không đánh dấu Mastered chỉ vì bấm hoàn thành.</span></div></div>'+
 '<div id="foundationNotice" hidden role="status"></div>'+
 '<div class="f-statbar"><div><small>Đã làm bài</small><strong>'+started+' / '+data.lessons.length+'</strong></div><div><small>Đã củng cố</small><strong>'+mastered+'</strong></div><div><small>Cần ôn</small><strong>'+due.length+'</strong></div></div>'+
-'<div class="f-guide"><b>5 bước học hiệu quả</b><p>Hiểu quy tắc → nghe và nhắc lại → trả lời câu hỏi → tự viết câu → ôn lại vào ngày khác. Mỗi ngày 1–2 bài, kết hợp thực hành nói thành tiếng.</p></div>';
+'<div class="f-guide"><b>5 bước học hiệu quả</b><p>Hiểu quy tắc → nghe và nhắc lại → trả lời câu hỏi → tự viết câu → ôn lại vào ngày khác. Mỗi ngày 1–2 bài, kết hợp thực hành nói thành tiếng.</p></div>'+
+'<section class="f-syntax-intro"><div class="f-syntax-symbol">Aa</div><div><span class="f-syntax-label">HỌC NGỮ PHÁP BẰNG TƯ DUY</span><h3>Giải mã câu: danh từ, tính từ, động từ, trạng từ & to be</h3><p>12 bài chuyên sâu: chạm vào từng từ để biết nó làm nhiệm vụ gì, vì sao đứng đó, tự sắp xếp câu và giải thích lỗi sai. Nên học song song từ bài A0.</p></div>'+button("syntax","Học tư duy cấu trúc câu →","primary")+'</section>';
 if(due.length){h+='<section class="f-due"><h3>↻ Đến lượt ôn lại</h3><div class="f-due-row">';due.slice(0,5).forEach(l=>h+='<button type="button" data-f-id="'+esc(l.id)+'" class="f-review-link">'+esc(l.title)+' <span>Ôn →</span></button>');h+='</div></section>';}
 h+='<div class="f-section-title"><div><h3>Lộ trình 4 chặng</h3><p>24 bài nhỏ, học từ dễ đến khó. Các bài khác vẫn có thể xem trước.</p></div></div>'+
 '<div class="f-levels"><button type="button" data-f-filter="all" class="'+(ui.filter==="all"?"on":"")+'" aria-pressed="'+(ui.filter==="all")+'">Tất cả<small>24 bài</small></button>';
@@ -55,7 +56,7 @@ function lesson(){
 const l=index[ui.id],p=passDates(l.id);
 let h='<div class="f-wrap f-lesson-view"><button class="f-back" type="button" data-f-action="home">← Quay lại chương trình</button>'+
 '<div class="f-lesson-header"><span>'+esc(l.level)+' · '+esc(l.skill)+' · '+l.minutes+' phút</span><h2>'+esc(l.title)+'</h2><p>'+esc(l.goal)+'</p><div>'+tag(l.id)+'<small>'+(p.length?"Đạt bài kiểm tra vào "+p.length+" ngày khác nhau":"Chưa có lượt kiểm tra đạt")+'</small></div></div>'+
-'<div class="f-tabs" role="group" aria-label="Bước học"><button type="button" data-f-tab="learn" aria-pressed="'+(ui.tab==="learn")+'" class="'+(ui.tab==="learn"?"on":"")+'">1. Học & nghe</button><button type="button" data-f-tab="quiz" aria-pressed="'+(ui.tab==="quiz")+'" class="'+(ui.tab==="quiz"?"on":"")+'">2. Tự kiểm tra</button><button type="button" data-f-tab="apply" aria-pressed="'+(ui.tab==="apply")+'" class="'+(ui.tab==="apply"?"on":"")+'">3. Vận dụng</button></div><div class="f-content">';
+'<div class="f-tabs" role="group" aria-label="Bước học"><button type="button" data-f-tab="learn" aria-pressed="'+(ui.tab==="learn")+'" class="'+(ui.tab==="learn"?"on":"")+'">1. Học & nghe</button><button type="button" data-f-tab="quiz" aria-pressed="'+(ui.tab==="quiz")+'" class="'+(ui.tab==="quiz"?"on":"")+'">2. Tự kiểm tra</button><button type="button" data-f-tab="apply" aria-pressed="'+(ui.tab==="apply")+'" class="'+(ui.tab==="apply"?"on":"")+'">3. Vận dụng</button><button type="button" data-f-tab="structure" aria-pressed="'+(ui.tab==="structure")+'" class="'+(ui.tab==="structure"?"on":"")+'">4. Giải mã câu</button></div><div class="f-content">';
 if(ui.tab==="learn"){
  h+=step("01","Hiểu trước khi ghi nhớ","Giải thích bằng tiếng Việt, sau đó xem cấu trúc trong câu.")+'<div class="f-concept">'+esc(l.explain)+'</div><div class="f-rules">';
  l.rules.forEach(x=>h+='<div><span>✓</span><p>'+esc(x)+'</p></div>');
@@ -75,6 +76,9 @@ h+='</div>'+(ui.graded?'<p class="f-explain">'+(ui.answers[i]===q.correct?"✓ �
 });
 if(ui.graded)h+='<div class="f-result '+(ui.score>=3?"pass":"retry")+'"><strong>'+ui.score+'/4 câu đúng</strong><p>'+(ui.score>=3?"Đạt lượt kiểm tra. Viết câu của mày và quay lại ôn ngày khác để củng cố.":"Chưa đạt 3/4. Xem giải thích, học lại điểm sai rồi thử lại.")+'</p></div><div class="f-next">'+button("retry","Làm lại","secondary")+button(ui.score>=3?"apply":"learn",ui.score>=3?"Tiếp tục vận dụng →":"Xem bài học →","primary")+'</div>';
 else h+='<div class="f-next"><span class="f-hint">Đã chọn '+Object.keys(ui.answers).length+'/'+ui.questions.length+'</span><button type="button" class="f-btn primary" data-f-action="grade" '+(Object.keys(ui.answers).length!==ui.questions.length?"disabled":"")+'>Chấm & giải thích →</button></div>';
+}
+if(ui.tab==="structure"){
+h+=window.GKSentenceLab?window.GKSentenceLab.lessonContent(l):'<p>Chưa tải được phần phân tích cấu trúc câu.</p>';
 }
 if(ui.tab==="apply"){
 const draft=state.drafts[l.id]||"";
@@ -135,6 +139,7 @@ else if(a==="continue"){open((data.lessons.find(l=>isDue(l.id))||data.lessons.fi
 else if(a==="diagnostic"){ui.page="placement";ui.placementAnswers={};ui.placementResult=null;ui.diagnosticQuestions=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]].map(l=>({prompt:l.quiz[0][0],options:shuffled(l.quiz[0].slice(1,4)),correct:l.quiz[0][1]}));render();scrollInto();}
 else if(a==="checkDiagnostic"){const n=ui.diagnosticQuestions.reduce((sum,q,i)=>sum+(ui.placementAnswers[i]===q.correct?1:0),0);ui.placementResult={correct:n,level:n<=3?"A0":n<=5?"A1":"A2"};render();}
 else if(a==="startLevel"){ui.page="home";ui.filter=ui.placementResult.level;render();scrollInto();}
+else if(a==="syntax"||a==="syntaxTopic"){if(!window.GKSentenceLab)return;window.GKSentenceLab.select(a==="syntaxTopic"?b.dataset.fSyntaxId:null);ui.page="syntax";render();scrollInto();}
 else if(a==="ielts"){const target=document.querySelector('.nav[data-view="today"]');if(target)target.click();else location.hash="#view-today";}
 else if(a==="learn"||a==="quiz"||a==="apply"){ui.tab=a;render();}
 else if(a==="transcript"){ui.transcript=!ui.transcript;render();}
