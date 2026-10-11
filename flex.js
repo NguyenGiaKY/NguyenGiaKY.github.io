@@ -665,7 +665,7 @@ function taskProgressSummary(t){
  const counted=valid(p.questionProgress)?p.questionProgress:previous||null;
  const answered=counted?Number(counted.answered):null,total=counted?Number(counted.total):null;
  const coverage=counted?Math.max(0,Math.min(100,answered/total*100)):null;
- const accuracy=latest?Math.max(0,Math.min(100,Number(latest.score)/Number(latest.total)*100)):null;
+ const accuracy=latest&&latest.answered!==undefined&&Number(latest.answered)>0?Math.max(0,Math.min(100,Number(latest.score)/Number(latest.answered)*100)):null;
  const full=scored.filter(h=>valid(h)&&Number(h.answered)===Number(h.total)&&Number(h.score)/Number(h.total)>=.85);
  const distinctDays=new Set(full.filter(h=>Number.isFinite(Number(h.at))).map(h=>new Date(h.at).toISOString().slice(0,10)));
  let status='not-started',label='Chưa học';
@@ -788,7 +788,7 @@ function showTaskProgress(id){
     '<div class="tpHeroStats">'+
       '<div><span>Tiến độ số câu</span><strong>'+progressFmt(s.coverage)+'</strong><div class="tpBigBar"><i style="width:'+(s.coverage||0)+'%"></i></div></div>'+
       '<div><span>Trạng thái</span><strong class="tpStatus '+s.status+'">'+s.label+'</strong></div>'+
-      '<div><span>Lần làm</span><strong>'+p.attempts+'</strong></div>'+
+      '<div><span>Đúng / câu đã trả lời</span><strong>'+progressFmt(s.accuracy)+'</strong></div><div><span>Lần làm</span><strong>'+p.attempts+'</strong></div>'+
       '<div><span>Lần gần nhất</span><strong>'+(s.latest?taskScoreLabel(s.latest):'—')+'</strong></div>'+
       '<div><span>Tốt nhất</span><strong>'+(s.best?taskScoreLabel(s.best):'—')+'</strong></div>'+
       '<div><span>Tổng thời gian</span><strong>'+formatTaskTime(p.totalSeconds)+'</strong></div>'+
@@ -820,7 +820,7 @@ function progressTaskRow(t){
   '<div class="progressTaskMain"><div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span><small>'+t.module+'</small><h4>'+t.title+'</h4></div>'+
    '<span class="tpStatus '+s.status+'">'+s.label+'</span></div>'+
   '<div class="progressTaskBar"><i style="width:'+(s.coverage||0)+'%"></i></div>'+
-  '<div class="progressTaskMeta"><span><b>'+progressFmt(s.coverage)+'</b> số câu'+(s.answered!==null?' · '+s.answered+'/'+s.total:'')+'</span><span>'+p.attempts+' lần</span><span>Gần nhất: '+(s.latest?taskScoreLabel(s.latest):'—')+'</span><span>'+formatTaskDate(p.lastStudied)+'</span></div>'+
+  '<div class="progressTaskMeta"><span><b>'+progressFmt(s.coverage)+'</b> số câu'+(s.answered!==null?' · '+s.answered+'/'+s.total:'')+'</span><span>'+p.attempts+' lần</span><span>Đúng / đã làm: '+progressFmt(s.accuracy)+'</span><span>Gần nhất: '+(s.latest?taskScoreLabel(s.latest):'—')+'</span><span>'+formatTaskDate(p.lastStudied)+'</span></div>'+
   '<div class="progressTaskActions"><button class="btn primary" data-open="'+t.id+'">Học tiếp</button><button class="btn" data-progress="'+t.id+'">Xem chi tiết</button></div>'+
  '</div>';
 }
