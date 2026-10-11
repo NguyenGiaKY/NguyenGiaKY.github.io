@@ -76,7 +76,7 @@ h+=sectionHeader("01","Học quan hệ, không học vị trí máy móc","Tìm 
 '<div class="fr-principle"><strong>Vì sao các từ kết nối?</strong><p>'+esc(c.principle)+'</p></div>'+
 '<div class="fr-warning"><strong>Đừng hiểu sai thành công thức cố định</strong><p>'+esc(c.exception)+'</p></div>'+
 '<div class="fr-selector"><span>So sánh hai câu:</span>'+c.examples.map((e,i)=>'<button data-r-example="'+i+'" aria-pressed="'+(ui.example===i)+'" class="'+(ui.example===i?"selected":"")+'">Ví dụ '+(i+1)+'</button>').join("")+'</div>'+
-'<div class="fr-example">'+chips(ex,ui.example)+'<div class="fr-relation"><strong>'+esc(ex.parts[ex.source].t)+'</strong><span>→ '+esc(c.link)+' →</span><strong>'+esc(ex.parts[ex.target].t)+'</strong></div><p>'+esc(ex.vi)+'</p><div class="fr-takeaway">'+esc(ex.point)+'</div></div>'+
+'<div class="fr-example">'+chips(ex,ui.example)+'<div class="fr-relation"><strong>'+esc(ex.parts[ex.source].t)+'</strong><span>→ '+esc(ex.connection||c.link)+' →</span><strong>'+esc(ex.parts[ex.target].t)+'</strong></div><p>'+esc(ex.vi)+'</p><div class="fr-takeaway">'+esc(ex.point)+'</div></div>'+
 '<div id="frWordExplanation" aria-live="polite">'+explainWord(ex,ui.selected)+'</div>'+
 '<div class="fr-next">'+button("build","Tiếp → tự xây câu","primary")+'</div>';
 }
