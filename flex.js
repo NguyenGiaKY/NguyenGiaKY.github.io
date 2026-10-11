@@ -772,6 +772,7 @@ window.recordTaskPerformance=function(data){
 function showTaskProgress(id){
  const t=taskById(id);if(!t)return;
  const s=taskProgressSummary(t),p=s.p;
+ const core=window.GKCoreSkills?.forTask?.(t.id,t.skill)||null;
  let overlay=document.getElementById('taskProgressOverlay');
  if(!overlay){
    overlay=document.createElement('div');
@@ -804,12 +805,13 @@ function showTaskProgress(id){
         '</div></div>';
       }).join('')+'</div>':'<p class="muted">Chưa có lịch sử. Mở task và bắt đầu học để hệ thống ghi tiến độ.</p>')+
     '</div>'+
-    '<div class="tpPanelActions"><button id="tpOpenTask" class="btn primary">Tiếp tục học task</button><button data-progress-close class="btn">Đóng</button></div>'+
+    '<div class="tpPanelActions"><button id="tpOpenTask" class="btn primary">Tiếp tục học task</button>'+(core?'<button id="tpCoreSkill" class="btn">Củng cố Stage 2: '+progressEsc(core.title)+'</button>':'')+'<button data-progress-close class="btn">Đóng</button></div>'+
   '</section>';
 
  overlay.classList.add('open');
  overlay.querySelectorAll('[data-progress-close]').forEach(b=>b.onclick=()=>overlay.classList.remove('open'));
  document.getElementById('tpOpenTask').onclick=function(){overlay.classList.remove('open');openFlexTask(t);};
+ const coreBtn=document.getElementById('tpCoreSkill');if(coreBtn&&core){coreBtn.onclick=function(){overlay.classList.remove('open');document.querySelector('.nav[data-view="core"]')?.click();window.GKCoreSkills?.open?.(core.id);};}
 }
 
 function progressTaskRow(t){
@@ -1065,6 +1067,7 @@ window.renderToday=renderFlexHome;
 window.renderRoadmap=function(){};
 window.flexRenderHome=renderFlexHome;
 window.renderProgressHub=renderProgressHub;
+window.GKOpenIELTSTask=function(id){const t=taskById(id);if(!t)return false;document.querySelector('.nav[data-view="'+(t.skill==='support'?'support':t.skill)+'"]')?.click();openFlexTask(t);return true;};
 window.GKIELTSProgress=function(){const tasks=allTasks();const rows=tasks.map(t=>({id:t.id,skill:t.skill,...taskProgressSummary(t)}));return{total:tasks.length,coverage:tasks.length?rows.reduce((a,x)=>a+(x.coverage||0),0)/tasks.length:0,mastered:rows.filter(x=>x.status==='mastered').length,known:rows.filter(x=>x.answered!==null).length,answered:rows.filter(x=>x.answered!==null).reduce((a,x)=>a+x.answered,0),rows};};
 window.showTaskProgress=showTaskProgress;
 
