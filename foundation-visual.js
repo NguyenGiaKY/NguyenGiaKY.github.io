@@ -112,7 +112,7 @@ function lesson(id){
   if(done)h+='<div class="fv-feedback '+(answer.correct?"ok":"retry")+'"><strong>'+(answer.correct?"✓ Đúng":"✗ Chưa đúng")+'</strong><p>'+esc(q.why)+'</p><small>Ví dụ: '+esc(q.example)+'</small></div>';
   h+='</fieldset>';
  });h+='</div><div class="fv-bottom"><span>Tiến độ minh họa: '+s.count+'/'+s.total+' câu đã thử · '+s.good+'/'+s.count+' câu đúng trong các câu đã thử.</span><button type="button" data-fv-reset="1">Làm lại phần trực quan</button></div>'+
- '<p class="fv-status" id="foundationVisualSpeechStatus" role="status">'+esc(ui.status||"")+'</p></section>';
+ '<div class="fv-build-link"><div><strong>Muốn hiểu sâu hơn về cấu trúc?</strong><small>Mở Giải mã câu để chạm từng từ, xem vai trò và tự sắp xếp câu.</small></div><button type="button" data-f-tab="structure">Mở Sentence Builder →</button></div><p class="fv-status" id="foundationVisualSpeechStatus" role="status">'+esc(ui.status||"")+'</p></section>';
  return h;
 }
 function preview(){
