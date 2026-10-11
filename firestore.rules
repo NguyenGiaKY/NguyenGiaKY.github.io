@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // No public access and no access between different account UIDs.
+    match /users/{uid}/learningProgress/{key} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+      function validDocument() {
+        return request.resource.data.keys().hasOnly(['value', 'source', 'updatedAt']) &&
+          request.resource.data.keys().hasAll(['value', 'source', 'updatedAt']) &&
+          request.resource.data.value is string &&
+          request.resource.data.value.size() <= 450000 &&
+          request.resource.data.source is string &&
+          request.resource.data.source.size() <= 100 &&
+          request.resource.data.updatedAt is timestamp;
+      }
+      allow read: if isOwner();
+      allow create, update: if isOwner() && validDocument();
+      allow delete: if isOwner();
+    }
+  }
+}
