@@ -586,7 +586,8 @@ const allTasks=()=>Object.entries(modules).flatMap(([skill,ms])=>ms.flatMap(m=>m
 const taskById=id=>allTasks().find(t=>t.id===id);
 const doneCountSkill=skill=>allTasks().filter(t=>t.skill===skill&&fs.done[t.id]).length;
 const totalSkill=skill=>allTasks().filter(t=>t.skill===skill).length;
-const pctSkill=skill=>Math.round(doneCountSkill(skill)/Math.max(1,totalSkill(skill))*100);
+const pctSkill=skill=>{const tasks=allTasks().filter(t=>t.skill===skill);return tasks.length?tasks.reduce((n,t)=>n+(taskProgressSummary(t).coverage||0),0)/tasks.length:0;};
+function progressFmt(v){if(v===null||v===undefined||!Number.isFinite(v))return '—';if(v===0)return '0%';return v<1?v.toFixed(2)+'%':(Number.isInteger(v)?v:v.toFixed(1))+'%';}
 
 function latestScore(skill){
  const a=fs.scores[skill]||[];return a.length?a[a.length-1]:null;
@@ -596,13 +597,11 @@ function scoreStatus(skill){
  if(v===null)return 'Chưa có checkpoint';
  return v>=m.goal?'Đạt vùng mục tiêu luyện tập':'Chưa đạt mục tiêu — tiếp tục module';
 }
-function overallProgress(){
- let tasks=allTasks(),done=tasks.filter(t=>fs.done[t.id]).length;
- return Math.round(done/tasks.length*100);
-}
+function overallProgress(){const tasks=allTasks();return tasks.length?tasks.reduce((n,t)=>n+(taskProgressSummary(t).coverage||0),0)/tasks.length:0;}
 function updateHero(){
  const p=overallProgress(),pct=document.getElementById('pct'),bar=document.getElementById('bar'),txt=document.getElementById('progressText');
- if(pct)pct.textContent=p;if(bar)bar.style.width=p+'%';if(txt)txt.textContent=Object.keys(fs.done).filter(k=>fs.done[k]).length+'/'+allTasks().length+' task đã hoàn thành';
+ if(pct)pct.textContent=progressFmt(p).replace('%','');if(bar)bar.style.width=p+'%';
+ if(txt){const sums=allTasks().map(taskProgressSummary),known=sums.filter(x=>x.answered!==null);const answered=known.reduce((n,x)=>n+x.answered,0),total=known.reduce((n,x)=>n+x.total,0);txt.textContent=known.length?answered+'/'+total+' câu ghi nhận trên '+known.length+'/'+sums.length+' tasks; chưa tính các task thiếu dữ liệu':'Chưa có dữ liệu số câu để tính tiến độ';}
 }
 window.progress=updateHero;
 
@@ -657,38 +656,32 @@ function taskPerformancePct(h){
 
 function taskProgressSummary(t){
  const p=taskProgressRecord(t.id);
- const scored=p.history.filter(h=>taskPerformancePct(h)!==null);
+ const scored=p.history.filter(h=>h&&Number.isFinite(Number(h.score))&&Number.isFinite(Number(h.total))&&Number(h.total)>0);
  const latest=scored.length?scored[scored.length-1]:null;
- const best=scored.length?scored.reduce((a,h)=>taskPerformancePct(h)>taskPerformancePct(a)?h:a):null;
- const latestPct=taskPerformancePct(latest),bestPct=taskPerformancePct(best);
- const recent=scored.slice(-2).map(taskPerformancePct);
- let mastery=0,status='not-started',label='Chưa học';
-
- if(latestPct!==null){
-   mastery=Math.round(latestPct*.7+(bestPct||latestPct)*.3);
-   if(recent.length>=2&&recent.every(x=>x>=85)){status='mastered';label='Mastered';}
-   else if(latestPct<65){status='review';label='Cần ôn';}
-   else{status='learning';label='Đang tiến bộ';}
- }else if(p.completed>0||fs.done[t.id]){
-   mastery=Math.min(78,55+Math.max(p.completed,1)*8);
-   status='complete';label='Đã hoàn thành';
- }else if(p.attempts>0||p.totalSeconds>0){
-   mastery=Math.min(55,20+p.attempts*10);
-   status='learning';label='Đang học';
- }
-
- const errors=latest&&Number.isFinite(Number(latest.errors))?Number(latest.errors):null;
- const nextReview=status==='review'
-   ?new Date((p.lastStudied||Date.now())+24*3600*1000)
-   :status==='learning'&&p.lastStudied?new Date(p.lastStudied+3*24*3600*1000):null;
-
- return {p,latest,best,latestPct,bestPct,mastery,status,label,errors,nextReview};
+ const best=scored.length?scored.reduce((a,h)=>(Number(h.score)/Number(h.total))>(Number(a.score)/Number(a.total))?h:a):null;
+ // A manual "Completed" flag, elapsed time or a score alone is NOT coverage.
+ const valid=h=>h&&h.answered!==undefined&&Number.isInteger(Number(h.answered))&&Number.isInteger(Number(h.total))&&Number(h.total)>0&&Number(h.answered)>=0&&Number(h.answered)<=Number(h.total);
+ const previous=p.history.slice().reverse().find(valid);
+ const counted=valid(p.questionProgress)?p.questionProgress:previous||null;
+ const answered=counted?Number(counted.answered):null,total=counted?Number(counted.total):null;
+ const coverage=counted?Math.max(0,Math.min(100,answered/total*100)):null;
+ const accuracy=latest?Math.max(0,Math.min(100,Number(latest.score)/Number(latest.total)*100)):null;
+ const full=scored.filter(h=>valid(h)&&Number(h.answered)===Number(h.total)&&Number(h.score)/Number(h.total)>=.85);
+ const distinctDays=new Set(full.filter(h=>Number.isFinite(Number(h.at))).map(h=>new Date(h.at).toISOString().slice(0,10)));
+ let status='not-started',label='Chưa học';
+ if(distinctDays.size>=2){status='mastered';label='Đạt 2 lần khác ngày';}
+ else if(coverage!==null){status='learning';label=coverage>=100?'Đã trả lời đủ câu':'Đang làm '+answered+'/'+total+' câu';if(latest&&accuracy<65&&latest.answered!==undefined&&Number(latest.answered)===Number(latest.total)){status='review';label='Cần ôn';}}
+ else if(scored.length){status='learning';label='Đã chấm · thiếu dữ liệu số câu';}
+ else if(p.completed||fs.done[t.id]){status='complete';label='Đã đánh dấu · chưa chấm';}
+ else if(p.attempts||p.totalSeconds){status='learning';label='Đã bắt đầu · thiếu số câu';}
+ const nextReview=status==='review'?new Date((p.lastStudied||Date.now())+24*3600*1000):null;
+ return{p,latest,best,latestPct:accuracy,bestPct:best?Number(best.score)/Number(best.total)*100:null,mastery:distinctDays.size>=2?100:null,coverage,answered,total,accuracy,status,label,errors:latest?.errors??null,nextReview};
 }
 
 function taskScoreLabel(h){
  if(!h)return '—';
  if(Number.isFinite(Number(h.band)))return Number(h.band).toFixed(1)+' / 9';
- if(Number.isFinite(Number(h.score))&&Number.isFinite(Number(h.total)))return Number(h.score)+' / '+Number(h.total);
+ if(Number.isFinite(Number(h.score))&&Number.isFinite(Number(h.total)))return Number(h.score)+' / '+Number(h.total)+(h.answered!==undefined?' · đã làm '+Number(h.answered)+'/'+Number(h.total):'');
  if(Number.isFinite(Number(h.percent)))return Math.round(Number(h.percent))+'%';
  return h.note||'Đã hoàn thành';
 }
@@ -709,7 +702,7 @@ function startTaskSession(id){
  activeTaskSession={id:id,start:Date.now(),counted:false};
  window.__activeFlexTaskId=id;
  const p=taskProgressRecord(id);
- p.lastStudied=Date.now();
+ p.lastStudied=Date.now();p.questionProgress=null;
  saveFlex();
 }
 
@@ -737,6 +730,15 @@ function completeTaskSession(id,note){
  renderProgressHub();
 }
 
+window.recordTaskCoverage=function(data){
+ const id=window.__activeFlexTaskId;if(!id||!taskById(id)||!data)return;
+ const total=Number(data.total),answered=Number(data.answered);
+ if(!Number.isInteger(total)||total<=0||!Number.isInteger(answered)||answered<0||answered>total)return;
+ const p=taskProgressRecord(id);p.questionProgress={answered,total,at:Date.now()};p.lastStudied=Date.now();saveFlex();
+ const progress=overallProgress(),hero=document.getElementById('pct'),bar=document.getElementById('bar');
+ if(hero)hero.textContent=progressFmt(progress).replace('%','');if(bar)bar.style.width=progress+'%';
+ const msg=document.getElementById('progressText');if(msg)msg.textContent='Bài đang làm: '+answered+'/'+total+' câu · '+progressFmt(answered/total*100);
+};
 window.recordTaskPerformance=function(data){
  const id=window.__activeFlexTaskId;
  if(!id||!taskById(id))return;
@@ -751,12 +753,14 @@ window.recordTaskPerformance=function(data){
  if(Number.isFinite(Number(data&&data.band)))h.band=Number(data.band);
  if(Number.isFinite(Number(data&&data.score)))h.score=Number(data.score);
  if(Number.isFinite(Number(data&&data.total)))h.total=Number(data.total);
+ if(data&&data.answered!==undefined&&Number.isInteger(Number(data.answered)))h.answered=Number(data.answered);
+ else if(p.questionProgress&&h.total===p.questionProgress.total)h.answered=p.questionProgress.answered;
  if(Number.isFinite(Number(data&&data.percent)))h.percent=Number(data.percent);
 
  p.attempts+=1;
  if(activeTaskSession&&activeTaskSession.id===id)activeTaskSession.counted=true;
  p.history.push(h);
- p.history=p.history.slice(-30);
+ p.history=p.history.slice(-30);p.questionProgress=null;
  p.lastStudied=Date.now();
  saveFlex();
  renderFlexHome();
