@@ -805,13 +805,14 @@ function showTaskProgress(id){
         '</div></div>';
       }).join('')+'</div>':'<p class="muted">Chưa có lịch sử. Mở task và bắt đầu học để hệ thống ghi tiến độ.</p>')+
     '</div>'+
-    '<div class="tpPanelActions"><button id="tpOpenTask" class="btn primary">Tiếp tục học task</button>'+(core?'<button id="tpCoreSkill" class="btn">Củng cố Stage 2: '+progressEsc(core.title)+'</button>':'')+'<button data-progress-close class="btn">Đóng</button></div>'+
+    '<div class="tpPanelActions"><button id="tpOpenTask" class="btn primary">Tiếp tục học task</button>'+(core?'<button id="tpCoreSkill" class="btn">Củng cố Stage 2: '+progressEsc(core.title)+'</button>':'')+'<button id="tpQuestionTypes" class="btn">Xem dạng IELTS liên quan</button><button data-progress-close class="btn">Đóng</button></div>'+
   '</section>';
 
  overlay.classList.add('open');
  overlay.querySelectorAll('[data-progress-close]').forEach(b=>b.onclick=()=>overlay.classList.remove('open'));
  document.getElementById('tpOpenTask').onclick=function(){overlay.classList.remove('open');openFlexTask(t);};
  const coreBtn=document.getElementById('tpCoreSkill');if(coreBtn&&core){coreBtn.onclick=function(){overlay.classList.remove('open');document.querySelector('.nav[data-view="core"]')?.click();window.GKCoreSkills?.open?.(core.id);};}
+ const typesBtn=document.getElementById('tpQuestionTypes');if(typesBtn){typesBtn.onclick=function(){overlay.classList.remove('open');if(!window.GKQuestionTypes?.openForTask?.(t.id))document.querySelector('.nav[data-view="question-types"]')?.click();};}
 }
 
 function progressTaskRow(t){
