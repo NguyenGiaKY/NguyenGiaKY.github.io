@@ -1,0 +1,152 @@
+/* English Foundation: mobile-first, accessible and visually aligned with existing site. */
+#view-foundation .foundation-panel{padding:0;border:0;box-shadow:none;background:transparent}
+#foundationRoot{color:#17243c;max-width:1100px;margin:0 auto;scroll-margin-top:15px;--f-blue:#3157d5;--f-line:#dce4f2;--f-muted:#64748b;--f-soft:#f4f7ff}
+#foundationRoot *{box-sizing:border-box}
+#foundationRoot .f-wrap{display:flex;flex-direction:column;gap:20px}
+#foundationRoot button{font:inherit;cursor:pointer}
+#foundationRoot button:focus-visible,#foundationRoot textarea:focus-visible{outline:3px solid #7593f0;outline-offset:3px}
+#foundationRoot button:disabled{opacity:.5;cursor:not-allowed}
+#foundationRoot .f-cover{display:grid;grid-template-columns:minmax(0,1fr) 190px;align-items:center;gap:26px;padding:34px;background:linear-gradient(120deg,#f8fbff,#e9efff);border:1px solid #d6e2ff;border-radius:24px}
+#foundationRoot .f-kicker{color:#3157d5;font-size:12px;font-weight:900;letter-spacing:.07em}
+#foundationRoot .f-cover h2{font-size:clamp(25px,3.2vw,36px);line-height:1.2;letter-spacing:-.035em;margin:12px 0;color:#132852}
+#foundationRoot .f-cover p{color:#536580;line-height:1.75;max-width:640px;margin:0}
+#foundationRoot .f-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+#foundationRoot .f-btn{border:1px solid #d3def0;background:#fff;color:#24427d;border-radius:11px;min-height:42px;padding:10px 16px;font-weight:750;transition:transform .15s,background .15s,border .15s}
+#foundationRoot .f-btn:hover:not(:disabled){transform:translateY(-1px);border-color:#819de7}
+#foundationRoot .f-btn.primary{background:var(--f-blue);color:#fff;border-color:var(--f-blue)}
+#foundationRoot .f-btn.primary:hover:not(:disabled){background:#2345bd}
+#foundationRoot .f-btn.secondary{background:#fff}
+#foundationRoot .f-btn.text{border:0;background:transparent}
+#foundationRoot .f-cover-progress{text-align:center;display:flex;align-items:center;flex-direction:column;gap:12px}
+#foundationRoot .f-circle{width:138px;height:138px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;background:radial-gradient(closest-side,#f9fbff 88%,transparent 90%),conic-gradient(#3157d5 var(--value),#d5dff4 0)}
+#foundationRoot .f-circle strong{font-size:30px;color:#3157d5;line-height:1.2}
+#foundationRoot .f-circle small,#foundationRoot .f-cover-progress>span{font-size:11px;color:#64748b}
+#foundationRoot .f-statbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#foundationRoot .f-statbar>div{border:1px solid var(--f-line);background:#fff;padding:17px 20px;border-radius:15px;display:flex;flex-direction:column;gap:7px}
+#foundationRoot .f-statbar small{color:var(--f-muted);font-size:12px}
+#foundationRoot .f-statbar strong{font-size:24px;color:#162849}
+#foundationRoot .f-guide{padding:16px 19px;border-left:3px solid #3157d5;background:#f7f9ff;border-radius:0 12px 12px 0}
+#foundationRoot .f-guide b{display:block;color:#263a64}
+#foundationRoot .f-guide p{margin:6px 0 0;color:#5a6a85;line-height:1.7}
+#foundationRoot .f-section-title{display:flex;justify-content:space-between;align-items:start;gap:12px;margin:5px 0 0}
+#foundationRoot .f-section-title h3,#foundationRoot .f-due h3{font-size:22px;line-height:1.3;margin:0 0 5px;color:#15284e}
+#foundationRoot .f-section-title p{margin:0;color:var(--f-muted)}
+#foundationRoot .f-levels{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+#foundationRoot .f-levels>button{min-height:98px;text-align:left;background:#fff;border:1px solid var(--f-line);border-radius:15px;padding:13px 12px;color:#243856;display:flex;flex-direction:column;justify-content:center;gap:4px}
+#foundationRoot .f-levels>button span{font-size:11px;font-weight:800;color:#3157d5}
+#foundationRoot .f-levels>button strong{font-size:13px;line-height:1.3}
+#foundationRoot .f-levels>button small{color:var(--f-muted);font-size:11px}
+#foundationRoot .f-levels>button.on{background:#ebf1ff;border-color:#7193ea;box-shadow:inset 0 0 0 1px #7193ea}
+#foundationRoot .f-lesson-list{display:flex;flex-direction:column;gap:9px}
+#foundationRoot .f-lesson-row{width:100%;display:flex;align-items:center;gap:15px;text-align:left;background:#fff;border:1px solid var(--f-line);border-radius:15px;padding:16px;min-height:94px;color:#1e3052}
+#foundationRoot .f-lesson-row:hover{border-color:#7896eb;background:#fafcff}
+#foundationRoot .f-number{flex:none;display:grid;place-items:center;background:#eff3ff;color:#3157d5;width:42px;height:42px;border-radius:12px;font-weight:850;font-variant-numeric:tabular-nums}
+#foundationRoot .f-row-center{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#foundationRoot .f-row-center small{font-size:11px;color:#5173bf;font-weight:800}
+#foundationRoot .f-row-center strong{font-size:16px;line-height:1.35}
+#foundationRoot .f-row-center>span{color:var(--f-muted);font-size:13px;line-height:1.5}
+#foundationRoot .f-row-end{align-items:center;gap:15px;display:flex;flex:none}
+#foundationRoot .f-row-end>b{font-size:19px;color:#3157d5}
+#foundationRoot .f-tag{white-space:nowrap;border:1px solid #dce3ef;border-radius:99px;padding:5px 9px;background:#f8fafc;font-size:11px;color:#64748b;font-weight:750}
+#foundationRoot .f-tag.good{color:#13713e;background:#eefbf3;border-color:#b6e9cd}
+#foundationRoot .f-tag.ongoing{color:#2959b7;background:#eef3ff;border-color:#c9d8fc}
+#foundationRoot .f-tag.due{color:#965500;background:#fff6e5;border-color:#f2dbb5}
+#foundationRoot .f-bridge{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:22px;background:#f7faff;border:1px solid #dfe8f9;border-radius:17px}
+#foundationRoot .f-bridge h3{font-size:17px;margin:0 0 7px}
+#foundationRoot .f-bridge p{font-size:13px;margin:0;line-height:1.6;color:var(--f-muted);max-width:630px}
+#foundationRoot .f-due{border:1px solid #eddab8;border-radius:15px;background:#fffbf3;padding:18px}
+#foundationRoot .f-due h3{font-size:17px;margin:0 0 12px}
+#foundationRoot .f-due-row{display:flex;flex-wrap:wrap;gap:8px}
+#foundationRoot .f-review-link{border:1px solid #ebd4ab;border-radius:10px;padding:10px 12px;background:#fff;font-size:13px;color:#604617}
+#foundationRoot .f-review-link span{color:#3157d5;font-weight:700;margin-left:8px}
+#foundationRoot #foundationNotice:not([hidden]){background:#fff8e7;border:1px solid #efd6a0;padding:12px;border-radius:10px}
+#foundationRoot .f-back{border:0;padding:6px 0;background:transparent;text-align:left;color:#3157d5;font-weight:800;align-self:flex-start}
+#foundationRoot .f-lesson-header{padding:25px 28px;border:1px solid #d9e4fc;background:linear-gradient(125deg,#f8fbff,#edf3ff);border-radius:19px}
+#foundationRoot .f-lesson-header>span{font-size:12px;font-weight:800;letter-spacing:.06em;color:#3157d5}
+#foundationRoot .f-lesson-header h2{font-size:clamp(23px,3vw,31px);margin:9px 0;color:#152953}
+#foundationRoot .f-lesson-header p{margin:0;color:#526480}
+#foundationRoot .f-lesson-header>div{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+#foundationRoot .f-lesson-header>div>small{color:var(--f-muted);font-size:12px}
+#foundationRoot .f-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#foundationRoot .f-tabs button{padding:12px 10px;border:1px solid #dce4f2;border-radius:12px;background:#fff;font-size:13px;color:#65758d;font-weight:750}
+#foundationRoot .f-tabs button.on{background:#3157d5;border-color:#3157d5;color:white}
+#foundationRoot .f-content{padding:24px 27px;border:1px solid var(--f-line);border-radius:18px;background:#fff;min-width:0}
+#foundationRoot .f-step{display:flex;align-items:flex-start;gap:13px;margin:3px 0 14px}
+#foundationRoot .f-step>span{width:35px;height:35px;flex:none;display:grid;place-items:center;border-radius:11px;background:#eaf0ff;color:#3157d5;font-size:14px;font-weight:900}
+#foundationRoot .f-step h3{font-size:18px;margin:0 0 4px}
+#foundationRoot .f-step p{margin:0;color:var(--f-muted);font-size:13px}
+#foundationRoot .f-concept{font-size:15px;line-height:1.85;background:#f8fafc;border:1px solid #e5ebf4;padding:16px 18px;border-radius:12px;margin:10px 0}
+#foundationRoot .f-rules{display:grid;gap:8px;margin-bottom:29px}
+#foundationRoot .f-rules>div{display:flex;gap:10px;align-items:baseline;color:#243956;font-size:14px;line-height:1.6}
+#foundationRoot .f-rules>div>span{color:#237c56;font-weight:900}
+#foundationRoot .f-rules p{margin:0}
+#foundationRoot .f-player{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:13px;padding:15px;border-radius:14px;background:#edf3ff;border:1px solid #d8e4ff}
+#foundationRoot .f-player>div:first-child{display:flex;flex-direction:column;gap:3px}
+#foundationRoot .f-player small{color:#596b8e;font-size:11px}
+#foundationRoot .f-player>div:last-child{display:flex;gap:7px;flex-wrap:wrap}
+#foundationRoot .f-examples{display:flex;flex-direction:column;gap:8px;margin:12px 0 28px}
+#foundationRoot .f-examples>div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 15px;background:#fff;border:1px solid #e2e8f2;border-radius:12px}
+#foundationRoot .f-examples>div>div{display:flex;flex-direction:column;gap:4px}
+#foundationRoot .f-examples strong{font-size:15px;line-height:1.5}
+#foundationRoot .f-examples span{color:var(--f-muted);font-size:13px}
+#foundationRoot .f-examples button{flex:none;border:1px solid #d9e4fc;background:#f5f8ff;border-radius:10px;padding:9px}
+#foundationRoot .f-vocabulary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#foundationRoot .f-vocabulary>div{padding:13px;background:#f8faff;border:1px solid #e1e8f6;border-radius:10px;display:flex;flex-direction:column;gap:4px}
+#foundationRoot .f-vocabulary b{font-size:14px}
+#foundationRoot .f-vocabulary span{color:var(--f-muted);font-size:13px}
+#foundationRoot .f-transcript{margin-top:20px}
+#foundationRoot .f-transcript p:not(.f-hint){background:#f7f9fd;border:1px solid #e4eaf5;border-radius:10px;padding:14px;line-height:1.7}
+#foundationRoot .f-hint{color:var(--f-muted);font-size:13px;line-height:1.6;margin:9px 0}
+#foundationRoot .f-next{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:22px}
+#foundationRoot .f-question{margin:16px 0;border:1px solid #e1e7f1;border-radius:14px;padding:16px;min-width:0}
+#foundationRoot .f-question legend{font-weight:800;padding:0 7px;max-width:100%;line-height:1.6}
+#foundationRoot .f-question legend span{display:inline-block;font-size:12px;color:#3157d5;margin-right:9px}
+#foundationRoot .f-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:5px}
+#foundationRoot .f-option{display:flex;align-items:center;gap:9px;text-align:left;padding:11px 12px;min-height:44px;border:1px solid #dee5f0;border-radius:10px;background:#fff;color:#273a58;font-size:14px}
+#foundationRoot .f-option>span{flex:none;width:24px;height:24px;display:grid;place-items:center;border-radius:7px;background:#edf2fb;color:#4a6492;font-weight:900;font-size:11px}
+#foundationRoot .f-option.selected{border-color:#5178e8;background:#eff4ff}
+#foundationRoot .f-option.right{border-color:#63af84;background:#f0fbf4}
+#foundationRoot .f-option.wrong{border-color:#e79c9c;background:#fff1f1}
+#foundationRoot .f-explain{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:#f5f8fd;color:#455572;font-size:13px;line-height:1.65}
+#foundationRoot .f-result{padding:16px;border-radius:12px;background:#f0f9f3;border:1px solid #c9e6d2;margin-top:16px}
+#foundationRoot .f-result.retry{background:#fff9ec;border-color:#ead8ac}
+#foundationRoot .f-result strong{font-size:18px}
+#foundationRoot .f-result p{color:#566580;margin:8px 0}
+#foundationRoot .f-assignment{background:#f5f8ff;border:1px solid #dce6fb;border-radius:12px;padding:16px;margin-bottom:19px}
+#foundationRoot .f-assignment p{font-size:15px;line-height:1.7;margin:9px 0}
+#foundationRoot .f-assignment small{color:#63728e}
+#foundationRoot .f-draft-label{display:block;margin-bottom:8px;font-weight:750}
+#foundationRoot #foundationDraft{display:block;width:100%;max-width:100%;border:1px solid #ccd8ee;border-radius:12px;background:#fff;min-height:154px;padding:14px;font:inherit;line-height:1.7;resize:vertical}
+#foundationRoot .f-model{background:#f4f9ff;border:1px solid #d8e6fb;border-radius:12px;padding:16px;margin-top:12px}
+#foundationRoot .f-model p{font-size:15px;line-height:1.75}
+#foundationRoot .f-model small{color:var(--f-muted)}
+#foundationRoot .f-selfcheck{margin-top:17px;display:flex;gap:10px;align-items:flex-start;padding:14px;border-radius:11px;border:1px solid #dce5f1;cursor:pointer;font-size:14px;line-height:1.5}
+#foundationRoot .f-selfcheck input{margin-top:4px;accent-color:#3157d5}
+#foundationRoot .f-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#foundationRoot .f-foot span{color:var(--f-muted);font-size:12px}
+@media(max-width:900px){#foundationRoot .f-levels{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){
+#foundationRoot .f-wrap{gap:14px}
+#foundationRoot .f-cover{grid-template-columns:1fr;padding:22px}
+#foundationRoot .f-cover-progress{flex-direction:row;text-align:left;justify-content:flex-start}
+#foundationRoot .f-cover-progress>span{max-width:150px}
+#foundationRoot .f-circle{height:100px;width:100px;flex:none}
+#foundationRoot .f-circle strong{font-size:24px}
+#foundationRoot .f-statbar>div{padding:11px}
+#foundationRoot .f-statbar strong{font-size:18px}
+#foundationRoot .f-levels{grid-template-columns:repeat(2,minmax(0,1fr))}
+#foundationRoot .f-lesson-row{gap:9px;padding:12px}
+#foundationRoot .f-number{width:35px;height:35px;border-radius:9px;font-size:12px}
+#foundationRoot .f-row-end{flex-direction:column;align-items:flex-end;gap:4px}
+#foundationRoot .f-row-end .f-tag{font-size:10px}
+#foundationRoot .f-row-center strong{font-size:14px}
+#foundationRoot .f-row-center>span{font-size:12px}
+#foundationRoot .f-bridge{flex-direction:column;align-items:stretch}
+#foundationRoot .f-lesson-header{padding:19px}
+#foundationRoot .f-content{padding:15px}
+#foundationRoot .f-tabs button{padding:10px 6px;font-size:11px}
+#foundationRoot .f-options{grid-template-columns:1fr}
+#foundationRoot .f-vocabulary{grid-template-columns:1fr}
+#foundationRoot .f-next .f-btn{flex:1}
+}
+@media(prefers-reduced-motion:reduce){#foundationRoot .f-btn{transition:none}}
