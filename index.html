@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="dictionary-rich.css?v=20260923-1">
 <link rel="stylesheet" href="listening-techniques.css?v=20261009-2">
 <link rel="stylesheet" href="site-polish.css?v=20261009-2">
+<link rel="stylesheet" href="foundation.css?v=20261012-1">
 </head>
 <body>
 <div id="app">
@@ -43,6 +44,7 @@
       <input id="search" class="search" type="search" autocomplete="off" aria-label="Tìm kỹ năng, module hoặc bài học" placeholder="Tìm kỹ năng, module, bài học...">
       <nav>
         <button class="nav active" data-view="today">🧭 Study Queue</button>
+        <button class="nav" data-view="foundation">🌱 English Foundation · Mới bắt đầu</button>
         <button class="nav" data-view="progress">📊 Progress Hub</button>
         <button class="nav" data-view="listening">🎧 Listening 8+</button>
         <button class="nav" data-view="reading">📖 Reading 8+</button>
@@ -62,6 +64,7 @@
 
     <main>
       <section id="view-today" class="view active"><div id="todayCard" class="card panel"></div></section>
+      <section id="view-foundation" class="view"><div class="foundation-panel"><div id="foundationRoot"></div></div></section>
       <section id="view-progress" class="view"><div id="progressHub" class="card panel"></div></section>
       <section id="view-listening" class="view"><div id="listeningModules" class="card panel"></div></section>
       <section id="view-reading" class="view"><div id="readingModules" class="card panel"></div></section>
@@ -138,5 +141,7 @@
 <script src="error-center.js?v=20261009-2"></script>
 <script src="vocab-lab.js?v=20260928-3"></script>
 <script src="writing-studio.js?v=20260923-4"></script>
+<script src="foundation-data.js?v=20261012-1"></script>
+<script src="foundation.js?v=20261012-1"></script>
 </body>
 </html>
