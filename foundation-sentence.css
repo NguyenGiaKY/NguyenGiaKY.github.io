@@ -133,3 +133,8 @@
 #foundationRoot .fs-topic-bottom .fs-btn,#foundationRoot .fs-next .fs-btn{width:100%}
 }
 @media(prefers-reduced-motion:reduce){#foundationRoot .fs-chip{transition:none}}
+
+/* Compare contrasted examples in the original Foundation lessons. */
+#foundationRoot .fs-mini-example{margin:14px 0}
+#foundationRoot .fs-mini-example h4{font-size:13px;font-weight:850;color:#3b5779;margin:0 0 7px}
+#foundationRoot .fs-punctuation{font-size:19px;line-height:1.5;color:#33445c;font-weight:750}
