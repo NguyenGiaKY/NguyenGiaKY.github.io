@@ -1065,6 +1065,7 @@ window.renderToday=renderFlexHome;
 window.renderRoadmap=function(){};
 window.flexRenderHome=renderFlexHome;
 window.renderProgressHub=renderProgressHub;
+window.GKIELTSProgress=function(){const tasks=allTasks();const rows=tasks.map(t=>({id:t.id,skill:t.skill,...taskProgressSummary(t)}));return{total:tasks.length,coverage:tasks.length?rows.reduce((a,x)=>a+(x.coverage||0),0)/tasks.length:0,mastered:rows.filter(x=>x.status==='mastered').length,known:rows.filter(x=>x.answered!==null).length,answered:rows.filter(x=>x.answered!==null).reduce((a,x)=>a+x.answered,0),rows};};
 window.showTaskProgress=showTaskProgress;
 
 renderFlexHome();
