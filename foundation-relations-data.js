@@ -62,5 +62,14 @@ ex("The driver is careful.","Người lái xe đó cẩn thận.","Careful sau i
 ["The","careful","student","writes","carefully."],
 {question:"Để nói “Cô ấy lái xe cẩn thận”, câu nào đúng?",options:["She drives carefully.","She drives careful.","She is drives careful."],correct:0,why:"Carefully bổ nghĩa cho hành động drives. Nếu mô tả người, có thể nói She is careful."})
 ];
+/* In contrasting examples the same relation may change, so don't present a misleading arrow. */
+const contrastLabels={
+object:["Động từ reads tác động lên tân ngữ books","Động từ sleeps không cần tân ngữ; baby là chủ ngữ"],
+"adj-before":["Tính từ careful mô tả student trong một cụm danh từ","Careful mô tả student qua động từ nối is"],
+"adv-frequency":["Usually mô tả tần suất hành động studies","Often mô tả tần suất trạng thái is tired"],
+"be-aux":["Is là trợ động từ hỗ trợ studying (hành động chính)","Is là động từ nối: She có tính chất ready"],
+transform:["Careful → driver; carefully → drives","Careful mô tả driver thông qua is"]
+};
+cases.forEach(c=>{if(contrastLabels[c.id])c.examples.forEach((e,i)=>e.connection=contrastLabels[c.id][i]);});
 window.GKRelationsData={version:1,roles,cases};
 })();
