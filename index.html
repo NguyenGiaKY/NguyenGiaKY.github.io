@@ -21,6 +21,8 @@
 <link rel="stylesheet" href="foundation.css?v=20261012-2">
 <link rel="stylesheet" href="foundation-sentence.css?v=20261012-2">
 <link rel="stylesheet" href="foundation-relations.css?v=20261012-1">
+<link rel="stylesheet" href="core-skills.css?v=20261012-1">
+<link rel="stylesheet" href="learning-journey.css?v=20261012-1">
 </head>
 <body>
 <div id="app">
@@ -34,10 +36,10 @@
       </div>
     </div>
     <div class="progressCard">
-      <div class="mutedLight">Tiến độ kỹ năng</div>
+      <div class="mutedLight">Tiến độ 81 IELTS Tasks (số câu)</div>
       <strong><span id="pct">0</span>%</strong>
       <div class="bar"><i id="bar"></i></div>
-      <small id="progressText">0 nhiệm vụ hoàn thành</small>
+      <small id="progressText">Chỉ cộng số câu đã có dữ liệu</small>
     </div>
   </header>
 
@@ -45,8 +47,10 @@
     <aside class="sidebar card">
       <input id="search" class="search" type="search" autocomplete="off" aria-label="Tìm kỹ năng, module hoặc bài học" placeholder="Tìm kỹ năng, module, bài học...">
       <nav>
-        <button class="nav active" data-view="today">🧭 Study Queue</button>
-        <button class="nav" data-view="foundation">🌱 English Foundation · Mới bắt đầu</button>
+        <button class="nav active" data-view="journey">🗺️ Learning Journey · 3 giai đoạn</button>
+        <button class="nav" data-view="foundation">🌱 Stage 1 · English Foundation</button>
+        <button class="nav" data-view="core">🧠 Stage 2 · Core Skills Lab</button>
+        <button class="nav" data-view="today">🎯 Stage 3 · 81 IELTS Tasks</button>
         <button class="nav" data-view="progress">📊 Progress Hub</button>
         <button class="nav" data-view="listening">🎧 Listening 8+</button>
         <button class="nav" data-view="reading">📖 Reading 8+</button>
@@ -65,7 +69,9 @@
     </aside>
 
     <main>
-      <section id="view-today" class="view active"><div id="todayCard" class="card panel"></div></section>
+      <section id="view-journey" class="view active"><div class="journey-surface"><div id="journeyRoot"></div></div></section>
+      <section id="view-core" class="view"><div class="core-surface"><div id="coreSkillsRoot"></div></div></section>
+      <section id="view-today" class="view"><div id="todayCard" class="card panel"></div></section>
       <section id="view-foundation" class="view"><div class="foundation-panel"><div id="foundationRoot"></div></div></section>
       <section id="view-progress" class="view"><div id="progressHub" class="card panel"></div></section>
       <section id="view-listening" class="view"><div id="listeningModules" class="card panel"></div></section>
@@ -133,12 +139,12 @@
 <script src="ai-config.js?v=20260923-3"></script>
 <script src="app.js?v=20261009-2"></script>
 <script src="dictionary-rich.js?v=20260923-1"></script>
-<script src="flex.js?v=20261009-3"></script>
+<script src="flex.js?v=20261012-3"></script>
 <script src="enhance.js?v=20261009-2"></script>
 <script src="speaking-studio.js?v=20260923-6"></script>
-<script src="listening-techniques.js?v=20261009-3"></script>
+<script src="listening-techniques.js?v=20261012-1"></script>
 <script src="mock-test.js?v=20261009-2"></script>
-<script src="reading-studio.js?v=20260928-1"></script>
+<script src="reading-studio.js?v=20261012-1"></script>
 <script src="highlighter.js?v=20260923-2"></script>
 <script src="error-center.js?v=20261009-2"></script>
 <script src="vocab-lab.js?v=20260928-3"></script>
@@ -149,5 +155,8 @@
 <script src="foundation-relations-data.js?v=20261012-2"></script>
 <script src="foundation-relations.js?v=20261012-3"></script>
 <script src="foundation.js?v=20261012-3"></script>
+<script src="core-skills-data.js?v=20261012-1"></script>
+<script src="core-skills.js?v=20261012-1"></script>
+<script src="learning-journey.js?v=20261012-1"></script>
 </body>
 </html>
