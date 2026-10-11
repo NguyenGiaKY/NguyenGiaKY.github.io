@@ -87,6 +87,11 @@ function question(scene,index){
 function diagram(scene,index){
  switch(scene.kind){case"ear":return sound(scene);case"people":return people(scene,index);case"link":return link(scene);case"apple":case"apples":case"book":return objects(scene,index);case"calendar":return calendar(scene,index);case"question":return question(scene,index);default:return base("","Sơ đồ minh họa bài học");}
 }
+function orderedOptions(id,i,options){
+ // Stable rotation ensures the correct answer is not always option A, even after the panel re-renders.
+ const shift=(Number(id.split("-")[1])+i)%options.length;
+ return options.map((_,j)=>options[(j+shift)%options.length]);
+}
 function status(id){const r=item(id),count=Object.keys(r.answers||{}).length,total=byId[id]?.quiz.length||0,good=Object.values(r.answers||{}).filter(x=>x.correct).length;return {count,total,good};}
 function lesson(id){
  const u=byId[id];if(!u)return"";
@@ -101,7 +106,7 @@ function lesson(id){
  u.quiz.forEach((q,i)=>{
   const answer=r.answers[i],done=!!answer;
   h+='<fieldset class="fv-question"><legend><span>Câu '+(i+1)+'</span> '+esc(q.prompt)+'</legend><div class="fv-options">';
-  q.options.forEach((option,j)=>{const selected=done&&option===answer.choice;
+  orderedOptions(id,i,q.options).forEach((option,j)=>{const selected=done&&option===answer.choice;
    h+='<button type="button" data-fv-answer="'+i+'" data-fv-option="'+j+'" '+(done?'disabled':'')+' aria-pressed="'+selected+'" class="'+(done?(option===q.correct?"correct":selected?"wrong":""):"")+'">'+esc(option)+'</button>';});
   h+='</div>';
   if(done)h+='<div class="fv-feedback '+(answer.correct?"ok":"retry")+'"><strong>'+(answer.correct?"✓ Đúng":"✗ Chưa đúng")+'</strong><p>'+esc(q.why)+'</p><small>Ví dụ: '+esc(q.example)+'</small></div>';
@@ -132,7 +137,7 @@ host.addEventListener("click",function(event){
  const button=event.target.closest("button");if(!button||!host.contains(button))return;
  if(button.dataset.fvScene!==undefined){const n=Number(button.dataset.fvScene);if(ui.id&&Number.isInteger(n)&&byId[ui.id]?.scenes[n]){ui.scene=n;ui.status="";renderPanel();}return;}
  if(button.dataset.fvAudio){const scene=byId[ui.id]?.scenes[ui.scene];if(scene)speak(scene.phrase.replace(/[→≠]/g,", "),button.dataset.fvAudio==="slow");return;}
- if(button.dataset.fvAnswer!==undefined){const u=byId[ui.id],q=u?.quiz[Number(button.dataset.fvAnswer)],o=q?.options[Number(button.dataset.fvOption)];
+ if(button.dataset.fvAnswer!==undefined){const u=byId[ui.id],qi=Number(button.dataset.fvAnswer),q=u?.quiz[qi],o=q&&orderedOptions(ui.id,qi,q.options)[Number(button.dataset.fvOption)];
  if(!q||!o)return;const r=item(ui.id),index=Number(button.dataset.fvAnswer);if(r.answers[index])return;
  r.answers[index]={choice:o,correct:o===q.correct,at:Date.now()};save();renderPanel();return;}
  if(button.dataset.fvReset){if(ui.id){item(ui.id).answers={};save();renderPanel();}return;}
