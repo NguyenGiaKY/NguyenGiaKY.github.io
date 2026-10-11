@@ -818,7 +818,7 @@ function progressTaskRow(t){
   '<div class="progressTaskMain"><div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span><small>'+t.module+'</small><h4>'+t.title+'</h4></div>'+
    '<span class="tpStatus '+s.status+'">'+s.label+'</span></div>'+
   '<div class="progressTaskBar"><i style="width:'+(s.coverage||0)+'%"></i></div>'+
-  '<div class="progressTaskMeta"><span><b>'+progressFmt(s.coverage)+'</b> số câu'+(s.answered!==null?' · '+s.answered+'/'+s.total:'')</span><span>'+p.attempts+' lần</span><span>Gần nhất: '+(s.latest?taskScoreLabel(s.latest):'—')+'</span><span>'+formatTaskDate(p.lastStudied)+'</span></div>'+
+  '<div class="progressTaskMeta"><span><b>'+progressFmt(s.coverage)+'</b> số câu'+(s.answered!==null?' · '+s.answered+'/'+s.total:'')+'</span><span>'+p.attempts+' lần</span><span>Gần nhất: '+(s.latest?taskScoreLabel(s.latest):'—')+'</span><span>'+formatTaskDate(p.lastStudied)+'</span></div>'+
   '<div class="progressTaskActions"><button class="btn primary" data-open="'+t.id+'">Học tiếp</button><button class="btn" data-progress="'+t.id+'">Xem chi tiết</button></div>'+
  '</div>';
 }
