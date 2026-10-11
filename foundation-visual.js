@@ -131,12 +131,12 @@ function speak(text,slow){
 host.addEventListener("click",function(event){
  const button=event.target.closest("button");if(!button||!host.contains(button))return;
  if(button.dataset.fvScene!==undefined){const n=Number(button.dataset.fvScene);if(ui.id&&Number.isInteger(n)&&byId[ui.id]?.scenes[n]){ui.scene=n;ui.status="";renderPanel();}return;}
- if(button.dataset.fvAudio){const scene=byId[ui.id]?.scenes[ui.scene];if(scene)speak(scene.phrase,button.dataset.fvAudio==="slow");return;}
+ if(button.dataset.fvAudio){const scene=byId[ui.id]?.scenes[ui.scene];if(scene)speak(scene.phrase.replace(/[→≠]/g,", "),button.dataset.fvAudio==="slow");return;}
  if(button.dataset.fvAnswer!==undefined){const u=byId[ui.id],q=u?.quiz[Number(button.dataset.fvAnswer)],o=q?.options[Number(button.dataset.fvOption)];
  if(!q||!o)return;const r=item(ui.id),index=Number(button.dataset.fvAnswer);if(r.answers[index])return;
  r.answers[index]={choice:o,correct:o===q.correct,at:Date.now()};save();renderPanel();return;}
  if(button.dataset.fvReset){if(ui.id){item(ui.id).answers={};save();renderPanel();}return;}
- if(button.dataset.fvStart){const first=host.querySelector('[data-f-id="a0-01"]');if(first)first.click();return;}
+ if(button.dataset.fvStart){if(typeof window.GKFoundationOpenLesson==="function")window.GKFoundationOpenLesson("a0-01");else{const first=host.querySelector('[data-f-id="a0-01"]');if(first)first.click();}return;}
 });
 window.GKFoundationVisual={render:setCurrent,preview,status,lessons:pack.lessons,getRecord:id=>item(id),open:id=>{if(byId[id]){ui.id=id;ui.scene=0;renderPanel();}}};
 })();
