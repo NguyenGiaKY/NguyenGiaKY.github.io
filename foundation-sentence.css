@@ -1,0 +1,135 @@
+/* Sentence Thinking Lab: role-aware interactive pedagogy without formulas-first learning. */
+#foundationRoot .fs-wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:18px;min-width:0}
+#foundationRoot .fs-wrap *{box-sizing:border-box}
+#foundationRoot .fs-back{border:0;background:transparent;color:#2b56bd;font-weight:800;padding:5px 0;text-align:left;align-self:start;font-size:14px}
+#foundationRoot .fs-hero{background:linear-gradient(120deg,#f1f6ff,#e8f7f2);border:1px solid #d5e6ea;border-radius:23px;padding:29px}
+#foundationRoot .fs-eyebrow,#foundationRoot .fs-topic-header>span{font-size:11px;color:#285ca0;font-weight:900;letter-spacing:.07em}
+#foundationRoot .fs-hero h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.025em;line-height:1.3;margin:10px 0}
+#foundationRoot .fs-hero p{font-size:15px;line-height:1.8;color:#435672;max-width:730px;margin:0}
+#foundationRoot .fs-hero-foot{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}
+#foundationRoot .fs-hero-foot>span{border:1px solid #cddae5;color:#264a66;background:#fffaf5d9;border-radius:99px;padding:6px 11px;font-size:12px;font-weight:750}
+#foundationRoot .fs-first{background:#fff;border:1px solid #dce5ef;border-radius:15px;padding:20px 22px}
+#foundationRoot .fs-first>strong{color:#1c3a62;font-size:17px}
+#foundationRoot .fs-first p{line-height:1.85;color:#516276;margin:10px 0 0}
+#foundationRoot .fs-legend{display:flex;gap:7px;flex-wrap:wrap;background:#f8fafc;border:1px solid #e3e9f0;border-radius:14px;padding:12px}
+#foundationRoot .fs-legend-tag{font-size:11px;line-height:1.4;font-weight:800;border-radius:99px;padding:6px 10px;border:1px solid currentColor;white-space:nowrap}
+#foundationRoot .fs-section-head h3{font-size:22px;margin:0 0 6px;color:#1d3352}
+#foundationRoot .fs-section-head p{margin:0;color:#64748b;font-size:13px}
+#foundationRoot .fs-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+#foundationRoot .fs-unit-card{display:flex;flex-direction:column;align-items:stretch;gap:7px;min-width:0;min-height:165px;background:#fff;border:1px solid #dfe6ef;border-radius:15px;padding:17px 17px 15px;text-align:left}
+#foundationRoot .fs-unit-card:hover{border-color:#6788d2;background:#fafdff}
+#foundationRoot .fs-unit-count{color:#5474af;background:#edf3ff;border-radius:8px;width:32px;height:30px;display:grid;place-items:center;font-size:12px;font-weight:900}
+#foundationRoot .fs-unit-card>strong{color:#253959;font-size:16px;line-height:1.4}
+#foundationRoot .fs-unit-card>small{color:#687991;font-size:12px;line-height:1.5}
+#foundationRoot .fs-unit-footer{margin-top:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#foundationRoot .fs-unit-footer>b{margin-left:auto;color:#3157d5}
+#foundationRoot .fs-state{color:#56667d;background:#f3f5f9;border:1px solid #dce3ee;border-radius:99px;font-size:10px;font-weight:800;padding:5px 10px;width:max-content;max-width:100%}
+#foundationRoot .fs-state.reviewing{background:#eef4ff;color:#3157a4;border-color:#d4e0fc}
+#foundationRoot .fs-state.mastered{background:#ebfbf2;color:#25704e;border-color:#bde3c9}
+#foundationRoot .fs-due{font-size:10px;font-weight:850;color:#a05f00;background:#fff1d5;border-radius:99px;padding:5px 8px}
+#foundationRoot .fs-bottom-note{background:#f7f9fc;border:1px solid #dfe6f0;padding:16px 18px;border-radius:14px}
+#foundationRoot .fs-bottom-note strong{color:#314361}
+#foundationRoot .fs-bottom-note p{margin:6px 0 0;font-size:13px;line-height:1.7;color:#5b6d81}
+#foundationRoot .fs-topic-header{background:linear-gradient(118deg,#f6faff,#edf5ff);padding:24px 27px;border-radius:17px;border:1px solid #dbe6f6}
+#foundationRoot .fs-topic-header h2{font-size:clamp(23px,3vw,30px);line-height:1.3;margin:11px 0}
+#foundationRoot .fs-topic-header>p{color:#586b83;margin:0 0 14px;line-height:1.7}
+#foundationRoot .fs-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#foundationRoot .fs-tabs button{border:1px solid #dbe4ef;border-radius:11px;background:#fff;color:#566781;padding:12px 8px;font-size:13px;font-weight:800}
+#foundationRoot .fs-tabs button.active{background:#2d56c5;color:#fff;border-color:#2d56c5}
+#foundationRoot .fs-topic-content{padding:23px 25px;border:1px solid #e0e7f0;background:#fff;border-radius:17px}
+#foundationRoot .fs-topic-content>h3{font-size:20px;color:#203658;margin:22px 0 7px}
+#foundationRoot .fs-topic-content>h3:first-child{margin-top:0}
+#foundationRoot .fs-idea{border-left:4px solid #4977d4;border-radius:0 12px 12px 0;background:#f0f5ff;padding:18px 19px}
+#foundationRoot .fs-idea>span{color:#3157b4;font-size:11px;letter-spacing:.07em;font-weight:900}
+#foundationRoot .fs-idea h3{font-size:18px;margin:8px 0 3px}
+#foundationRoot .fs-idea p{color:#354965;font-size:15px;line-height:1.9;margin:8px 0 0}
+#foundationRoot .fs-thinking{display:flex;flex-direction:column;gap:8px}
+#foundationRoot .fs-thinking-row{display:flex;align-items:flex-start;gap:12px;background:#f8fafc;border:1px solid #e7edf3;border-radius:11px;padding:11px 12px}
+#foundationRoot .fs-thinking-row>span{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:8px;color:#2b58a2;background:#e9efff;font-size:12px;font-weight:900}
+#foundationRoot .fs-thinking-row>p{color:#445671;line-height:1.65;margin:0;font-size:14px}
+#foundationRoot .fs-trap{border:1px solid #efdfb6;background:#fffbf1;border-radius:12px;padding:14px 16px;margin-top:18px}
+#foundationRoot .fs-trap strong{color:#845c19}
+#foundationRoot .fs-trap p{color:#695634;line-height:1.7;margin:7px 0 0;font-size:14px}
+#foundationRoot .fs-muted{font-size:13px;line-height:1.75;color:#61748b}
+#foundationRoot .fs-example-tabs{display:flex;gap:7px;margin:12px 0}
+#foundationRoot .fs-example-tabs button{border:1px solid #dce4f0;border-radius:9px;background:#fff;padding:8px 12px;font-size:12px;color:#4b6080;font-weight:750}
+#foundationRoot .fs-example-tabs button.chosen{background:#2c56c5;border-color:#2c56c5;color:#fff}
+#foundationRoot .fs-sentence{background:#f8fafd;border:1px solid #e1e8f1;border-radius:13px;padding:16px 18px}
+#foundationRoot .fs-chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center;line-height:1.9}
+#foundationRoot .fs-chip{border:1px solid currentColor;border-radius:9px;padding:6px 10px;font-size:16px;font-weight:850;line-height:1.45;background:#fff;transition:transform .12s;cursor:pointer;min-height:38px}
+#foundationRoot .fs-chip:hover{transform:translateY(-1px);box-shadow:0 3px 12px #29467a1c}
+#foundationRoot .fs-translation{font-size:14px;color:#54657c;margin:13px 0 7px}
+#foundationRoot .fs-takeaway{font-size:13px;line-height:1.7;color:#304f74;margin:0}
+#foundationRoot .fs-detail-empty,#foundationRoot .fs-detail{margin-top:12px;border:1px dashed #cbd6e7;background:#fff;border-radius:12px;padding:17px}
+#foundationRoot .fs-detail-empty{display:flex;flex-direction:column;gap:5px}
+#foundationRoot .fs-detail-empty strong{color:#354969}
+#foundationRoot .fs-detail-empty span{font-size:13px;color:#6a7b91}
+#foundationRoot .fs-detail-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#foundationRoot .fs-detail-top>b{font-size:19px;color:#182d52}
+#foundationRoot .fs-role{padding:5px 9px;border-radius:99px;border:1px solid currentColor;font-size:12px;font-weight:800}
+#foundationRoot .fs-detail p{line-height:1.8;color:#435570;font-size:14px;margin:7px 0}
+#foundationRoot .fs-det{color:#7c529f;background:#f7f0ff}
+#foundationRoot .fs-pron{color:#2a689a;background:#edf7ff}
+#foundationRoot .fs-noun{color:#255d99;background:#eaf3ff}
+#foundationRoot .fs-adj{color:#a64c2e;background:#fff0e9}
+#foundationRoot .fs-adv{color:#7e4696;background:#f9f0ff}
+#foundationRoot .fs-verb{color:#0b8064;background:#e5f9f1}
+#foundationRoot .fs-link{color:#1f6b55;background:#e3f5ec}
+#foundationRoot .fs-aux{color:#a15b10;background:#fff4dc}
+#foundationRoot .fs-prep{color:#6358a4;background:#f0edff}
+#foundationRoot .fs-conj{color:#a13e65;background:#ffeef4}
+#foundationRoot .fs-neg{color:#7c5262;background:#f8eff2}
+#foundationRoot .fs-number{color:#2d6d70;background:#e8f7f8}
+#foundationRoot .fs-next{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
+#foundationRoot .fs-btn{min-height:42px;padding:10px 15px;border-radius:10px;background:#fff;border:1px solid #cdd9ec;color:#34547d;font-weight:800;font-size:14px}
+#foundationRoot .fs-btn.primary{border-color:#3157d5;background:#3157d5;color:#fff}
+#foundationRoot .fs-btn.primary:hover{background:#2344b7}
+#foundationRoot .fs-btn.secondary:hover{background:#f2f6ff}
+#foundationRoot .fs-btn:disabled{cursor:not-allowed;opacity:.48}
+#foundationRoot .fs-task{border:1px solid #d9e5fb;background:#f3f7ff;border-radius:11px;padding:15px}
+#foundationRoot .fs-task>p{margin:8px 0 0;color:#48607e;line-height:1.7}
+#foundationRoot .fs-built{min-height:85px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;border:2px dashed #b7c9e4;border-radius:13px;padding:13px;margin:15px 0}
+#foundationRoot .fs-placeholder{font-size:13px;color:#8a97a8}
+#foundationRoot .fs-word-bank{display:flex;gap:8px;flex-wrap:wrap;padding:13px;min-height:70px;border:1px solid #e3e9f1;background:#f8fafc;border-radius:13px}
+#foundationRoot .fs-word{border:1px solid #b9c9e3;background:white;border-radius:9px;color:#2b4d7c;padding:8px 12px;font-size:15px;font-weight:750;min-height:38px}
+#foundationRoot .fs-word.selected{border-color:#3157d5;background:#edf3ff}
+#foundationRoot .fs-word>span{font-size:11px;margin-left:5px}
+#foundationRoot .fs-word:hover{border-color:#3157d5}
+#foundationRoot .fs-controls{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+#foundationRoot .fs-feedback{padding:14px 16px;margin-top:16px;border-radius:12px;border:1px solid #d1dfeb;background:#f8fafc}
+#foundationRoot .fs-feedback.success{background:#f0fbf5;border-color:#b3e0c5;color:#17613c}
+#foundationRoot .fs-feedback.error{background:#fff8f1;border-color:#efd6b8;color:#86501b}
+#foundationRoot .fs-feedback p{margin:7px 0;color:#3d526a;line-height:1.65}
+#foundationRoot .fs-feedback small{font-size:12px;line-height:1.6}
+#foundationRoot .fs-question{border:1px solid #e1e7f0;border-radius:13px;margin:15px 0;padding:15px;min-width:0}
+#foundationRoot .fs-question legend{max-width:100%;line-height:1.65;font-size:15px;font-weight:800;padding:0 5px}
+#foundationRoot .fs-question legend>span{font-size:12px;color:#3157c5;margin-right:8px}
+#foundationRoot .fs-options{display:grid;grid-template-columns:1fr;gap:8px}
+#foundationRoot .fs-option{border:1px solid #dce4ef;background:#fff;color:#33445e;border-radius:10px;padding:12px;text-align:left;font-size:14px;line-height:1.5;min-height:43px}
+#foundationRoot .fs-option:hover:not(:disabled){background:#f5f8ff;border-color:#9bb6ea}
+#foundationRoot .fs-option.selected{border-color:#3157d5;background:#edf2ff}
+#foundationRoot .fs-option.correct{background:#eaf9f0;border-color:#7dc49f}
+#foundationRoot .fs-option.incorrect{background:#fff0ef;border-color:#dd9692}
+#foundationRoot .fs-explanation{font-size:13px;line-height:1.75;border-left:3px solid #7697db;background:#f5f7fd;padding:11px 12px;margin:12px 0 0;color:#3c5272}
+#foundationRoot .fs-topic-bottom{display:flex;gap:15px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+#foundationRoot .fs-topic-bottom>p{font-size:12px;color:#64748b;max-width:610px;line-height:1.65;margin:0}
+#foundationRoot .fs-inlesson .fs-idea{margin-bottom:15px}
+#foundationRoot .fs-inlesson .fs-idea p{font-size:14px}
+#foundationRoot .fs-inlesson .fs-sentence{margin-top:12px}
+#foundationRoot .fs-inlesson .fs-chip{font-size:14px}
+#foundationRoot .fs-inlesson .fs-trap{margin-top:14px}
+@media(max-width:650px){
+#foundationRoot .fs-wrap{gap:13px}
+#foundationRoot .fs-hero{padding:20px}
+#foundationRoot .fs-first{padding:15px}
+#foundationRoot .fs-grid{grid-template-columns:1fr}
+#foundationRoot .fs-unit-card{min-height:130px;padding:14px}
+#foundationRoot .fs-topic-header{padding:18px}
+#foundationRoot .fs-topic-content{padding:15px}
+#foundationRoot .fs-tabs{gap:5px}
+#foundationRoot .fs-tabs button{font-size:11px;padding:10px 5px;line-height:1.3}
+#foundationRoot .fs-chip{font-size:14px;padding:7px 9px}
+#foundationRoot .fs-sentence{padding:12px}
+#foundationRoot .fs-topic-bottom .fs-btn,#foundationRoot .fs-next .fs-btn{width:100%}
+}
+@media(prefers-reduced-motion:reduce){#foundationRoot .fs-chip{transition:none}}
