@@ -877,7 +877,7 @@ function taskCard(t,queue=false){
    '<div class="flexTaskActions">'+
     '<button class="btn primary" data-open="'+t.id+'">'+(ps.status==='not-started'?'Mở bài':'Tiếp tục')+'</button>'+
     '<button class="btn" data-progress="'+t.id+'">Tiến độ</button>'+
-    '<button class="btn '+(fs.done[t.id]?'green':'')+'" data-done="'+t.id+'">'+(fs.done[t.id]?'✓ Đã xong':'Đánh dấu hoàn thành')+'</button>'+
+    '<button class="btn '+(fs.done[t.id]?'green':'')+'" data-done="'+t.id+'">'+(fs.done[t.id]?'✓ Đã đánh dấu':'Đánh dấu đã học · không cộng %')+'</button>'+
    '</div></div>';
 }
 
@@ -920,7 +920,7 @@ function openFlexTask(t){
      fs.done[t.id]=true;fs.queue=(fs.queue||[]).filter(x=>x!==t.id);
      completeTaskSession(t.id,'Hoàn thành task từ lesson');
      saveFlex();
-     this.textContent='✓ Đã hoàn thành';
+     this.textContent='✓ Đã đánh dấu';
      renderProgressHub();
      updateHero();
     };
@@ -1011,7 +1011,7 @@ function scoreBox(skill){
 function renderSkill(skill){
  const el=document.getElementById(skill+'Modules');if(!el)return;
  const m=skillMeta[skill],ms=modules[skill];
- el.innerHTML='<div class="skillHead"><div><span class="phase">TARGET '+m.target+'</span><h2>'+m.label+'</h2><p class="muted">Hoàn thành theo năng lực, không theo ngày. Có thể dừng ở bất kỳ module nào và quay lại tiếp.</p></div><strong>'+pctSkill(skill)+'%</strong></div>'+
+ el.innerHTML='<div class="skillHead"><div><span class="phase">TARGET '+m.target+'</span><h2>'+m.label+'</h2><p class="muted">Hoàn thành theo năng lực, không theo ngày. Có thể dừng ở bất kỳ module nào và quay lại tiếp.</p></div><strong>'+progressFmt(pctSkill(skill))+'</strong></div>'+
  (skill==='listening'?'<div class="authAudioPanel"><div><span class="phase">REAL AUDIO · OFFICIAL</span><h3>Nghe người thật, không chỉ giọng máy</h3><p>Technique Studio giúp tập chiến thuật. Để luyện giọng tự nhiên, nối âm và tốc độ IELTS thật, hãy làm song song các bài sample có audio chính thức. Hai trang bên dưới chứa đề, recordings, đáp án và transcript.</p></div><div class="authAudioLinks"><a href="https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests/academic/listening" target="_blank" rel="noopener noreferrer">🎧 British Council · Listening samples ↗</a><a href="https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test" target="_blank" rel="noopener noreferrer">🎧 IELTS Official · 4-part practice ↗</a></div></div>':'')+
  (skill!=='support'?scoreBox(skill):'')+
  '<div class="moduleStack">'+ms.map(mod=>{
