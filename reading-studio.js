@@ -187,6 +187,7 @@
       inp.onchange=function(){
         var qIndex=Number(this.name.replace("rsq",""));
         RS.answers[qIndex]=Number(this.value);
+        if(typeof window.recordTaskCoverage==="function")window.recordTaskCoverage({answered:answeredCount(),total:RS.pack.q.length});
         renderAnswerState(qIndex);
         var answered=document.getElementById("rsAnswered");
         if(answered)answered.textContent=answeredCount()+" / "+RS.pack.q.length+" answered";
@@ -303,7 +304,7 @@
       });
     }
     if(!RS.progressRecorded&&typeof window.recordTaskPerformance==="function"){
-      window.recordTaskPerformance({kind:"reading",score:s.correct,total:s.total,errors:s.wrong+s.skip,note:s.wrong+" sai · "+s.skip+" bỏ trống"});
+      window.recordTaskPerformance({kind:"reading",score:s.correct,total:s.total,answered:s.total-s.skip,errors:s.wrong+s.skip,note:s.wrong+" sai · "+s.skip+" bỏ trống"});
       RS.progressRecorded=true;
     }
     body.innerHTML=
