@@ -31,7 +31,7 @@ const body=overlay.querySelector("#cloudSyncBody"),info=overlay.querySelector("#
 const configured=!!(CONFIG&&typeof CONFIG==="object"&&CONFIG.apiKey&&CONFIG.authDomain&&CONFIG.projectId&&CONFIG.appId);
 let status=configured?"loading":"disabled",auth=null,db=null,sdk=null,user=null,uid=null,cloud=new Map(),base=new Map();
 let busy=false,pollTimer=null,authenticatedAt=0,initCycle=0,lastRefresh=0,issue="",lastUpload=0,cloudStatus="";
-let exportedBackup=false;
+let exportedLocal=false,exportedCloud=false;
 const clean=v=>(v===null||v===undefined)?null:String(v);
 const bytes=s=>new Blob([s]).size;
 function snapshotLocal(){const x=new Map();for(const k of KEYS){try{const v=localStorage.getItem(k);if(v!==null)x.set(k,v);}catch(e){}}return x;}
@@ -45,7 +45,7 @@ function setStatus(label,mode){
 function setInfo(s,level){info.textContent=s;info.dataset.kind=level||"neutral";}
 function userLabel(){return escapeHtml(user?.displayName||user?.email||"Google account");}
 function render(){
- const pending=status==="deciding"||status==="conflict"||status==="remote";
+ const onlyLocal=status==="deciding"&&!meaningful(cloud);
  let markup="";
  if(status==="disabled"){
   setStatus("☁ Sync setup needed","local");
@@ -65,17 +65,18 @@ function render(){
   setStatus("☁ Choose progress","warning");
   setInfo(status==="conflict"?"Có thay đổi trên hai thiết bị. Tạm dừng đồng bộ để tránh ghi đè.":"Có hai bản tiến độ khác nhau. Hãy chọn bản muốn tiếp tục.", "warning");
   markup='<p class="cloud-sync-user">Signed in as <strong>'+userLabel()+'</strong></p>'+
-   '<p>Tiến độ trên thiết bị này và tài khoản Google không giống nhau. <strong>Không có dữ liệu nào bị ghi đè tự động.</strong></p>'+
-   '<div class="cloud-sync-actions"><button type="button" data-cloud="chooseCloud" class="cloud-sync-primary">Use cloud progress on this device</button>'+
-   '<button type="button" data-cloud="chooseLocal" class="cloud-sync-secondary">Keep this device and replace cloud</button></div>'+
-   '<p class="cloud-sync-note">Trước khi thay thế, website cố lưu một bản sao dự phòng ở trình duyệt này. Có thể tải thêm tệp sao lưu JSON bên dưới.</p>'+
-   '<button type="button" data-cloud="export" class="cloud-sync-link">Download progress backup (.json)</button>';
+   (onlyLocal?'<p>Cloud chưa có tiến độ. Dữ liệu trên máy sẽ được giữ nguyên và tải lên tài khoản khi mày chọn.</p>':'<p>Tiến độ trên máy và cloud khác nhau. <strong>Không tự ghi đè dữ liệu.</strong></p>')+
+   '<div class="cloud-sync-actions">'+(onlyLocal?'':'<button type="button" data-cloud="chooseCloud" class="cloud-sync-primary">Use cloud progress on this device</button>')+
+   '<button type="button" data-cloud="chooseLocal" class="'+(onlyLocal?'cloud-sync-primary':'cloud-sync-secondary')+'">'+(onlyLocal?'Upload device progress to cloud':'Keep this device and replace cloud')+'</button></div>'+
+   '<p class="cloud-sync-note">Website sẽ cố lưu bản dự phòng trước khi thay thế; mày cũng có thể tải backup JSON.</p>'+
+   '<button type="button" data-cloud="exportLocal" class="cloud-sync-link">Download device backup</button>'+
+   (onlyLocal?'':'<button type="button" data-cloud="exportCloud" class="cloud-sync-link">Download cloud backup</button>');
  }else if(status==="remote"){
   setStatus("☁ Cloud update available","warning");
   setInfo("Một thiết bị khác đã cập nhật tiến độ. Hãy tải bản mới khi mày đã lưu xong bài đang làm.","warning");
   markup='<p class="cloud-sync-user">Signed in as <strong>'+userLabel()+'</strong></p><p>Cloud có thay đổi mới. Những bài đang mở vẫn giữ nguyên; áp dụng dữ liệu mới sẽ tải lại trang.</p>'+
    '<button type="button" data-cloud="chooseCloud" class="cloud-sync-primary">Load updated cloud progress</button>'+
-   '<button type="button" data-cloud="export" class="cloud-sync-secondary">Download backup</button>';
+   '<button type="button" data-cloud="exportLocal" class="cloud-sync-secondary">Download backup</button>';
  }else if(status==="active"||status==="syncing"){
   setStatus(status==="syncing"?"☁ Syncing…":"☁ Progress synced",status==="syncing"?"pending":"synced");
   setInfo(status==="syncing"?"Đang lưu thay đổi lên tài khoản Google…":"Đã kết nối với tài khoản Google. Các thay đổi học tập sẽ được đồng bộ khi có mạng.","success");
@@ -83,12 +84,12 @@ function render(){
    '<div class="cloud-sync-details"><span>Saved sections</span><strong>'+cloud.size+' nhóm dữ liệu</strong><span>Last upload</span><strong>'+(lastUpload?fmtTime(lastUpload):"No new changes")+'</strong></div>'+
    '<div class="cloud-sync-actions"><button type="button" data-cloud="syncNow" class="cloud-sync-primary">Sync now</button>'+
    '<button type="button" data-cloud="refresh" class="cloud-sync-secondary">Check other device</button></div>'+
-   '<button type="button" data-cloud="export" class="cloud-sync-link">Download local progress backup</button>'+
+   '<button type="button" data-cloud="exportLocal" class="cloud-sync-link">Download local progress backup</button>'+
    '<p class="cloud-sync-note">Chỉ đồng bộ tiến độ học, từ vựng và ghi chú được hỗ trợ. Không đồng bộ tài khoản API, dữ liệu cache hoặc tệp âm thanh thô.</p>';
  }else{
   setStatus("☁ Sync paused","warning");
   setInfo(issue||"Không kết nối được. Tiến độ vẫn được lưu trên thiết bị này.","warning");
-  markup='<button type="button" data-cloud="retry" class="cloud-sync-primary">Retry connection</button><button type="button" data-cloud="export" class="cloud-sync-secondary">Download local backup</button>';
+  markup='<button type="button" data-cloud="retry" class="cloud-sync-primary">Retry connection</button><button type="button" data-cloud="exportLocal" class="cloud-sync-secondary">Download local backup</button>';
  }
  if(user&&status!=="signedout")markup+='<div class="cloud-sync-footer"><button type="button" data-cloud="signout">Sign out (keep local progress)</button></div>';
  body.innerHTML=markup;
@@ -106,16 +107,16 @@ function saveBackup(map,kind){
   return true;
  }catch(e){return false;}
 }
-function download(map){
+function download(map,kind){
  const data=JSON.stringify({format:"gk-ielts-learning-backup",version:1,createdAt:new Date().toISOString(),values:Object.fromEntries(map)},null,2);
  const url=URL.createObjectURL(new Blob([data],{type:"application/json"}));
  const a=document.createElement("a");a.href=url;a.download="ielts-progress-backup-"+new Date().toISOString().slice(0,10)+".json";
  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
- exportedBackup=true;
+ if(kind==="local")exportedLocal=true;else if(kind==="cloud")exportedCloud=true;
 }
 function applyCloud(){
  const mine=snapshotLocal();
- if(!same(mine,cloud)&&meaningful(mine)&&!saveBackup(mine,"device")){issue="Không đủ bộ nhớ để giữ bản sao dữ liệu hiện tại. Tải backup JSON trước, rồi giải phóng dung lượng.";status="conflict";render();return;}
+ if(!same(mine,cloud)&&meaningful(mine)&&!saveBackup(mine,"device")&&!exportedLocal){issue="Không đủ bộ nhớ để giữ bản sao dữ liệu hiện tại. Tải backup JSON trước, rồi giải phóng dung lượng.";status="conflict";render();return;}
  try{
   for(const k of KEYS){if(cloud.has(k))localStorage.setItem(k,cloud.get(k));else localStorage.removeItem(k);}
   setInfo("Đã tải tiến độ. Đang tải lại trang…","success");
@@ -140,10 +141,10 @@ async function replaceCloud(){
  if(!uid||busy)return;busy=true;status="syncing";render();
  try{
   const mine=snapshotLocal();verifySizes(mine);
-  if(meaningful(cloud)&&!saveBackup(cloud,"cloud")){
+  if(meaningful(cloud)&&!saveBackup(cloud,"cloud")&&!exportedCloud){
    throw Error("Không thể tạo backup cloud trên thiết bị này. Hãy tải backup JSON trước khi thay thế.");
   }
-  if(meaningful(cloud)&&!exportedBackup){
+  if(meaningful(cloud)&&!exportedCloud){
    const confirmed=window.confirm("Thay bản trên cloud bằng dữ liệu thiết bị này? Bản cloud cũ sẽ được giữ dự phòng trong trình duyệt này. Mày có thể tải backup JSON trước.");
    if(!confirmed){status="deciding";return;}
   }
@@ -194,7 +195,7 @@ async function checkRemote(force){
  busy=true;
  try{
   const remote=await cloudRead();lastRefresh=Date.now();
-  if(!same(remote,base)){cloud=remote;status="remote";show();}
+  if(!same(remote,base)){cloud=remote;status=same(snapshotLocal(),base)?"remote":"conflict";show();}
   else if(status==="remote")status="active";
   if(status==="active")await syncLocalAfterRefresh();
  }catch(e){issue="Không kiểm tra được cloud: "+(e.message||e);status="error";show();}
@@ -202,7 +203,7 @@ async function checkRemote(force){
 }
 function syncLocalAfterRefresh(){return Promise.resolve();}
 async function onUser(u){
- resetPolling();const session=++initCycle;user=u;uid=u?.uid||null;exportedBackup=false;
+ resetPolling();const session=++initCycle;user=u;uid=u?.uid||null;exportedLocal=false;exportedCloud=false;
  if(!u){cloud=new Map();base=new Map();status="signedout";render();return;}
  status="loading";render();
  try{
@@ -236,13 +237,14 @@ overlay.addEventListener("click",async event=>{
  const btn=event.target.closest("button[data-cloud]");if(!btn||busy)return;
  const action=btn.dataset.cloud;
  if(action==="close"){hide();return;}
- if(action==="export"){download(status==="deciding"||status==="conflict"?cloud:snapshotLocal());return;}
+ if(action==="exportLocal"){download(snapshotLocal(),"local");return;}
+ if(action==="exportCloud"){download(cloud,"cloud");return;}
  if(action==="chooseCloud"){applyCloud();return;}
  if(action==="chooseLocal"){await replaceCloud();return;}
  if(action==="syncNow"){await syncLocal();if(status==="active")await checkRemote(true);return;}
  if(action==="refresh"){await checkRemote(true);return;}
  if(action==="retry"){if(auth&&user)await onUser(user);else if(!auth)await startup();return;}
- if(action==="signout"){resetPolling();await sdk.signOut(auth);return;}
+ if(action==="signout"){if(status==="active")await syncLocal();if(status!=="active"&&status!=="signedout"){if(!window.confirm("Đồng bộ chưa xong; điện thoại có thể chưa nhận tiến độ mới. Vẫn đăng xuất?"))return;}resetPolling();await sdk.signOut(auth);return;}
  if(action==="signin"&&auth){
   try{await sdk.signInWithPopup(auth,new sdk.GoogleAuthProvider());}catch(e){
    issue=e.code==="auth/popup-blocked"?"Trình duyệt đã chặn popup. Hãy cho phép popup đăng nhập Google.":e.code==="auth/unauthorized-domain"?"Cần thêm nguyengiaky.github.io vào Firebase Authentication → Authorized domains.":"Google sign-in failed: "+(e.message||e);
