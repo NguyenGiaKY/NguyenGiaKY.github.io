@@ -1,0 +1,62 @@
+/* Foundation A0 Visual Lab: interactive illustration panels. Scoped to Foundation only. */
+#foundationRoot .fv-home-banner{display:flex;align-items:center;gap:17px;flex-wrap:wrap;padding:17px 19px;background:linear-gradient(115deg,#f3f9ff,#e9f6f2);border:1px solid #d4e6f4;border-radius:16px}
+#foundationRoot .fv-home-icon{flex:none;border:1px solid #b8cee8;color:#3157b1;border-radius:12px;padding:12px;font-size:17px;font-weight:900;background:#fff}
+#foundationRoot .fv-home-banner>div:nth-child(2){flex:1;min-width:170px}
+#foundationRoot .fv-home-banner strong{color:#234471;font-size:15px}
+#foundationRoot .fv-home-banner p{margin:5px 0 0;color:#607994;line-height:1.7;font-size:12px}
+#foundationRoot .fv-home-banner button{background:#3157d5;color:white;border:1px solid #3157d5;border-radius:11px;padding:11px 14px;min-height:42px;font-size:13px;font-weight:800;white-space:nowrap}
+#foundationRoot .fv-studio{border:1px solid #cbdcf0;border-radius:18px;padding:21px;background:linear-gradient(180deg,#fbfdff,#fff);margin:12px 0 24px;box-shadow:0 8px 27px rgba(32,62,112,.045)}
+#foundationRoot .fv-studio button{cursor:pointer;font:inherit}
+#foundationRoot .fv-studio button:focus-visible{outline:3px solid #83a9ea;outline-offset:2px}
+#foundationRoot .fv-heading{display:flex;justify-content:space-between;gap:13px;align-items:flex-start}
+#foundationRoot .fv-heading>div{flex:1;min-width:0}
+#foundationRoot .fv-kicker{font-size:11px;font-weight:900;color:#3872a5;letter-spacing:.07em}
+#foundationRoot .fv-heading h3{font-size:clamp(19px,2.2vw,24px);line-height:1.35;color:#213d67;margin:7px 0}
+#foundationRoot .fv-heading p{font-size:13px;color:#637790;line-height:1.75;margin:0}
+#foundationRoot .fv-progress{flex:none;border-radius:99px;padding:7px 11px;font-size:11px;font-weight:800;background:#edf3fc;color:#4166a2;white-space:nowrap}
+#foundationRoot .fv-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0}
+#foundationRoot .fv-switch button{border:1px solid #d5e1ed;padding:10px 11px;border-radius:10px;background:#fff;color:#465c78;text-align:left;line-height:1.5;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px}
+#foundationRoot .fv-switch button span{background:#eef3fb;color:#3962a3;font-size:11px;border-radius:7px;padding:5px}
+#foundationRoot .fv-switch button.active{border-color:#6689d4;background:#eff5ff;color:#244988;box-shadow:inset 0 0 0 1px #8ea8e6}
+#foundationRoot .fv-scene{display:grid;grid-template-columns:minmax(220px,.87fr) minmax(0,1.13fr);gap:18px;padding:16px;border:1px solid #d9e4f0;border-radius:15px;background:#fff;align-items:stretch}
+#foundationRoot .fv-picture{display:flex;align-items:center;justify-content:center;min-width:0}
+#foundationRoot .fv-illustration{width:100%;max-width:450px;height:auto;aspect-ratio:340/180;display:block}
+#foundationRoot .fv-explainer{display:flex;flex-direction:column;min-width:0;justify-content:center;gap:9px}
+#foundationRoot .fv-caption{font-size:11px;font-weight:900;letter-spacing:.06em;color:#4c77ad}
+#foundationRoot .fv-explainer h4{color:#1f3e68;font-size:clamp(17px,2.6vw,24px);line-height:1.4;margin:0}
+#foundationRoot .fv-translation{font-size:13px;color:#60758f;margin:0}
+#foundationRoot .fv-chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;line-height:1.45}
+#foundationRoot .fv-chips span{background:#f0f5ff;color:#395782;border:1px solid #d5e3fa;border-radius:8px;padding:6px 9px;font-size:13px;font-weight:800}
+#foundationRoot .fv-chips span.first{background:#ebf8f0;color:#28725a;border-color:#cfe9d9}
+#foundationRoot .fv-chips b{font-size:11px;color:#9aabc3}
+#foundationRoot .fv-description{font-size:13px;color:#425d79;line-height:1.8;margin:0}
+#foundationRoot .fv-sound{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
+#foundationRoot .fv-sound button{min-height:36px;background:#f6f9ff;border:1px solid #cbdcf4;color:#34578f;font-size:12px;font-weight:800;border-radius:9px;padding:7px 10px}
+#foundationRoot .fv-sound button:hover{background:#e8f1ff}
+#foundationRoot .fv-sound small{width:100%;font-size:11px;color:#788ba0;line-height:1.5}
+#foundationRoot .fv-question-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:23px 0 13px}
+#foundationRoot .fv-question-heading h4{font-size:17px;color:#254369;margin:0 0 5px}
+#foundationRoot .fv-question-heading p{font-size:12px;color:#6d8096;margin:0;line-height:1.5}
+#foundationRoot .fv-question-heading>span{font-size:11px;font-weight:800;color:#3d668d;white-space:nowrap}
+#foundationRoot .fv-practice{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#foundationRoot .fv-question{border:1px solid #e0e8f2;border-radius:12px;min-width:0;padding:12px;margin:0;background:#fff}
+#foundationRoot .fv-question legend{font-weight:800;font-size:12px;line-height:1.65;padding:0 6px;color:#2f4665;max-width:100%}
+#foundationRoot .fv-question legend span{color:#5477ae;display:block;font-size:10px}
+#foundationRoot .fv-options{display:grid;grid-template-columns:1fr;gap:7px;margin-top:8px}
+#foundationRoot .fv-options button{background:#f8faff;border:1px solid #d9e2ed;border-radius:9px;padding:8px 10px;color:#345171;font-size:12px;line-height:1.5;text-align:left;min-height:35px}
+#foundationRoot .fv-options button:not(:disabled):hover{border-color:#7395d8;background:#eef4ff}
+#foundationRoot .fv-options button.correct{background:#e9f8f0;border-color:#91c9a8;color:#236f4b}
+#foundationRoot .fv-options button.wrong{background:#fff0ed;border-color:#e0b0a2;color:#9d423e}
+#foundationRoot .fv-options button:disabled{opacity:1;cursor:default}
+#foundationRoot .fv-feedback{margin-top:9px;padding:10px;border-radius:8px;font-size:11px;line-height:1.65}
+#foundationRoot .fv-feedback.ok{background:#f1faf4;border:1px solid #d2eadc;color:#2d7252}
+#foundationRoot .fv-feedback.retry{background:#fff9f4;border:1px solid #efdac6;color:#875e3e}
+#foundationRoot .fv-feedback p{margin:4px 0}
+#foundationRoot .fv-feedback small{font-size:10px;color:#688077}
+#foundationRoot .fv-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px;border-top:1px solid #e3ebf5;padding-top:14px}
+#foundationRoot .fv-bottom span{color:#66788e;font-size:12px;line-height:1.6}
+#foundationRoot .fv-bottom button{background:white;border:1px solid #cbd8e8;color:#315b9d;border-radius:9px;min-height:39px;padding:8px 11px;font-size:12px;font-weight:800}
+#foundationRoot .fv-status{min-height:10px;margin:9px 0 0;font-size:12px;color:#547293}
+@media (max-width:910px){#foundationRoot .fv-practice{grid-template-columns:1fr 1fr}}
+@media (max-width:710px){#foundationRoot .fv-studio{padding:14px;margin:10px 0 18px}#foundationRoot .fv-scene{grid-template-columns:1fr}#foundationRoot .fv-picture{max-width:420px;width:100%;margin:0 auto}#foundationRoot .fv-explainer{gap:8px}#foundationRoot .fv-heading{flex-direction:column}#foundationRoot .fv-switch{gap:5px}#foundationRoot .fv-switch button{padding:8px;font-size:11px;display:block;text-align:center}#foundationRoot .fv-switch button span{display:block;width:max-content;margin:0 auto 4px}#foundationRoot .fv-practice{grid-template-columns:1fr}#foundationRoot .fv-question-heading{align-items:flex-start;flex-direction:column}#foundationRoot .fv-home-banner button{width:100%}}
+@media (prefers-reduced-motion:reduce){#foundationRoot .fv-studio *,#foundationRoot .fv-home-banner *{transition:none!important;animation:none!important}}
