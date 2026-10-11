@@ -293,7 +293,7 @@ function grade(){
  const result={at:Date.now(),score:st.lastScore,total:st.pack.questions.length,mode:st.mode};
  persist(st.id,result);
  if(typeof window.recordTaskPerformance==="function")window.recordTaskPerformance({
-  kind:"listening technique",score:result.score,total:result.total,errors:result.total-result.score,
+  kind:"listening technique",score:result.score,total:result.total,answered:Object.values(st.responses).filter(v=>v!==null&&v!==undefined&&String(v).trim()!=="").length,errors:result.total-result.score,
   note:st.id+" · "+st.pack.part+" · "+st.mode
  });
  render();
@@ -338,11 +338,11 @@ function handler(e){
  }
  if(button.dataset.pick){
   const [i,k]=button.dataset.pick.split(":").map(Number);
-  if(!st.graded){st.responses[i]=k;st.crossed[i]=(st.crossed[i]||[]).filter(x=>x!==k);render()}return;
+  if(!st.graded){st.responses[i]=k;st.crossed[i]=(st.crossed[i]||[]).filter(x=>x!==k);if(typeof window.recordTaskCoverage==="function")window.recordTaskCoverage({answered:Object.values(st.responses).filter(v=>v!==null&&v!==undefined&&String(v).trim()!=="").length,total:st.pack.questions.length});render()}return;
  }
  if(button.dataset.strike){
   const [i,k]=button.dataset.strike.split(":").map(Number);
-  if(!st.graded){const a=st.crossed[i]||[];st.crossed[i]=a.includes(k)?a.filter(x=>x!==k):a.concat(k);if(st.responses[i]===k)st.responses[i]=null;render()}return;
+  if(!st.graded){const a=st.crossed[i]||[];st.crossed[i]=a.includes(k)?a.filter(x=>x!==k):a.concat(k);if(st.responses[i]===k)st.responses[i]=null;if(typeof window.recordTaskCoverage==="function")window.recordTaskCoverage({answered:Object.values(st.responses).filter(v=>v!==null&&v!==undefined&&String(v).trim()!=="").length,total:st.pack.questions.length});render()}return;
  }
  if(button.dataset.submit){grade();return}
  if(button.dataset.clip!=null){
@@ -381,7 +381,7 @@ document.addEventListener("click",handler);
 document.addEventListener("input",e=>{
  if(!current||current.graded)return;
  const n=e.target.dataset;
- if(n.answer!=null)current.responses[Number(n.answer)]=e.target.value;
+ if(n.answer!=null){current.responses[Number(n.answer)]=e.target.value;if(typeof window.recordTaskCoverage==="function")window.recordTaskCoverage({answered:Object.values(current.responses).filter(v=>v!==null&&v!==undefined&&String(v).trim()!=="").length,total:current.pack.questions.length});}
  if(n.predict!=null)current.prediction[Number(n.predict)]=e.target.value;
 });
 document.addEventListener("change",e=>{
