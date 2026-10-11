@@ -795,7 +795,7 @@ function showTaskProgress(id){
     (s.nextReview?'<div class="tpReviewNotice">🔁 Nên ôn lại khoảng <b>'+formatTaskDate(s.nextReview.getTime())+'</b>.</div>':'')+
     '<div class="tpPanelSection"><h3>Lịch sử task</h3>'+
       (hist.length?'<div class="tpTimeline">'+hist.map(function(h){
-        const pct=taskPerformancePct(h);
+        const pct=h.answered!==undefined&&Number(h.total)>0?Number(h.answered)/Number(h.total)*100:null;
         return '<div class="tpTimelineItem"><span></span><div><b>'+formatTaskDate(h.at)+' · '+(h.kind==='completion'?'Hoàn thành':progressEsc(h.kind))+'</b>'+
           '<strong>'+taskScoreLabel(h)+'</strong>'+
           (h.errors!==undefined?'<small>'+h.errors+' lỗi được ghi nhận</small>':'')+
