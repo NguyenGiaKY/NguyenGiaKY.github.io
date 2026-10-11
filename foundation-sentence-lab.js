@@ -32,6 +32,8 @@ function render(rootEl){if(rootEl)rootEl.innerHTML=ui.id?unitPage():homePage();}
 function sentenceExample(ex,id,index,mini){
 let h='<div class="fs-sentence"><div class="fs-chips" aria-label="Các từ trong câu">';
 ex.parts.forEach((p,i)=>{const role=d.roles[p.role]||["Khác",""];h+='<button type="button" class="fs-chip fs-'+esc(p.role)+'" data-s-token="'+i+'" data-s-ex="'+index+'" data-s-unit="'+esc(id)+'" title="'+esc(role[0])+'" aria-label="'+esc(p.text)+": "+esc(role[0])+'">'+esc(p.text)+'</button>';});
+const punctuation=String(ex.sentence||"").trim().slice(-1);
+if(/[.!?]/.test(punctuation))h+='<span class="fs-punctuation" aria-hidden="true">'+esc(punctuation)+'</span>';
 h+='</div><p class="fs-translation">'+esc(ex.vi)+'</p><p class="fs-takeaway">'+esc(ex.meaning)+'</p></div>';
 return h;
 }
@@ -99,11 +101,11 @@ h+='</div><div class="fs-topic-bottom">'+helper("next","Chủ đề tiếp theo 
 return h;
 }
 function lessonContent(lesson){
-const id=map[lesson.id]||"sentence",u=byId[id],ex=u.examples[0];
+const id=map[lesson.id]||"sentence",u=byId[id];
 return '<div class="fs-inlesson">'+
 '<div class="fs-idea"><span>GIẢI MÃ CẤU TRÚC CÂU</span><h3>'+esc(u.title)+'</h3><p>'+esc(u.idea)+'</p></div>'+
 '<p class="fs-muted">Chạm vào một từ để hiểu vai trò của nó. Phần này gắn trực tiếp với bài đang học.</p>'+
-sentenceExample(ex,id,0,true)+'<div id="sentenceTokenDetails" aria-live="polite">'+tokenDetails(ex,null)+'</div>'+
+u.examples.map((e,i)=>'<div class="fs-mini-example"><h4>Ví dụ '+(i+1)+' — '+(i===0?"Xác định vai trò":"So sánh cách dùng")+'</h4>'+sentenceExample(e,id,i,true)+'</div>').join("")+'<div id="sentenceTokenDetails" aria-live="polite">'+tokenDetails(u.examples[0],null)+'</div>'+
 '<div class="fs-trap"><strong>Hiểu nhầm cần tránh</strong><p>'+esc(u.trap)+'</p></div>'+
 '<div class="fs-next"><button class="fs-btn primary" type="button" data-f-action="syntaxTopic" data-f-syntax-id="'+esc(id)+'">Luyện suy luận & tự xây câu →</button></div></div>';
 }
