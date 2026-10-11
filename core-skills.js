@@ -66,7 +66,7 @@ h+='<div class="cs-step-head"><span>04</span><div><h3>Tự chuyển kỹ năng s
 if(ui.showSample){h+='<div class="cs-sample"><strong>Ví dụ tham khảo</strong><p>'+escape(u.sample)+'</p><small>Không cần giống hệt; phải biết giải thích vì sao cách dùng đó phù hợp.</small></div>'+
 '<label class="cs-check"><input id="csReflection" type="checkbox" '+(r.reflection?"checked":"")+'/> Tao đã tự làm, đối chiếu và sửa lỗi mà mình nhận ra.</label>';}
 const attempts=(r.history||[]).filter(x=>x.answered===t&&x.correct===t);
-h+='<div class="cs-skill-links"><strong>Áp dụng sang IELTS tasks</strong><p>'+escape(u.related.join(", "))+'</p><small>Liên hệ kiến thức, chưa tự mở hoặc tự đánh dấu 81 tasks.</small></div>'+
+h+='<div class="cs-skill-links"><strong>Áp dụng sang IELTS tasks</strong><div class="cs-related-buttons">'+u.related.map(id=>'<button type="button" data-cs-ielts="'+escape(id)+'">'+escape(id)+' ↗</button>').join("")+'</div><small>Chỉ mở task tương ứng; không tự đánh dấu đã học.</small></div>'+
 '<p class="cs-subdued">Đạt 2/'+t+' ở ít nhất hai ngày khác nhau cùng phần tự kiểm tra sẽ được ghi nhận là đã luyện qua hai ngày (không phải band IELTS).</p>'+
 '<div class="cs-actions">'+btn("home","Danh sách bài →","outline")+btn("next","Bài tiếp theo →","primary")+'</div>';
 }
@@ -79,6 +79,7 @@ const b=e.target.closest("button");if(!b||!root.contains(b))return;
 if(b.dataset.csArea){ui.area=b.dataset.csArea;render();return;}
 if(b.dataset.csOpen){open(b.dataset.csOpen);return;}
 if(b.dataset.csTab){ui.tab=b.dataset.csTab;render();return;}
+if(b.dataset.csIelts){if(window.GKOpenIELTSTask)window.GKOpenIELTSTask(b.dataset.csIelts);return;}
 if(b.dataset.csQ!==undefined){const q=index[ui.id].questions[Number(b.dataset.csQ)],o=q.options[Number(b.dataset.csO)];answer(ui.id,Number(b.dataset.csQ),o);return;}
 const a=b.dataset.csAction;
 if(a==="continue"){const n=pack.units.find(u=>!completed(u.id))||pack.units[0];open(n.id);}
@@ -103,6 +104,6 @@ try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(index[ui.id].e
 });
 root.addEventListener("input",e=>{if(e.target.id==="csDraft"&&ui.id){get(ui.id).draft=e.target.value;persist();}});
 root.addEventListener("change",e=>{if(e.target.id==="csReflection"&&ui.id){get(ui.id).reflection=e.target.checked;persist();}});
-window.GKCoreSkills={snapshot,render,open,getUnit:id=>index[id],getState:id=>get(id)};
+window.GKCoreSkills={snapshot,render,open,getUnit:id=>index[id],getState:id=>get(id),forTask:(id,skill)=>pack.units.find(u=>u.related.includes(id)&&u.area===skill)||pack.units.find(u=>u.related.includes(id))||null};
 render();
 })();
