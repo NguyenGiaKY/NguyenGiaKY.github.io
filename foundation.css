@@ -150,3 +150,14 @@
 #foundationRoot .f-next .f-btn{flex:1}
 }
 @media(prefers-reduced-motion:reduce){#foundationRoot .f-btn{transition:none}}
+
+/* New reasoning-first syntax course in Foundation */
+#foundationRoot .f-syntax-intro{display:grid;grid-template-columns:58px minmax(0,1fr) auto;align-items:center;gap:17px;padding:20px 22px;border:1px solid #d7e7e1;border-radius:17px;background:linear-gradient(110deg,#eefaf5,#f4f8ff)}
+#foundationRoot .f-syntax-symbol{width:56px;height:56px;display:grid;place-items:center;border-radius:15px;color:#176f64;background:#d7f3e9;font-size:20px;font-weight:900}
+#foundationRoot .f-syntax-label{font-size:10px;letter-spacing:.07em;font-weight:900;color:#217467}
+#foundationRoot .f-syntax-intro h3{font-size:19px;line-height:1.4;margin:4px 0 5px;color:#1c3e49}
+#foundationRoot .f-syntax-intro p{font-size:13px;line-height:1.65;color:#527074;margin:0;max-width:640px}
+#foundationRoot .f-syntax-intro .f-btn{white-space:nowrap}
+#foundationRoot .f-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:880px){#foundationRoot .f-syntax-intro{grid-template-columns:50px 1fr}#foundationRoot .f-syntax-intro .f-btn{grid-column:2;justify-self:start;white-space:normal}}
+@media(max-width:650px){#foundationRoot .f-syntax-intro{grid-template-columns:1fr;gap:10px;padding:17px}#foundationRoot .f-syntax-symbol{height:43px;width:43px;font-size:17px}#foundationRoot .f-syntax-intro .f-btn{grid-column:1;width:100%}#foundationRoot .f-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
