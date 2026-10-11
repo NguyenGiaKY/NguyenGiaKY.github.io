@@ -41,7 +41,7 @@ return '<div class="fr-word-explain"><span class="fr-type fr-'+esc(p.kind)+'">'+
 function homepage(){
 const learned=cases.filter(x=>checkDates(x.id).length).length,done=cases.filter(x=>status(x.id)==="reviewed").length;
 const filtered=cases.filter(c=>ui.filter==="all"||filterMap[ui.filter].includes(c.id));
-let h='<div class="fr-wrap"><button class="fr-return" type="button" data-r-action="foundation">← English Foundation</button>'+
+let h='<div class="fr-wrap"><button class="fr-return" type="button" data-f-action="relationsBack">← English Foundation</button>'+
 '<div class="fr-hero"><span>WORD CONNECTIONS · HỌC TƯ DUY QUA QUAN HỆ CỦA TỪ</span><h2>Bốn loại từ kết nối với nhau như thế nào?</h2>'+
 '<p>Danh từ gọi tên, động từ nói điều diễn ra, tính từ mô tả, trạng từ bổ sung cách thức hoặc mức độ. Chúng không đứng ngẫu nhiên: hãy tìm <b>từ nào đang nói về từ nào</b>.</p>'+
 '<div class="fr-progress"><span>Đã luyện '+learned+'/'+cases.length+' quan hệ</span><span>Đã ôn ít nhất hai ngày: '+done+'</span></div></div>'+
