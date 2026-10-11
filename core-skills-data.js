@@ -338,8 +338,8 @@ window.GKCoreSkillsData={
       "title": "Numbers, dates & spelling",
       "principle": "Đọc câu hỏi để biết cần loại dữ liệu trước khi nghe.",
       "text": "Khi ghi giờ, tên, số, ngày cần chú ý âm cuối và cách viết, không suy ra theo phỏng đoán. Khi người nói sửa lại, lấy thông tin đã được xác nhận.",
-      "example": "The meeting starts at fifteen — sorry, I mean fifty minutes past nine.",
-      "misconception": "Mười lăm và năm mươi có thể dễ nhầm; hãy chú ý stress và ngữ cảnh.",
+      "example": "The meeting starts at nine fifteen — sorry, I mean nine fifty.",
+      "misconception": "Fifteen và fifty dễ nhầm; người nói sửa lại nên chỉ giữ giờ được xác nhận.",
       "questions": [
         {
           "prompt": "Giờ cuối cùng được nêu là?",
@@ -602,11 +602,11 @@ window.GKCoreSkillsData={
         {
           "prompt": "Mệnh đề All visitors là gì?",
           "options": [
-            "Bị bác bỏ bởi phạm vi 'some'? chưa chắc",
+            "Chưa đủ dữ kiện để kết luận",
             "Được xác nhận",
             "Bắt buộc là đúng"
           ],
-          "correct": "Bị bác bỏ bởi phạm vi 'some'? chưa chắc",
+          "correct": "Chưa đủ dữ kiện để kết luận",
           "why": "Some không đủ để xác nhận all; một số không khẳng định tất cả."
         },
         {
