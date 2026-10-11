@@ -1,0 +1,39 @@
+/* Three-stage Learning Journey: progress is based on observable evidence. */
+#journeyRoot{max-width:1080px;margin:0 auto;color:#213450}
+#journeyRoot *{box-sizing:border-box}
+#journeyRoot .lj-wrap{display:flex;flex-direction:column;gap:19px}
+#journeyRoot .lj-hero{display:grid;grid-template-columns:minmax(0,1fr) 185px;align-items:center;gap:21px;padding:30px;background:linear-gradient(115deg,#f8fbff,#e8f2ff);border-radius:22px;border:1px solid #d4e2f7}
+#journeyRoot .lj-kicker{font-size:11px;font-weight:900;color:#315bb4;letter-spacing:.08em}
+#journeyRoot .lj-hero h2{font-size:clamp(26px,3vw,35px);line-height:1.25;color:#162e57;margin:10px 0}
+#journeyRoot .lj-hero p{font-size:14px;line-height:1.85;color:#4f6682;max-width:670px;margin:0}
+#journeyRoot .lj-hero-side{border-radius:16px;background:#fff;border:1px solid #d5e2f2;padding:20px;text-align:center;display:flex;flex-direction:column;gap:6px}
+#journeyRoot .lj-hero-side strong{font-size:40px;color:#3157d5}
+#journeyRoot .lj-hero-side span{font-size:13px;font-weight:800;color:#435879}
+#journeyRoot .lj-hero-side small{font-size:11px;line-height:1.5;color:#78899b}
+#journeyRoot .lj-alert{background:#f7f9ff;border:1px solid #dde5f3;border-radius:13px;padding:16px 19px}
+#journeyRoot .lj-alert strong{font-size:15px;color:#2a4c81}
+#journeyRoot .lj-alert p{font-size:13px;line-height:1.8;color:#587089;margin:6px 0 0}
+#journeyRoot .lj-stage-list{display:grid;grid-template-columns:1fr;gap:14px}
+#journeyRoot .lj-stage{border:1px solid #dce6f0;border-radius:17px;padding:20px 22px;background:#fff;display:flex;flex-direction:column;gap:11px}
+#journeyRoot .lj-stage-heading{display:flex;align-items:center;gap:14px;min-width:0}
+#journeyRoot .lj-stage-id{display:grid;place-items:center;height:47px;width:47px;border-radius:12px;flex:none;background:#eaf1ff;color:#3157d5;font-size:20px;font-weight:900}
+#journeyRoot .lj-stage-name{flex:1;min-width:0}
+#journeyRoot .lj-stage-name>span{font-size:10px;font-weight:900;color:#5075b8;letter-spacing:.07em}
+#journeyRoot .lj-stage-name h3{font-size:19px;color:#213c60;margin:4px 0}
+#journeyRoot .lj-stage-name p{font-size:13px;color:#697a91;line-height:1.6;margin:0}
+#journeyRoot .lj-rate{font-size:24px;color:#3157d5;white-space:nowrap}
+#journeyRoot .lj-bar{height:10px;border-radius:100px;background:#e7edf6;overflow:hidden}
+#journeyRoot .lj-bar>i{display:block;height:100%;max-width:100%;background:#3157d5;border-radius:100px}
+#journeyRoot .lj-caption{color:#66778c;font-size:12px;line-height:1.7;margin:0}
+#journeyRoot .lj-parts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#journeyRoot .lj-parts>div{background:#f8faff;border:1px solid #e4eaf4;border-radius:10px;padding:9px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#5b6e87}
+#journeyRoot .lj-parts b{font-size:12px;color:#3157a4;white-space:nowrap}
+#journeyRoot .lj-action{align-self:flex-start;background:#3157d5;color:#fff;border:1px solid #3157d5;border-radius:11px;padding:10px 15px;min-height:42px;font-size:13px;font-weight:800}
+#journeyRoot .lj-action:hover{background:#2749bb}
+#journeyRoot .lj-guidance{border-radius:16px;background:#f7faff;border:1px solid #dfe8f4;padding:20px}
+#journeyRoot .lj-guidance h3{font-size:18px;margin:0 0 9px;color:#234164}
+#journeyRoot .lj-guidance p{font-size:13px;line-height:1.85;color:#5a718a;margin:0}
+#journeyRoot .lj-shortcuts{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+#journeyRoot .lj-shortcuts button{background:white;color:#365aa3;border:1px solid #cbdaf0;border-radius:10px;padding:10px 13px;font-weight:800;font-size:13px}
+#journeyRoot .lj-shortcuts button:hover{background:#edf4ff}
+@media(max-width:650px){#journeyRoot .lj-wrap{gap:13px}#journeyRoot .lj-hero{grid-template-columns:1fr;padding:20px}#journeyRoot .lj-hero-side{align-items:center;flex-direction:row;text-align:left}#journeyRoot .lj-hero-side strong{font-size:30px}#journeyRoot .lj-stage{padding:16px}#journeyRoot .lj-stage-heading{align-items:flex-start;gap:9px}#journeyRoot .lj-stage-id{height:39px;width:39px;font-size:17px}#journeyRoot .lj-stage-name h3{font-size:16px}#journeyRoot .lj-rate{font-size:17px}#journeyRoot .lj-parts{grid-template-columns:1fr}#journeyRoot .lj-action{width:100%}}
