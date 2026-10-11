@@ -785,7 +785,7 @@ function showTaskProgress(id){
   '<section class="taskProgressPanel">'+
     '<div class="tpPanelTop"><div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span><small>'+t.module+' · '+t.moduleTitle+'</small><h2>'+t.title+'</h2></div><button data-progress-close>×</button></div>'+
     '<div class="tpHeroStats">'+
-      '<div><span>Mastery</span><strong>'+s.mastery+'%</strong><div class="tpBigBar"><i style="width:'+s.mastery+'%"></i></div></div>'+
+      '<div><span>Tiến độ số câu</span><strong>'+progressFmt(s.coverage)+'</strong><div class="tpBigBar"><i style="width:'+(s.coverage||0)+'%"></i></div></div>'+
       '<div><span>Trạng thái</span><strong class="tpStatus '+s.status+'">'+s.label+'</strong></div>'+
       '<div><span>Lần làm</span><strong>'+p.attempts+'</strong></div>'+
       '<div><span>Lần gần nhất</span><strong>'+(s.latest?taskScoreLabel(s.latest):'—')+'</strong></div>'+
@@ -817,8 +817,8 @@ function progressTaskRow(t){
  return '<div class="progressTaskRow" data-progress-skill="'+t.skill+'">'+
   '<div class="progressTaskMain"><div><span class="skillPill '+t.skill+'">'+skillMeta[t.skill].label+'</span><small>'+t.module+'</small><h4>'+t.title+'</h4></div>'+
    '<span class="tpStatus '+s.status+'">'+s.label+'</span></div>'+
-  '<div class="progressTaskBar"><i style="width:'+s.mastery+'%"></i></div>'+
-  '<div class="progressTaskMeta"><span><b>'+s.mastery+'%</b> mastery</span><span>'+p.attempts+' lần</span><span>Gần nhất: '+(s.latest?taskScoreLabel(s.latest):'—')+'</span><span>'+formatTaskDate(p.lastStudied)+'</span></div>'+
+  '<div class="progressTaskBar"><i style="width:'+(s.coverage||0)+'%"></i></div>'+
+  '<div class="progressTaskMeta"><span><b>'+progressFmt(s.coverage)+'</b> số câu'+(s.answered!==null?' · '+s.answered+'/'+s.total:'')</span><span>'+p.attempts+' lần</span><span>Gần nhất: '+(s.latest?taskScoreLabel(s.latest):'—')+'</span><span>'+formatTaskDate(p.lastStudied)+'</span></div>'+
   '<div class="progressTaskActions"><button class="btn primary" data-open="'+t.id+'">Học tiếp</button><button class="btn" data-progress="'+t.id+'">Xem chi tiết</button></div>'+
  '</div>';
 }
@@ -831,19 +831,19 @@ function renderProgressHub(){
  const mastered=summaries.filter(x=>x.s.status==='mastered').length;
  const review=summaries.filter(x=>x.s.status==='review').length;
  const activeSummaries=summaries.filter(x=>x.s.status!=='not-started');
- const avg=activeSummaries.length?Math.round(activeSummaries.reduce((n,x)=>n+x.s.mastery,0)/activeSummaries.length):0;
+ const avg=tasks.length?summaries.reduce((n,x)=>n+(x.s.coverage||0),0)/tasks.length:0;
 
  const skillCards=['listening','reading','writing','speaking','support'].map(function(skill){
    const a=summaries.filter(x=>x.t.skill===skill);
    const active=a.filter(x=>x.s.status!=='not-started');
-   const pct=active.length?Math.round(active.reduce((n,x)=>n+x.s.mastery,0)/active.length):0;
+   const pct=a.length?a.reduce((n,x)=>n+(x.s.coverage||0),0)/a.length:0;
    const weak=a.filter(x=>x.s.status==='review').length;
-   return '<button class="progressSkillCard" data-progress-filter="'+skill+'"><span>'+skillMeta[skill].label+'</span><strong>'+pct+'%</strong><div><i style="width:'+pct+'%"></i></div><small>'+active.length+'/'+a.length+' đã học'+(weak?' · '+weak+' cần ôn':'')+'</small></button>';
+   return '<button class="progressSkillCard" data-progress-filter="'+skill+'"><span>'+skillMeta[skill].label+'</span><strong>'+progressFmt(pct)+'</strong><div><i style="width:'+pct+'%"></i></div><small>'+active.length+'/'+a.length+' đã bắt đầu'+(weak?' · '+weak+' cần ôn':'')+'</small></button>';
  }).join('');
 
  el.innerHTML=
-  '<div class="progressHubHero"><div><span class="phase">TASK PROGRESS</span><h2>Progress Hub</h2><p>Mỗi task tự lưu số lần làm, điểm, thời gian và lịch sử. Mastery được tính từ kết quả thực tế; chỉ bấm “hoàn thành” sẽ không tự biến task thành Mastered.</p></div>'+
-   '<div class="progressOverall"><span>Mastery trung bình</span><strong>'+avg+'%</strong></div></div>'+
+  '<div class="progressHubHero"><div><span class="phase">TASK PROGRESS</span><h2>Progress Hub</h2><p>Mỗi task tự lưu số lần làm, điểm, thời gian và lịch sử. Tiến độ số câu và tỷ lệ trả lời đúng là hai chỉ số riêng. Bấm “hoàn thành” hoặc mở bài không tự tạo phần trăm. Task thiếu dữ liệu số câu hiện dấu —.</p></div>'+
+   '<div class="progressOverall"><span>Tiến độ có chứng cứ</span><strong>'+progressFmt(avg)+'</strong></div></div>'+
   '<div class="progressSummaryGrid"><div><span>Đã bắt đầu</span><b>'+started+'/'+tasks.length+'</b></div><div><span>Mastered</span><b>'+mastered+'</b></div><div><span>Cần ôn</span><b>'+review+'</b></div><div><span>Chưa học</span><b>'+(tasks.length-started)+'</b></div></div>'+
   '<div class="progressSkillGrid">'+skillCards+'</div>'+
   '<div class="progressHubTools"><b>Tất cả task</b><div><button class="btn primary" data-progress-filter="all">Tất cả</button><button class="btn" data-progress-filter="review">Cần ôn</button><button class="btn" data-progress-filter="mastered">Mastered</button></div></div>'+
@@ -870,7 +870,7 @@ function taskCard(t,queue=false){
    (vocab?'<span class="listenVocabBadge">🎧 Word drill · '+vocab.words.length+' từ</span>':'')+
    '<h4>'+t.title+'</h4><p>'+t.desc+'</p>'+
    (vocab?'<small class="listenVocabMeta">'+listeningWordMeta(t.id)+'</small>':'')+
-   '<div class="taskMiniProgress"><div><span class="tpStatus '+ps.status+'">'+ps.label+'</span><small>'+p.attempts+' lần'+(ps.latest?' · gần nhất '+taskScoreLabel(ps.latest):'')+'</small><b>'+ps.mastery+'%</b></div><div class="tpMiniBar"><i style="width:'+ps.mastery+'%"></i></div></div>'+
+   '<div class="taskMiniProgress"><div><span class="tpStatus '+ps.status+'">'+ps.label+'</span><small>'+p.attempts+' lần'+(ps.latest?' · gần nhất '+taskScoreLabel(ps.latest):'')+'</small><b>'+progressFmt(ps.coverage)+'</b></div><div class="tpMiniBar"><i style="width:'+(ps.coverage||0)+'%"></i></div></div>'+
    '</div>'+
    '<div class="flexTaskActions">'+
     '<button class="btn primary" data-open="'+t.id+'">'+(ps.status==='not-started'?'Mở bài':'Tiếp tục')+'</button>'+
@@ -959,7 +959,7 @@ function renderFlexHome(){
  '<div class="flexQueue">'+q.map(t=>taskCard(t,true)).join('')+'</div>'+
  '<div class="skillSnapshot">'+['listening','reading','writing','speaking'].map(s=>{
    let v=latestScore(s),m=skillMeta[s];
-   return '<div class="snapshotCard"><b>'+m.label+' '+m.target+'</b><strong>'+pctSkill(s)+'%</strong><span>'+(v===null?'Chưa nhập checkpoint':'Gần nhất: '+v+(m.metric==='/40'?'/40':' band'))+'</span></div>';
+   return '<div class="snapshotCard"><b>'+m.label+' '+m.target+'</b><strong>'+progressFmt(pctSkill(s))+'</strong><span>'+(v===null?'Chưa nhập checkpoint':'Gần nhất: '+v+(m.metric==='/40'?'/40':' band'))+'</span></div>';
  }).join('')+'</div>';
 
  const paintSelected=n=>{
@@ -1013,7 +1013,7 @@ function renderSkill(skill){
  (skill==='listening'?'<div class="authAudioPanel"><div><span class="phase">REAL AUDIO · OFFICIAL</span><h3>Nghe người thật, không chỉ giọng máy</h3><p>Technique Studio giúp tập chiến thuật. Để luyện giọng tự nhiên, nối âm và tốc độ IELTS thật, hãy làm song song các bài sample có audio chính thức. Hai trang bên dưới chứa đề, recordings, đáp án và transcript.</p></div><div class="authAudioLinks"><a href="https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests/academic/listening" target="_blank" rel="noopener noreferrer">🎧 British Council · Listening samples ↗</a><a href="https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test" target="_blank" rel="noopener noreferrer">🎧 IELTS Official · 4-part practice ↗</a></div></div>':'')+
  (skill!=='support'?scoreBox(skill):'')+
  '<div class="moduleStack">'+ms.map(mod=>{
-   let done=mod.tasks.filter(t=>fs.done[t[0]]).length;
+   let done=mod.tasks.filter(t=>taskProgressSummary(taskById(t[0])).coverage===100).length;
    return '<div class="moduleCard"><div class="moduleHead"><div><span class="moduleId">'+mod.id+'</span><h3>'+mod.title+'</h3><p>'+mod.goal+'</p></div><b>'+done+'/'+mod.tasks.length+'</b></div>'+
     '<div>'+mod.tasks.map(t=>taskCard({skill,module:mod.id,moduleTitle:mod.title,id:t[0],title:t[1],desc:t[2],day:t[3],index:t[4]})).join('')+'</div></div>';
  }).join('')+'</div>';
