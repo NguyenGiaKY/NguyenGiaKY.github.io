@@ -37,3 +37,7 @@
 #journeyRoot .lj-shortcuts button{background:white;color:#365aa3;border:1px solid #cbdaf0;border-radius:10px;padding:10px 13px;font-weight:800;font-size:13px}
 #journeyRoot .lj-shortcuts button:hover{background:#edf4ff}
 @media(max-width:650px){#journeyRoot .lj-wrap{gap:13px}#journeyRoot .lj-hero{grid-template-columns:1fr;padding:20px}#journeyRoot .lj-hero-side{align-items:center;flex-direction:row;text-align:left}#journeyRoot .lj-hero-side strong{font-size:30px}#journeyRoot .lj-stage{padding:16px}#journeyRoot .lj-stage-heading{align-items:flex-start;gap:9px}#journeyRoot .lj-stage-id{height:39px;width:39px;font-size:17px}#journeyRoot .lj-stage-name h3{font-size:16px}#journeyRoot .lj-rate{font-size:17px}#journeyRoot .lj-parts{grid-template-columns:1fr}#journeyRoot .lj-action{width:100%}}
+
+#journeyRoot .lj-stage-secondary{display:flex;justify-content:flex-end;margin-top:-4px}
+#journeyRoot .lj-stage-secondary button{background:#fff;border:1px solid #c8daf3;border-radius:10px;padding:10px 14px;color:#3157a0;font-size:13px;font-weight:800;min-height:42px}
+#journeyRoot .lj-stage-secondary button:hover{background:#edf4ff}
