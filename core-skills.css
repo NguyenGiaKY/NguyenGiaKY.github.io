@@ -95,3 +95,8 @@
 #coreSkillsRoot .cs-skill-links small{color:#7a8ca0}
 @media(max-width:800px){#coreSkillsRoot .cs-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){#coreSkillsRoot .cs-hero{grid-template-columns:1fr;padding:20px;gap:13px}#coreSkillsRoot .cs-hero-progress{padding:12px}#coreSkillsRoot .cs-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#coreSkillsRoot .cs-lesson{gap:8px;padding:11px}#coreSkillsRoot .cs-number{min-width:40px;padding:8px 5px}#coreSkillsRoot .cs-lesson-main strong{font-size:13px}#coreSkillsRoot .cs-lesson-end{width:95px}#coreSkillsRoot .cs-lesson-end .cs-status{font-size:10px;white-space:normal;text-align:right}#coreSkillsRoot .cs-bridge{flex-direction:column;align-items:stretch}#coreSkillsRoot .cs-panel{padding:15px}#coreSkillsRoot .cs-tabs button{font-size:11px;line-height:1.35}#coreSkillsRoot .cs-example{flex-direction:column;align-items:flex-start}#coreSkillsRoot .cs-actions .cs-btn{flex:1}}
+
+/* Direct connections between Core Skills and its linked IELTS tasks */
+#coreSkillsRoot .cs-related-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+#coreSkillsRoot .cs-related-buttons button{background:#fff;border:1px solid #c7d9f1;color:#3157ac;border-radius:9px;font-weight:850;font-size:13px;padding:8px 13px;min-height:38px}
+#coreSkillsRoot .cs-related-buttons button:hover{background:#edf4ff;border-color:#6e91d7}
