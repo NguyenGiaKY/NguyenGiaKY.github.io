@@ -116,3 +116,24 @@
 @media(max-width:700px){#foundationRoot .ft-home{padding:17px}#foundationRoot .ft-hero,#foundationRoot .ft-section{padding:14px}#foundationRoot .ft-word-list,#foundationRoot .ft-roles{grid-template-columns:repeat(2,minmax(0,1fr))}#foundationRoot .ft-word-detail{grid-template-columns:1fr}#foundationRoot .ft-choice-list{grid-template-columns:1fr}#foundationRoot .ft-same{grid-template-columns:1fr}#foundationRoot .ft-same>span{transform:rotate(90deg)}#foundationRoot .ft-big-idea{flex-direction:column}#foundationRoot .ft-big-idea>div{width:100%}#foundationRoot .ft-footer{flex-direction:column;align-items:stretch}#foundationRoot .ft-home h3{font-size:21px}#foundationRoot .ft-review-cards{grid-template-columns:1fr}}
 @media(max-width:460px){#foundationRoot .ft-missions{grid-template-columns:1fr 1fr}#foundationRoot .ft-missions span{font-size:10px;padding:8px}#foundationRoot .ft-roles span{font-size:10px}}
 @media(prefers-reduced-motion:reduce){#foundationRoot .ft-studio *{animation:none!important;transition:none!important}}
+
+#foundationRoot .ft-family{background:linear-gradient(140deg,#fff,#f7fafc);border-color:#d7e2ec}
+#foundationRoot .ft-family-comparison{display:grid;grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr);align-items:center;gap:10px}
+#foundationRoot .ft-family-comparison>div{background:#f1f6fc;padding:14px 15px;border:1px solid #d5e1ee;border-radius:12px;min-height:116px}
+#foundationRoot .ft-family-comparison>div:last-child{background:#edf8f1;border-color:#cce7d9}
+#foundationRoot .ft-family-comparison>div>span{font-size:11px;font-weight:850;color:#53779b}
+#foundationRoot .ft-family-comparison h4{font-size:20px;margin:5px 0}
+#foundationRoot .ft-family-comparison p{font-size:13px;color:#536b86;margin:0}
+#foundationRoot .ft-family-comparison>span{font-size:20px;color:#6685a2;text-align:center}
+#foundationRoot .ft-family-reason{border:1px solid #dbe4ed;border-radius:11px;background:#fff;padding:12px 14px}
+#foundationRoot .ft-family-reason summary{cursor:pointer;font-size:13px;font-weight:800;display:flex;justify-content:space-between;gap:12px;color:#30577e}
+#foundationRoot .ft-family-reason summary b{font-size:11px;color:#527cac}
+#foundationRoot .ft-family-reason p{color:#526e89;line-height:1.7;font-size:12px}
+#foundationRoot .f-deep-dives{border:1px solid #d9e5f0;background:#fafdff;border-radius:15px;overflow:hidden}
+#foundationRoot .f-deep-dives>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;color:#30577f}
+#foundationRoot .f-deep-dives>summary b{font-size:14px}
+#foundationRoot .f-deep-dives>summary span{font-size:11px;color:#6a819a}
+#foundationRoot .f-deep-dives>.f-guide{margin:10px}
+#foundationRoot .f-deep-dives>.f-syntax-intro{margin:10px}
+#foundationRoot .f-deep-dives>.fv-home-banner{margin:10px}
+@media(max-width:700px){#foundationRoot .ft-family-comparison{grid-template-columns:1fr}#foundationRoot .ft-family-comparison>span{transform:rotate(90deg)}#foundationRoot .f-deep-dives>summary{flex-direction:column;align-items:start}}
