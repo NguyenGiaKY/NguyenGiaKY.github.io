@@ -17,7 +17,7 @@ const steps=[
 ];
 const phases=["Explore & Listen","Think & Paraphrase","Speak & Write","Check & Fix","Deep Dive"];
 let loaded={};try{loaded=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(err){}
-const rows=loaded.lessons||{};
+const rows=loaded.lessons||{};let lastLessonId=loaded.lastLessonId||"";
 let current="",message="";
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function state(id){
@@ -26,7 +26,7 @@ function state(id){
  if(!r.draft){try{r.draft=JSON.parse(localStorage.getItem(PREV)||"{}")?.drafts?.[id]||""}catch(err){}}
  return r;
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify({lessons:rows}))}catch(err){message="Could not save progress. Check browser storage."}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({lessons:rows,lastLessonId}))}catch(err){message="Could not save progress. Check browser storage."}}
 function legacyDraft(id,val){try{const old=JSON.parse(localStorage.getItem(PREV)||"{}")||{};old.drafts=old.drafts||{};old.drafts[id]=val;localStorage.setItem(PREV,JSON.stringify(old))}catch(err){}}
 function b(name,text,style="outline",disabled=false){return '<button type="button" data-gf-action="'+name+'" class="gf-btn '+style+'" '+(disabled?"disabled":"")+'>'+text+'</button>'}
 function field(id,value,placeholder){return '<textarea data-gf-field="'+id+'" rows="4" class="gf-field" placeholder="'+esc(placeholder)+'">'+esc(value||"")+'</textarea>'}
@@ -88,7 +88,7 @@ function content(lesson,r){
 }
 function render(lesson){
  const l=typeof lesson==="string"?lessonById[lesson]:lesson;if(!l)return;
- current=l.id;const r=state(current);r.page=Math.max(0,Math.min(steps.length-1,Number(r.page)||0));
+ current=l.id;lastLessonId=current;const r=state(current);r.page=Math.max(0,Math.min(steps.length-1,Number(r.page)||0));
  const phase=steps[r.page][1],percent=Math.round((r.page+1)/steps.length*100);
  const parts=phases.map((p,i)=>'<button type="button" data-gf-phase="'+i+'" class="'+(i===phase?"selected":"")+'">'+String(i+1).padStart(2,"0")+' · '+esc(p)+'</button>').join("");
  root.innerHTML='<div class="gf-shell"><header class="gf-top">'+b("exit","← Foundation lessons","text")+'<div class="gf-title"><small>'+esc(l.level)+' · '+esc(l.skill)+'</small><h1>'+esc(l.title)+'</h1></div>'+
@@ -138,5 +138,5 @@ root.addEventListener("input",ev=>{
  }
  if(ev.target.id==="foundationDraft"){r.draft=ev.target.value;legacyDraft(current,r.draft);save()}
 });
-window.GKFoundationFlow={render,open:render,getState:state,screenCount:steps.length};
+window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,screenCount:steps.length};
 })();
