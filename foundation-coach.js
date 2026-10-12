@@ -42,45 +42,65 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 const row=id=>records[id]||(records[id]={writing:null,speaking:null});
 function persist(){try{localStorage.setItem(KEY,JSON.stringify({records}));}catch(e){error="Unable to save this feedback on your browser.";}}
 function clearAudio(){if(url)URL.revokeObjectURL(url);url="";clip=null;}
-function fields(title,report){
- if(!report)return'<p class="fc-no-result">No AI assessment yet. Submit your answer to receive corrections.</p>';
- const corrections=Array.isArray(report.mistakes)?report.mistakes:[];
- let h='<div class="fc-report"><div class="fc-result-head"><strong>'+esc(title)+'</strong>'+
- '<span>'+(Number.isInteger(report.score)?report.score+'/5 practice':'Practice result')+'</span></div>'+
- '<p class="fc-report-summary">'+esc(report.summary_vi)+'</p>';
- if(report.transcript)h+='<div class="fc-part"><h5>Heard from your recording</h5><p lang="en">'+esc(report.transcript)+'</p></div>';
- if(report.task_feedback_vi)h+='<div class="fc-part"><h5>Task feedback</h5><p>'+esc(report.task_feedback_vi)+'</p></div>';
- if(report.strengths_vi?.length)h+='<div class="fc-part"><h5>What you did well</h5><ul>'+report.strengths_vi.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></div>';
- h+='<div class="fc-part"><h5>Errors and fixes</h5>';
- if(!corrections.length)h+='<p>No clear language mistakes identified in this response.</p>';
- else corrections.forEach((m,i)=>{h+='<div class="fc-fix"><span>Correction '+(i+1)+'</span><p class="fc-wrong">'+esc(m.original)+'</p><p class="fc-correct">→ '+esc(m.correction)+'</p><p>'+esc(m.reason_vi)+'</p>'+(m.rule_vi?'<small>Rule: '+esc(m.rule_vi)+'</small>':'')+'</div>'});
- h+='</div>';
- if(report.corrected_answer)h+='<div class="fc-part"><h5>Corrected version (your ideas)</h5><p lang="en">'+esc(report.corrected_answer)+'</p></div>';
- if(report.model_answer)h+='<div class="fc-part"><h5>Model answer at this level</h5><p lang="en">'+esc(report.model_answer)+'</p></div>';
- if(report.pronunciation_vi)h+='<div class="fc-part"><h5>Pronunciation from audio</h5><p>'+esc(report.pronunciation_vi)+'</p></div>';
+function fields(mode,record){
+ const report=record?.report;
+ if(!report)return'<div class="fc-awaiting"><strong>No assessment yet</strong><p>First try the task yourself. OpenAI checking is optional and requires your Google sign-in and a configured API.</p></div>';
+ const errors=Array.isArray(report.mistakes)?report.mistakes:[];
+ const checks=Array.isArray(report.task_checks)?report.task_checks:[];
+ const status=report.task_status||"unclear",descriptions={met:"Answered the task",partial:"Some task requirements missing",off_topic:"Off topic — the question was not answered",unclear:"Task fit needs checking"};
+ let h='<section class="fc-report" aria-label="AI correction result"><header class="fc-report-hero"><div><span class="fc-kicker">DIAGNOSTIC FEEDBACK · '+(mode==="writing"?"WRITING":"SPEAKING")+'</span><h4>'+esc(descriptions[status])+'</h4></div><strong>'+ (report.score===null||report.score===undefined?"—":esc(report.score))+'/5 <small>practice</small></strong></header>'+
+ '<p class="fc-report-summary">'+esc(report.summary_vi||report.task_feedback_vi)+'</p>';
+ if(record?.at)h+='<p class="fc-result-date">Checked '+esc(new Date(record.at).toLocaleString())+'</p>';
+ if(report.transcript)h+='<div class="fc-part"><h5>What I heard (audio transcript)</h5><p lang="en">'+esc(report.transcript)+'</p></div>';
+ if(checks.length){h+='<div class="fc-part"><h5>Did you answer the actual question?</h5><div class="fc-criteria">';
+  for(const c of checks)h+='<div class="fc-criterion"><div><span class="fc-criterion-label '+esc(c.status)+'">'+(c.status==="met"?"✓":c.status==="partial"?"~":"!")+' '+esc(c.status)+'</span><strong>'+esc(c.criterion)+'</strong></div>'+
+  (c.evidence?'<p><b>Evidence:</b> '+esc(c.evidence)+'</p>':'')+(c.why_vi?'<p>'+esc(c.why_vi)+'</p>':'')+(c.fix_vi?'<p class="fc-criterion-fix">Next: '+esc(c.fix_vi)+'</p>':'')+'</div>';
+  h+='</div></div>';
+ }else if(report.task_feedback_vi)h+='<div class="fc-part"><h5>Task fit</h5><p>'+esc(report.task_feedback_vi)+'</p></div>';
+ if(report.priority_fix_vi)h+='<div class="fc-priority"><span>FIX THIS FIRST</span><strong>'+esc(report.priority_fix_vi)+'</strong></div>';
+ if(errors.length){
+  h+='<div class="fc-part"><h5>Fix the actual mistakes</h5><p class="fc-hint">Read what you wrote. Try correcting it before expanding the explanation.</p>';
+  errors.forEach((c,i)=>{h+='<details class="fc-error-item"><summary><span>'+esc(c.original||"Sentence "+(i+1))+'</span><b>How to fix ↓</b></summary>'+
+  '<div><p class="fc-correct" lang="en">'+esc(c.correction)+'</p><p>'+esc(c.reason_vi)+'</p>'+(c.rule_vi?'<small>'+esc(c.rule_vi)+'</small>':'')+'</div></details>';});
+  h+='</div>';
+ }else h+='<div class="fc-part"><h5>Language corrections</h5><p>No definite errors identified in this answer. Check task fit and development above before moving on.</p></div>';
+ if(report.pronunciation_vi)h+='<div class="fc-part"><h5>Pronunciation — from the recording</h5><p>'+esc(report.pronunciation_vi)+'</p></div>';
  if(report.rhythm_vi)h+='<div class="fc-part"><h5>Rhythm and pace</h5><p>'+esc(report.rhythm_vi)+'</p></div>';
- if(report.next_practice?.length)h+='<div class="fc-part"><h5>Fix it next</h5><ol>'+report.next_practice.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol></div>';
- return h+'</div>';
+ if(report.revision_feedback_vi)h+='<div class="fc-part"><h5>Compared with your previous attempt</h5><p>'+esc(report.revision_feedback_vi)+'</p></div>';
+ if(report.strengths_vi?.length)h+='<div class="fc-part"><h5>What worked</h5><ul>'+report.strengths_vi.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></div>';
+ if(mode==="writing"){
+  h+='<div class="fc-revision"><span class="fc-kicker">REWRITE → RECHECK</span><h5>Now revise your own answer</h5><p>Use the corrections above. Do not just copy the model. Submitting a new draft to AI requires another request and may incur a charge.</p>'+
+  (report.revision_question?'<p class="fc-revision-task">'+esc(report.revision_question)+'</p>':'')+
+  '<textarea id="fc-revision-draft" rows="4" placeholder="Rewrite your answer with the correct meaning and clearer English…">'+esc(row(current).revisionDraft||"")+'</textarea>'+
+  '<div class="fc-revision-actions"><button type="button" data-fc="useRevision" class="fc-primary">Put this revision into my answer</button></div></div>';
+ }
+ if(report.corrected_answer)h+='<details class="fc-model"><summary>See minimal corrections to your original wording</summary><p lang="en">'+esc(report.corrected_answer)+'</p></details>';
+ if(report.model_answer)h+='<details class="fc-model"><summary>See a possible on-topic answer (not for copying)</summary><p lang="en">'+esc(report.model_answer)+'</p></details>';
+ if(report.next_practice?.length)h+='<div class="fc-part"><h5>Your next 5-minute practice</h5><ol>'+report.next_practice.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol></div>';
+ return h+'</section>';
 }
 function render(lesson){
  if(!lesson||(!prompts[lesson.id]&&!lesson.speakingPrompt))return"";
  if(current&&current!==lesson.id)leave();
  if(lesson.speakingPrompt)customLessons[lesson.id]=lesson;
  current=lesson.id;
- const r=row(lesson.id);
- return'<section class="fc-coach" id="foundationCoach" aria-label="Writing and speaking correction">'+
- '<div class="fc-heading"><div><span class="fc-kicker">WRITING + SPEAKING • OPENAI CORRECTION</span><h3>Get specific feedback, then try again</h3>'+
- '<p>One correction at a time: understand the mistake, fix your sentence, and practise speaking it.</p></div><span class="fc-level">'+esc(lesson.level)+'</span></div>'+
- '<div class="fc-grid"><div class="fc-column"><h4>✍️ Writing correction</h4><p>'+esc(lesson.speakingPrompt?lesson.produce[0]:"Write your answer in the text box above, then ask AI to assess it against this lesson.")+'</p>'+
- (lesson.speakingPrompt?'<textarea id="fc-custom-answer" rows="4" aria-label="Your English response" placeholder="Write in English…">'+esc(r.draft||"")+'</textarea>':'')+
- '<button type="button" class="fc-primary" data-fc="writing" '+(loading?'disabled':'')+'>'+(loading?'Checking…':'Check my writing with OpenAI')+'</button>'+
- '<div id="fc-writing-result">'+fields("Writing",r.writing?.report)+'</div></div>'+
- '<div class="fc-column"><h4>🎙️ Speaking practice</h4><p class="fc-speaking-task" lang="en">'+esc(prompts[lesson.id]||lesson.speakingPrompt)+'</p>'+
- '<div class="fc-microphone"><button type="button" class="fc-primary" data-fc="'+(rec?'stop':'record')+'" '+(loading?'disabled':'')+'>'+(rec?'■ Stop recording':'● Record my answer')+'</button>'+
- '<span id="fc-mic-status" role="status">'+(rec?'Recording '+elapsed+'s / 45s':clip?'Recording ready':'No recording yet')+'</span></div>'+
- (clip?'<audio controls preload="none" src="'+esc(url)+'" aria-label="Review your recorded answer"></audio><button type="button" class="fc-primary" data-fc="speaking" '+(loading?'disabled':'')+'>Send recording for OpenAI feedback</button><button type="button" class="fc-link" data-fc="discard">Discard recording</button>':'')+
- '<div id="fc-speaking-result">'+fields("Speaking",r.speaking?.report)+'</div></div></div>'+
- '<p class="fc-disclosure">Practice scores /5 are not IELTS bands. OpenAI API usage may incur charges. Written answers or voice recordings are sent to the OpenAI service <strong>only when you press the assessment button</strong>. Feedback, written answers and transcripts are saved for cross-device review; raw audio is not saved.</p>'+
+ const r=row(lesson.id),mission=window.GKFoundationMissions?.mission(lesson.id),talk=lesson.speakingPrompt||mission?.speaking||prompts[lesson.id];
+ const shortIntro=!!mission;
+ return'<section class="fc-coach" id="foundationCoach" aria-label="Practice, correct and retry">'+
+ '<div class="fc-heading"><div><span class="fc-kicker">LEARN → TRY → FIX → RETRY</span><h3>Make your own answer stronger</h3>'+
+ '<p>Understand the question first. AI marks the task, identifies actual errors and guides your next attempt.</p></div></div>'+
+ '<div class="fc-grid"><div class="fc-column"><h4>01 · Check my writing</h4>'+
+ (shortIntro?'<p>Use your answer from the box above. Check that it answers the exact writing mission.</p>':'<p>'+esc(lesson.produce[0])+'</p><textarea id="fc-custom-answer" rows="4" placeholder="Write an original English response…">'+esc(r.draft||"")+'</textarea>')+
+ '<div class="fc-action-area"><button type="button" class="fc-primary" data-fc="writing" '+(loading?'disabled':'')+'>'+(loading?'Checking…':'Analyse my answer with OpenAI')+'</button>'+
+ '<span>Task fit · grammar · vocabulary · meaning</span></div>'+
+ fields("writing",r.writing)+'</div>'+
+ '<div class="fc-column"><h4>02 · Speak for a real purpose</h4><p class="fc-speaking-task" lang="en">'+esc(talk)+'</p>'+
+ (mission?'<p>Build the idea before recording: <b>'+esc(mission.focus)+'</b></p>':'')+
+ '<div class="fc-microphone"><button type="button" class="fc-primary" data-fc="'+(rec?'stop':'record')+'" '+(loading?'disabled':'')+'>'+(rec?'■ Stop':'● Record answer')+'</button>'+
+ '<span id="fc-mic-status" role="status">'+(rec?'Recording '+elapsed+'s / 45s':clip?'Ready to review':'No audio recorded')+'</span></div>'+
+ (clip?'<audio controls preload="none" src="'+esc(url)+'" aria-label="Review your recording"></audio><button type="button" class="fc-primary" data-fc="speaking" '+(loading?'disabled':'')+'>Assess recording with OpenAI</button><button type="button" class="fc-link" data-fc="discard">Discard and try again</button>':'')+
+ fields("speaking",r.speaking)+'</div></div>'+
+ '<p class="fc-disclosure">AI diagnostic scores /5 are not IELTS bands. OpenAI API use is billed separately. Text or audio is sent only after you press Assess and confirm. Text, transcripts and feedback can sync with your Google account; microphone recordings are not retained in your learning history.</p>'+
  '<p id="fc-message" role="status" class="fc-message">'+esc(error)+'</p></section>';
 }
 function refresh(){
