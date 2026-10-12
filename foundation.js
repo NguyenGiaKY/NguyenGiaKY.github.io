@@ -139,7 +139,7 @@ if(a==="home"){ui.page="home";render();scrollInto();}
 else if(a==="wordPacks"){ui.page="wordpacks";render();scrollInto();}
 else if(a==="classic"){ui.classic=true;window.GKFoundationCoach?.leave();render();scrollInto();}
 else if(a==="flow"){ui.classic=false;window.GKFoundationCoach?.leave();render();scrollInto();}
-else if(a==="continue"){open((data.lessons.find(l=>{const f=window.GKFoundationFlow?.getState(l.id);return f?.page>0&&!f.finished;})||data.lessons.find(l=>isDue(l.id))||data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0]).id);}
+else if(a==="continue"){const last=window.GKFoundationFlow?.getLastLessonId?.();const recent=last&&index[last]&&!window.GKFoundationFlow.getState(last).finished?index[last]:null;open((recent||data.lessons.find(l=>{const f=window.GKFoundationFlow?.getState(l.id);return f?.page>0&&!f.finished;})||data.lessons.find(l=>isDue(l.id))||data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0]).id);}
 else if(a==="diagnostic"){ui.page="placement";ui.placementAnswers={};ui.placementResult=null;ui.diagnosticQuestions=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]].map(l=>({prompt:l.quiz[0][0],options:shuffled(l.quiz[0].slice(1,4)),correct:l.quiz[0][1]}));render();scrollInto();}
 else if(a==="checkDiagnostic"){const n=ui.diagnosticQuestions.reduce((sum,q,i)=>sum+(ui.placementAnswers[i]===q.correct?1:0),0);ui.placementResult={correct:n,level:n<=3?"A0":n<=5?"A1":"A2"};render();}
 else if(a==="startLevel"){ui.page="home";ui.filter=ui.placementResult.level;render();scrollInto();}
