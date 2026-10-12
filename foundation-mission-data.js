@@ -1,4 +1,4 @@
-/* 24 authored situation-based Foundation learning missions: meaning -> practice -> transfer. */
+/* 24 authored real-life Foundation meaning checks and transfer tasks (balanced choices). */
 window.GKFoundationMissionData = {
   "version": 2,
   "missions": {
@@ -26,10 +26,10 @@ window.GKFoundationMissionData = {
       "dialog": "This is Tom. He is my classmate. We study together.",
       "question": "Who does he refer to?",
       "choices": [
-        "Tom",
-        "Tom and the speaker"
+        "Tom and the speaker",
+        "Tom"
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "Tom → he; Tom + I → we",
       "writing": "Tell someone about yourself and a friend.",
       "why": "Explain who he, she, we and they refer to.",
@@ -64,10 +64,10 @@ window.GKFoundationMissionData = {
       "dialog": "I found a pen. The pen is blue.",
       "question": "Why does the speaker say the pen the second time?",
       "choices": [
-        "The listener now knows which pen",
-        "It is an entirely different pen"
+        "It is an entirely different pen",
+        "The listener now knows which pen"
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "a pen → the pen",
       "writing": "Describe two objects and identify one specific object.",
       "why": "Introduce something, then refer back to it.",
@@ -102,10 +102,10 @@ window.GKFoundationMissionData = {
       "dialog": "Where is Room 4? It is upstairs. When does class start? At nine.",
       "question": "Which question asks for time?",
       "choices": [
-        "When does class start?",
-        "Where is Room 4?"
+        "Where is Room 4?",
+        "When does class start?"
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "where = place; when = time; why = reason",
       "writing": "Write one question about time and one about place, then answer one.",
       "why": "Choose the right question word for the information needed.",
@@ -140,10 +140,10 @@ window.GKFoundationMissionData = {
       "dialog": "First, I wake up. Then I have breakfast. Finally, I leave home.",
       "question": "Does finally describe the first or last stage?",
       "choices": [
-        "The final stage",
-        "The first stage"
+        "The first stage",
+        "The final stage"
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "first → then → finally",
       "writing": "Explain your morning in a clear and natural sequence.",
       "why": "Help a listener visualise what you do and in what order.",
@@ -178,10 +178,10 @@ window.GKFoundationMissionData = {
       "dialog": "I'm going to study tonight. I'll call you when I finish.",
       "question": "Which part is a plan already decided?",
       "choices": [
-        "I'm going to study tonight.",
-        "I'll call you when I finish."
+        "I'll call you when I finish.",
+        "I'm going to study tonight."
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "going to → intended plan; will → promise/decision in context",
       "writing": "Tell a friend about tomorrow's plan and one promise.",
       "why": "Distinguish a plan from a promise or spontaneous decision.",
@@ -216,10 +216,10 @@ window.GKFoundationMissionData = {
       "dialog": "We have some rice, but we don't have any milk.",
       "question": "What is missing?",
       "choices": [
-        "Milk",
-        "Rice"
+        "Rice",
+        "Milk"
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "some rice, any milk; countable items have units",
       "writing": "Explain which food you have and what you need.",
       "why": "Choose countable/uncountable expressions for real quantities.",
@@ -254,10 +254,10 @@ window.GKFoundationMissionData = {
       "dialog": "Videos are more convenient than long articles for me, but articles give more detail.",
       "question": "Does the speaker say articles are useless?",
       "choices": [
-        "No, they offer detail.",
-        "Yes, articles have no value."
+        "Yes, articles have no value.",
+        "No, they offer detail."
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "Comparisons are about a chosen quality, not overall worth.",
       "writing": "Compare two learning methods while explaining one advantage of each.",
       "why": "Choose clear comparison criteria instead of saying only better.",
@@ -292,10 +292,10 @@ window.GKFoundationMissionData = {
       "dialog": "I enjoy English because I can use it at school. Although it is difficult, I keep learning.",
       "question": "Which clause introduces a contrast?",
       "choices": [
-        "Although it is difficult",
-        "because I can use it at school"
+        "because I can use it at school",
+        "Although it is difficult"
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "because → reason; although → contrast",
       "writing": "Explain a personal goal using a reason and a contrast.",
       "why": "Show how a reason differs from an obstacle.",
@@ -330,10 +330,10 @@ window.GKFoundationMissionData = {
       "dialog": "Online lessons are flexible because students can choose when to study, but self-discipline is important.",
       "question": "What is the main message?",
       "choices": [
-        "Online learning is flexible but requires discipline.",
-        "Online learning never helps students."
+        "Online learning never helps students.",
+        "Online learning is flexible but requires discipline."
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "main point ≠ one example; retain benefits and limitations",
       "writing": "Summarise the main idea in your own words.",
       "why": "Paraphrase the overall claim without dropping the limitation.",
@@ -368,10 +368,10 @@ window.GKFoundationMissionData = {
       "dialog": "The library opens at 8 a.m. on weekdays and closes on Sundays.",
       "question": "Which detail answers ‘What time?’",
       "choices": [
-        "8 a.m.",
-        "Weekdays"
+        "Weekdays",
+        "8 a.m."
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "skim = overall idea; scan = precise fact",
       "writing": "Summarise the notice and give an exact opening time.",
       "why": "Separate a summary from evidence you scanned.",
@@ -406,10 +406,10 @@ window.GKFoundationMissionData = {
       "dialog": "I like English because I can talk with more people. For example, I use it when travelling.",
       "question": "What makes the example relevant?",
       "choices": [
-        "It supports the reason for learning English.",
-        "It introduces an unrelated hobby."
+        "It introduces an unrelated hobby.",
+        "It supports the reason for learning English."
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "answer → reason → supporting example",
       "writing": "Answer a personal preference question with a genuine reason and example.",
       "why": "Link a reason and an example to the same central idea.",
@@ -444,10 +444,10 @@ window.GKFoundationMissionData = {
       "dialog": "I prefer classroom lessons because I can ask questions immediately. Online lessons are more flexible.",
       "question": "Does the speaker reject every benefit of online learning?",
       "choices": [
-        "No, online learning has a different advantage.",
-        "Yes, online learning has no advantages."
+        "Yes, online learning has no advantages.",
+        "No, online learning has a different advantage."
       ],
-      "correct": 0,
+      "correct": 1,
       "focus": "preference ≠ absolute truth; reason must support choice",
       "writing": "Choose online or classroom learning and explain your preference with an example.",
       "why": "Stay on the exact comparison; don't answer with unrelated hobbies.",
