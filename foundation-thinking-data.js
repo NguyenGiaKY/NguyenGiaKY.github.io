@@ -1,4 +1,4 @@
-/* Foundation thinking, meaning contrast and contextual paraphrase: 24 authored lesson sets. */
+/* Curated concept-first paraphrase, contextual vocabulary and word-family transformations for 24 lessons. */
 window.GKFoundationThinkingData = {
   "version": 1,
   "cases": {
@@ -31,7 +31,16 @@ window.GKFoundationThinkingData = {
         "my name",
         "read a book",
         "feed a cat"
-      ]
+      ],
+      "family": {
+        "from": "name",
+        "fromRole": "noun",
+        "fromSentence": "My name is Anna.",
+        "to": "name",
+        "toRole": "verb",
+        "toSentence": "Name one thing you can see.",
+        "why": "The same spelling can label information or express an action. Ask what it is doing."
+      }
     },
     "a0-02": {
       "id": "a0-02",
@@ -62,7 +71,16 @@ window.GKFoundationThinkingData = {
         "a close friend",
         "an English teacher",
         "my family"
-      ]
+      ],
+      "family": {
+        "from": "teach",
+        "fromRole": "verb",
+        "fromSentence": "I teach English.",
+        "to": "teacher",
+        "toRole": "noun",
+        "toSentence": "My teacher is kind.",
+        "why": "Teach describes an activity; teacher names a person who does it."
+      }
     },
     "a0-03": {
       "id": "a0-03",
@@ -93,7 +111,16 @@ window.GKFoundationThinkingData = {
         "feel tired",
         "look happy",
         "go home"
-      ]
+      ],
+      "family": {
+        "from": "happy",
+        "fromRole": "adjective",
+        "fromSentence": "She is happy.",
+        "to": "happiness",
+        "toRole": "noun",
+        "toSentence": "Happiness matters.",
+        "why": "Happy describes a person's state; happiness names the feeling itself."
+      }
     },
     "a0-04": {
       "id": "a0-04",
@@ -124,7 +151,16 @@ window.GKFoundationThinkingData = {
         "a blue pen",
         "a small box",
         "sit at a desk"
-      ]
+      ],
+      "family": {
+        "from": "box",
+        "fromRole": "noun",
+        "fromSentence": "I have a box.",
+        "to": "box",
+        "toRole": "verb",
+        "toSentence": "Please box the books.",
+        "why": "Box names a container in one sentence and an action in the other."
+      }
     },
     "a0-05": {
       "id": "a0-05",
@@ -155,7 +191,16 @@ window.GKFoundationThinkingData = {
         "play football",
         "usually study",
         "every day after school"
-      ]
+      ],
+      "family": {
+        "from": "play",
+        "fromRole": "verb",
+        "fromSentence": "They play football.",
+        "to": "player",
+        "toRole": "noun",
+        "toSentence": "She is a good player.",
+        "why": "Play describes the action; player names the person performing it."
+      }
     },
     "a0-06": {
       "id": "a0-06",
@@ -186,7 +231,16 @@ window.GKFoundationThinkingData = {
         "why it matters",
         "when it starts",
         "how it works"
-      ]
+      ],
+      "family": {
+        "from": "question",
+        "fromRole": "noun",
+        "fromSentence": "I have a question.",
+        "to": "question",
+        "toRole": "verb",
+        "toSentence": "I question that idea.",
+        "why": "Question can name something asked or describe challenging an idea."
+      }
     },
     "a1-01": {
       "id": "a1-01",
@@ -217,7 +271,16 @@ window.GKFoundationThinkingData = {
         "currently studying",
         "sleep well",
         "cook dinner"
-      ]
+      ],
+      "family": {
+        "from": "cook",
+        "fromRole": "verb",
+        "fromSentence": "I cook dinner.",
+        "to": "cooking",
+        "toRole": "noun",
+        "toSentence": "Cooking is useful.",
+        "why": "Cook is an action here; cooking names an activity."
+      }
     },
     "a1-02": {
       "id": "a1-02",
@@ -248,7 +311,16 @@ window.GKFoundationThinkingData = {
         "have breakfast",
         "go to school",
         "finally arrive"
-      ]
+      ],
+      "family": {
+        "from": "final",
+        "fromRole": "adjective",
+        "fromSentence": "The final lesson is easy.",
+        "to": "finally",
+        "toRole": "adverb",
+        "toSentence": "Finally, I go to school.",
+        "why": "Final describes a noun; finally organises the sequence of actions."
+      }
     },
     "a1-03": {
       "id": "a1-03",
@@ -279,7 +351,16 @@ window.GKFoundationThinkingData = {
         "last week",
         "went home",
         "saw a friend"
-      ]
+      ],
+      "family": {
+        "from": "visit",
+        "fromRole": "verb",
+        "fromSentence": "I visit my friend.",
+        "to": "visitor",
+        "toRole": "noun",
+        "toSentence": "A visitor arrived.",
+        "why": "Visit is an action; visitor names the person who comes."
+      }
     },
     "a1-04": {
       "id": "a1-04",
@@ -310,7 +391,16 @@ window.GKFoundationThinkingData = {
         "make a plan",
         "tonight at home",
         "next year"
-      ]
+      ],
+      "family": {
+        "from": "plan",
+        "fromRole": "noun",
+        "fromSentence": "I have a plan.",
+        "to": "plan",
+        "toRole": "verb",
+        "toSentence": "I plan to study.",
+        "why": "A plan is something you have; plan can also express what you intend to do."
+      }
     },
     "a1-05": {
       "id": "a1-05",
@@ -341,7 +431,16 @@ window.GKFoundationThinkingData = {
         "next to the bed",
         "between two desks",
         "on the shelf"
-      ]
+      ],
+      "family": {
+        "from": "near",
+        "fromRole": "preposition",
+        "fromSentence": "The shop is near my home.",
+        "to": "nearby",
+        "toRole": "adverb",
+        "toSentence": "I live nearby.",
+        "why": "Near relates two locations; nearby can describe location without naming its reference."
+      }
     },
     "a1-06": {
       "id": "a1-06",
@@ -372,7 +471,16 @@ window.GKFoundationThinkingData = {
         "a glass of milk",
         "drink water",
         "a slice of bread"
-      ]
+      ],
+      "family": {
+        "from": "water",
+        "fromRole": "noun",
+        "fromSentence": "I drink water.",
+        "to": "water",
+        "toRole": "verb",
+        "toSentence": "I water the plants.",
+        "why": "Water can name a liquid or mean giving water to plants."
+      }
     },
     "a2-01": {
       "id": "a2-01",
@@ -403,7 +511,16 @@ window.GKFoundationThinkingData = {
         "follow a rule",
         "eat healthy food",
         "practise daily"
-      ]
+      ],
+      "family": {
+        "from": "advice",
+        "fromRole": "noun",
+        "fromSentence": "Thank you for your advice.",
+        "to": "advise",
+        "toRole": "verb",
+        "toSentence": "I advise you to practise.",
+        "why": "Advice names a suggestion; advise is the action of giving it. Pronunciation differs, too."
+      }
     },
     "a2-02": {
       "id": "a2-02",
@@ -434,7 +551,16 @@ window.GKFoundationThinkingData = {
         "better at reading",
         "more than before",
         "the most helpful"
-      ]
+      ],
+      "family": {
+        "from": "easy",
+        "fromRole": "adjective",
+        "fromSentence": "The task is easy.",
+        "to": "easily",
+        "toRole": "adverb",
+        "toSentence": "I can do it easily.",
+        "why": "Easy describes the task; easily describes how the action is done."
+      }
     },
     "a2-03": {
       "id": "a2-03",
@@ -465,7 +591,16 @@ window.GKFoundationThinkingData = {
         "have never been",
         "have already finished",
         "not yet"
-      ]
+      ],
+      "family": {
+        "from": "experience",
+        "fromRole": "noun",
+        "fromSentence": "It was a new experience.",
+        "to": "experience",
+        "toRole": "verb",
+        "toSentence": "I want to experience new things.",
+        "why": "Experience may name an event or express going through one."
+      }
     },
     "a2-04": {
       "id": "a2-04",
@@ -496,7 +631,16 @@ window.GKFoundationThinkingData = {
         "although it is hard",
         "however, I tried",
         "therefore, we changed"
-      ]
+      ],
+      "family": {
+        "from": "useful",
+        "fromRole": "adjective",
+        "fromSentence": "English is useful.",
+        "to": "usefulness",
+        "toRole": "noun",
+        "toSentence": "Its usefulness is clear.",
+        "why": "Useful describes English; usefulness names the quality of being useful."
+      }
     },
     "a2-05": {
       "id": "a2-05",
@@ -527,7 +671,16 @@ window.GKFoundationThinkingData = {
         "attend a meeting",
         "change the room",
         "arrive on time"
-      ]
+      ],
+      "family": {
+        "from": "change",
+        "fromRole": "verb",
+        "fromSentence": "We will change the room.",
+        "to": "change",
+        "toRole": "noun",
+        "toSentence": "The change starts tomorrow.",
+        "why": "Change can be an action or the result/event of making things different."
+      }
     },
     "a2-06": {
       "id": "a2-06",
@@ -558,7 +711,16 @@ window.GKFoundationThinkingData = {
         "learn at your own pace",
         "a flexible schedule",
         "self-discipline"
-      ]
+      ],
+      "family": {
+        "from": "flexible",
+        "fromRole": "adjective",
+        "fromSentence": "Online classes are flexible.",
+        "to": "flexibility",
+        "toRole": "noun",
+        "toSentence": "Flexibility helps students.",
+        "why": "Flexible describes classes; flexibility names the quality."
+      }
     },
     "bridge-01": {
       "id": "bridge-01",
@@ -589,7 +751,16 @@ window.GKFoundationThinkingData = {
         "make a decision",
         "make a decision",
         "take a short break"
-      ]
+      ],
+      "family": {
+        "from": "decide",
+        "fromRole": "verb",
+        "fromSentence": "I need to decide.",
+        "to": "decision",
+        "toRole": "noun",
+        "toSentence": "I need to make a decision.",
+        "why": "The message stays close but the grammatical shape changes: decide is an action; decision is a noun."
+      }
     },
     "bridge-02": {
       "id": "bridge-02",
@@ -620,7 +791,16 @@ window.GKFoundationThinkingData = {
         "scan for a date",
         "borrow a book",
         "closed on Sundays"
-      ]
+      ],
+      "family": {
+        "from": "scan",
+        "fromRole": "verb",
+        "fromSentence": "Scan the text for dates.",
+        "to": "scanning",
+        "toRole": "noun",
+        "toSentence": "Scanning helps you find dates.",
+        "why": "Scan gives an instruction; scanning names the reading strategy."
+      }
     },
     "bridge-03": {
       "id": "bridge-03",
@@ -651,7 +831,16 @@ window.GKFoundationThinkingData = {
         "the total cost",
         "choose an occupation",
         "reschedule a meeting"
-      ]
+      ],
+      "family": {
+        "from": "begin",
+        "fromRole": "verb",
+        "fromSentence": "The course begins in May.",
+        "to": "beginning",
+        "toRole": "noun",
+        "toSentence": "The beginning is in May.",
+        "why": "Begin is the event; beginning names its start point."
+      }
     },
     "bridge-04": {
       "id": "bridge-04",
@@ -682,7 +871,16 @@ window.GKFoundationThinkingData = {
         "give a reason",
         "for example",
         "improve my English"
-      ]
+      ],
+      "family": {
+        "from": "improve",
+        "fromRole": "verb",
+        "fromSentence": "I want to improve my English.",
+        "to": "improvement",
+        "toRole": "noun",
+        "toSentence": "I can see an improvement.",
+        "why": "Improve expresses change; improvement names the change/result."
+      }
     },
     "bridge-05": {
       "id": "bridge-05",
@@ -713,7 +911,16 @@ window.GKFoundationThinkingData = {
         "give an explanation",
         "support an idea",
         "draw a conclusion"
-      ]
+      ],
+      "family": {
+        "from": "explain",
+        "fromRole": "verb",
+        "fromSentence": "Explain your point.",
+        "to": "explanation",
+        "toRole": "noun",
+        "toSentence": "Give an explanation.",
+        "why": "Explain is the action; explanation is the information given."
+      }
     },
     "bridge-06": {
       "id": "bridge-06",
@@ -744,7 +951,16 @@ window.GKFoundationThinkingData = {
         "review notes",
         "prefer face-to-face classes",
         "develop self-discipline"
-      ]
+      ],
+      "family": {
+        "from": "prefer",
+        "fromRole": "verb",
+        "fromSentence": "I prefer classroom learning.",
+        "to": "preference",
+        "toRole": "noun",
+        "toSentence": "My preference is classroom learning.",
+        "why": "Prefer expresses the choice as a verb; preference names that choice."
+      }
     }
   }
 };
