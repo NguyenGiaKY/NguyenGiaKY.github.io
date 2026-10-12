@@ -51,6 +51,10 @@ function fields(mode,record){
  let h='<section class="fc-report" aria-label="AI correction result"><header class="fc-report-hero"><div><span class="fc-kicker">DIAGNOSTIC FEEDBACK · '+(mode==="writing"?"WRITING":"SPEAKING")+'</span><h4>'+esc(descriptions[status])+'</h4></div><strong>'+ (report.score===null||report.score===undefined?"—":esc(report.score))+'/5 <small>practice</small></strong></header>'+
  '<p class="fc-report-summary">'+esc(report.summary_vi||report.task_feedback_vi)+'</p>';
  if(record?.at)h+='<p class="fc-result-date">Checked '+esc(new Date(record.at).toLocaleString())+'</p>';
+ const previous=row(current).history?.[mode]||[];
+ if(previous.length)h+='<details class="fc-previous"><summary>Compare with '+previous.length+' earlier attempt'+(previous.length>1?'s':'')+'</summary>'+
+ previous.slice().reverse().map(v=>'<div><strong>'+esc((v.score??"—")+'/5')+'</strong><span>'+esc(v.task_status||"")+'</span><p lang="en">'+esc(v.answer||"")+'</p></div>').join("")+'</details>';
+
  if(report.transcript)h+='<div class="fc-part"><h5>What I heard (audio transcript)</h5><p lang="en">'+esc(report.transcript)+'</p></div>';
  if(checks.length){h+='<div class="fc-part"><h5>Did you answer the actual question?</h5><div class="fc-criteria">';
   for(const c of checks)h+='<div class="fc-criterion"><div><span class="fc-criterion-label '+esc(c.status)+'">'+(c.status==="met"?"✓":c.status==="partial"?"~":"!")+' '+esc(c.status)+'</span><strong>'+esc(c.criterion)+'</strong></div>'+
