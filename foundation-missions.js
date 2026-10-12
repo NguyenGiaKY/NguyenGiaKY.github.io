@@ -4,7 +4,7 @@
 "use strict";
 const root=document.getElementById("foundationRoot"),source=window.GKFoundationMissionData?.missions;
 if(!root||!source)return;
-const KEY="gk_foundation_missions_v2";
+const KEY="gk_foundation_missions_v2",lessonMap=Object.fromEntries((window.GKFoundationData?.lessons||[]).map(l=>[l.id,l]));
 let old={};try{old=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 const records=old.records||{};
 const state=id=>records[id]||(records[id]={answer:null,attempts:0,reflections:{},review:false});
@@ -19,6 +19,7 @@ function choiceCard(id){
  return h+'</div>';
 }
 function intro(lesson){
+ lesson=lessonMap[lesson.id]||lesson;
  const m=source[lesson.id];if(!m)return"";
  active=lesson.id;
  return'<div class="fm-scene" id="foundationMissionIntro"><div class="fm-scene-header"><div><span class="fm-eyebrow">REAL-LIFE ENGLISH · '+esc(lesson.level)+'</span><h3>First, understand the situation</h3><p>'+esc(m.scene)+'</p></div><button type="button" data-fm-listen="1" class="fm-audio">▶ Listen to the scene</button></div>'+
