@@ -11,7 +11,7 @@ async function checkToken(req){
  const p=t.split(".");if(p.length!==3)throw {status:401,message:"Invalid login"};
  let h,c;try{h=JSON.parse(Buffer.from(p[0],"base64url"));c=JSON.parse(Buffer.from(p[1],"base64url"))}catch(e){throw {status:401,message:"Invalid login"}}
  const now=Math.floor(Date.now()/1000),id="ielts-study-sync";
- if(h.alg!=="RS256"||typeof h.kid!=="string"||c.aud!==id||c.iss!=="https://securetoken.google.com/"+id||!c.sub||c.sub.length>128||c.exp<=now||c.iat>now+30||c.auth_time>now+30)
+ if(h.alg!=="RS256"||typeof h.kid!=="string"||c.aud!==id||c.iss!=="https://securetoken.google.com/"+id||typeof c.sub!=="string"||!c.sub||c.sub.length>128||!Number.isFinite(c.exp)||!Number.isFinite(c.iat)||!Number.isFinite(c.auth_time)||c.exp<=now||c.iat>now+30||c.auth_time>now+30)
   throw {status:401,message:"Invalid or expired login"};
  if(Date.now()>certUntil||!certs[h.kid]){
   const r=await fetch("https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com",{signal:AbortSignal.timeout(7000)});
@@ -47,8 +47,9 @@ function prompt(b,mode){
 function output(data,mode){
  const raw=data?.choices?.[0]?.message?.content;
  if(typeof raw!=="string")throw Error("Invalid AI response");
- const clean=raw.replace(/^\\s*\\x60\\x60\\x60(?:json)?/,"").replace(/\\x60\\x60\\x60\\s*$/,"");
- const val=JSON.parse(clean.slice(clean.indexOf("{"),clean.lastIndexOf("}")+1));
+ const first=raw.indexOf("{"),last=raw.lastIndexOf("}");
+ if(first<0||last<first)throw Error("AI did not return JSON");
+ const val=JSON.parse(raw.slice(first,last+1));
  const arr=(x,n)=>Array.isArray(x)?x.slice(0,n):[];
  const num=Number(val.score);
  return {mode,score:Number.isFinite(num)?Math.max(0,Math.min(5,Math.round(num))):null,
