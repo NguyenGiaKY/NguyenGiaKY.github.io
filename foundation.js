@@ -25,7 +25,7 @@ function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const k=Mat
 function generate(l){return shuffled(l.quiz.map(q=>({prompt:q[0],correct:q[1],options:shuffled(q.slice(1,4)),reason:q[4]})));}
 function notice(x){const n=root.querySelector("#foundationNotice");if(n){n.hidden=false;n.textContent=x;}}
 function scrollInto(){root.scrollIntoView({block:"start",behavior:"smooth"});}
-function render(){if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else diagnostic();}
+function render(){if((ui.page!=="lesson"||ui.tab!=="apply")&&window.GKFoundationCoach)window.GKFoundationCoach.leave();if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else diagnostic();}
 function home(){
 const started=data.lessons.filter(l=>(entry(l.id).attempts||[]).length||state.drafts[l.id]).length;
 const mastered=data.lessons.filter(l=>levelStatus(l.id)==="mastered").length;
@@ -51,7 +51,7 @@ filtered.forEach(l=>{const seq=data.lessons.indexOf(l)+1;h+='<button class="f-le
 h+='</div><div class="f-bridge"><div><h3>Sau Foundation là 81 IELTS Tasks</h3><p>Đây là chương trình khởi động, không phải chứng nhận đạt A2. Khi đã hiểu câu cơ bản, nghe được ý chính và tự diễn đạt, hãy chuyển dần sang các IELTS tasks phù hợp.</p></div>'+button("ielts","Mở Study Queue →","secondary")+'</div></div>';
 root.innerHTML=h;
 }
-function open(id){if(!index[id])return;ui.page="lesson";ui.id=id;ui.tab="learn";ui.questions=generate(index[id]);ui.answers={};ui.graded=false;ui.score=0;ui.transcript=false;ui.model=false;render();scrollInto();}
+function open(id){if(!index[id])return;window.GKFoundationCoach?.leave();ui.page="lesson";ui.id=id;ui.tab="learn";ui.questions=generate(index[id]);ui.answers={};ui.graded=false;ui.score=0;ui.transcript=false;ui.model=false;render();scrollInto();}
 function step(n,title,subtitle){return '<div class="f-step"><span>'+n+'</span><div><h3>'+title+'</h3><p>'+subtitle+'</p></div></div>';}
 function lesson(){
 const l=index[ui.id],p=passDates(l.id);
@@ -86,8 +86,8 @@ if(ui.tab==="apply"){
 const draft=state.drafts[l.id]||"";
 h+=step("05","Tự tạo câu tiếng Anh","Viết mà không xem câu mẫu. Sau đó tự so sánh và sửa lỗi.")+
 '<div class="f-assignment"><strong>✍️ Yêu cầu</strong><p>'+esc(l.produce[0])+'</p><small>Gợi ý: '+esc(l.produce[1])+'</small></div>'+
-'<label class="f-draft-label" for="foundationDraft">Câu trả lời của mày</label><textarea id="foundationDraft" rows="5" placeholder="Write your answer in English…">'+esc(draft)+'</textarea><p class="f-hint">Câu tự viết lưu trên trình duyệt này. Hệ thống chưa tự chấm ngữ pháp hay phát âm.</p>'+
-'<div class="f-next">'+button("model",ui.model?"Ẩn câu mẫu":"So sánh với câu mẫu","secondary")+'</div>';
+'<label class="f-draft-label" for="foundationDraft">Câu trả lời của mày</label><textarea id="foundationDraft" rows="5" placeholder="Write your answer in English…">'+esc(draft)+'</textarea><p class="f-hint">Câu tự viết được lưu trên trình duyệt. Dùng OpenAI bên dưới để nhận chấm chữa chi tiết và luyện nói.</p>'+
+(window.GKFoundationCoach?window.GKFoundationCoach.render(l):'')+'<div class="f-next">'+button("model",ui.model?"Ẩn câu mẫu":"So sánh với câu mẫu","secondary")+'</div>';
 if(ui.model){
 h+='<div class="f-model"><strong>Câu mẫu tham khảo</strong><p>'+esc(l.produce[2])+'</p><small>Đừng bắt buộc viết giống hệt; hãy kiểm tra ngữ pháp, ý nghĩa, cách dùng từ.</small></div>';
 h+='<label class="f-selfcheck"><input id="foundationSelfCheck" type="checkbox" '+(entry(l.id).selfChecked?"checked":"")+'/> Tôi đã tự viết, so sánh câu mẫu và sửa các lỗi nhận ra.</label>';
