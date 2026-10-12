@@ -146,6 +146,8 @@ async function evaluate(mode){
  if(mode==="speaking"&&!clip){error="Record an answer first.";refresh();return;}
  const id=current,lesson=getLesson(id);if(!lesson)return;
  const answer=String(root.querySelector(lesson.speakingPrompt?"#fc-custom-answer":"#foundationDraft")?.value||"");
+ const previous=row(id)[mode];
+ if(mode==="writing"&&previous?.answer?.trim()===answer.trim()){error="This exact version has already been checked. Revise at least one meaningful part before spending another OpenAI request.";refresh();return;}
  if(mode==="writing"&&answer.trim().length<5){error="Write at least a short English sentence before grading.";refresh();return;}
  if(!window.GKCloudSync?.getIdToken){error="Sign in with Google using Save across devices to use AI corrections.";refresh();return;}
  const msg=mode==="speaking"?"Your audio will be sent to OpenAI for transcription, corrections and pronunciation feedback. OpenAI API usage can cost money. Continue?":"Your writing will be sent to OpenAI for feedback. OpenAI API usage can cost money. Continue?";
@@ -153,27 +155,49 @@ async function evaluate(mode){
  loading=true;error="Sending "+mode+" to OpenAI…";refresh();
  try{
   const token=await window.GKCloudSync.getIdToken();
-  const payload={mode,level:lesson.level,task:mode==="writing"?lesson.produce[0]:(prompts[id]||lesson.speakingPrompt),goal:lesson.goal,example:lesson.produce[2]};
+  const mission=window.GKFoundationMissions?.mission(id);
+  const payload={mode,level:lesson.level,task:mode==="writing"?(mission?.writing||lesson.produce[0]):(lesson.speakingPrompt||mission?.speaking||prompts[id]),goal:lesson.goal,example:lesson.produce[2],
+    scenario:mission?.scene||"",checklist:mission?.checklist||[],meaningFocus:mission?.focus||"",
+    revisionOf:mode==="writing"&&previous?.answer?previous.answer:""};
   if(mode==="writing")payload.answer=answer;
   else{payload.audioBase64=base64(await clip.arrayBuffer());payload.format="wav";}
   const response=await fetch(EP,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
   const data=await response.json().catch(()=>({}));
   if(!response.ok)throw Error(data.error||"OpenAI assessment unavailable ("+response.status+")");
   if(!data||data.source!=="openai-foundation")throw Error("Invalid assessment response");
-  row(id)[mode]={at:new Date().toISOString(),answer:mode==="writing"?answer:data.transcript||"",prompt:payload.task,report:data};
+  const currentRecord=row(id);
+  if(currentRecord[mode]){
+   currentRecord.history=currentRecord.history||{writing:[],speaking:[]};
+   currentRecord.history[mode]=(currentRecord.history[mode]||[]).concat([{at:currentRecord[mode].at,score:currentRecord[mode].report?.score,task_status:currentRecord[mode].report?.task_status,answer:currentRecord[mode].answer}]).slice(-4);
+  }
+  currentRecord[mode]={at:new Date().toISOString(),answer:mode==="writing"?answer:data.transcript||"",prompt:payload.task,report:data};
+  if(mode==="writing")currentRecord.revisionDraft="";
   persist();
   error="Assessment saved. Read the corrections, revise your answer, then practise again.";
   if(mode==="speaking")clearAudio();
  }catch(e){error="Assessment unavailable: "+String(e?.message||"Network error");}
  finally{loading=false;refresh();}
 }
-root.addEventListener("input",e=>{if(e.target?.id==="fc-custom-answer"&&current&&customLessons[current]){row(current).draft=e.target.value;persist();}});
+root.addEventListener("input",e=>{
+ if(e.target?.id==="fc-custom-answer"&&current&&customLessons[current]){row(current).draft=e.target.value;persist();}
+ if(e.target?.id==="fc-revision-draft"&&current){row(current).revisionDraft=e.target.value;persist();}
+});
 root.addEventListener("click",e=>{
  const button=e.target.closest("button[data-fc]");if(!button)return;
  const action=button.dataset.fc;
  if(action==="record")void record();
  else if(action==="stop")stop(false);
  else if(action==="discard"){clearAudio();refresh();}
+ else if(action==="useRevision"){
+  if(!current)return;
+  const text=String(root.querySelector("#fc-revision-draft")?.value||"").trim();
+  if(text.length<5){error="Write your corrected answer before transferring it.";refresh();return;}
+  const lesson=getLesson(current),draft=root.querySelector(lesson.speakingPrompt?"#fc-custom-answer":"#foundationDraft");
+  if(!draft){error="Please open the Writing task to revise your answer.";refresh();return;}
+  draft.value=text;
+  draft.dispatchEvent(new Event("input",{bubbles:true}));
+  error="Revision transferred. Read it again; to ask AI to recheck, press Analyse my answer (another API request).";refresh();
+ }
  else if(action==="writing"||action==="speaking")void evaluate(action);
 });
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&rec)stop(true);});
