@@ -163,6 +163,8 @@ async function checkWord(){
  if(checkingWord||!current)return;
  const id=current,r=state(id),lesson=lessonById[id],idx=Math.max(0,Math.min(3,r.word||0)),word=lesson.words[idx]?.[0];
  const answer=String(r.wordSentences?.[word]||"").trim(),detail=wordContexts[id]?.[idx],role=thoughts[id]?.roles[idx],phrase=thoughts[id]?.usage[idx];
+ const normalize=x=>String(x||"").toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
+ if(normalize(answer)===normalize(detail?.[0])){message="That is the example sentence. Try an original sentence of your own before requesting AI checking.";render(lesson);return;}
  if(answer.length<8){message="Write one meaningful English sentence before checking.";render(lesson);return;}
  const prev=r.wordFeedback[word];
  if(prev?.answer?.trim()===answer){message="This version has already been checked. Edit it before spending another OpenAI request.";render(lesson);return;}
