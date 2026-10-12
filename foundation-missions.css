@@ -97,3 +97,9 @@
 #foundationRoot .fc-model summary{font-size:12px;color:#315e87;font-weight:850;cursor:pointer}
 #foundationRoot .fc-model p{font-size:13px;line-height:1.8;color:#3b5775;margin:10px 0 0}
 @media(max-width:780px){#foundationRoot .fm-scene-header{flex-direction:column}#foundationRoot .fm-audio{align-self:start}#foundationRoot .fm-options,#foundationRoot .fm-task-grid,#foundationRoot .fm-difference{grid-template-columns:1fr}#foundationRoot .fm-scene,#foundationRoot .fm-task,#foundationRoot .fm-detective{padding:14px}#foundationRoot .fm-scaffold summary{flex-direction:column;gap:4px}}
+
+#foundationRoot .fm-language-notes,#foundationRoot .fm-quick-words{margin:12px 0;border:1px solid #dce6f0;border-radius:11px;background:#fafdff;overflow:hidden}
+#foundationRoot .fm-language-notes>summary,#foundationRoot .fm-quick-words>summary{padding:12px 15px;cursor:pointer;color:#315c83;font-size:13px;font-weight:800}
+#foundationRoot .fm-language-notes .f-rules,#foundationRoot .fm-quick-words .f-vocabulary{padding:10px 14px;margin:0}
+#foundationRoot .fm-self-review{background:#f5f9ff;border:1px solid #d7e4f1;border-radius:10px;padding:12px 14px;display:flex!important;align-items:start;gap:10px;color:#3c5e7b;font-size:12px;line-height:1.7}
+#foundationRoot .fm-self-review input{margin:4px 0 0;flex:none;accent-color:#315ec3}
