@@ -1,0 +1,42 @@
+/* OpenAI practice coach for the Foundation Apply tab; mobile first and accessible */
+#foundationRoot .fc-coach{margin:19px 0;padding:20px;border:1px solid #cadcf4;border-radius:18px;background:linear-gradient(125deg,#fbfdff,#eff5ff);font-family:inherit}
+#foundationRoot .fc-coach *{box-sizing:border-box}
+#foundationRoot .fc-heading{display:flex;gap:14px;align-items:start;justify-content:space-between;margin:0 0 17px}
+#foundationRoot .fc-kicker{display:block;font-size:10px;font-weight:850;color:#3e72b7;letter-spacing:.075em}
+#foundationRoot .fc-heading h3{font-size:21px;line-height:1.35;color:#193f73;margin:6px 0 5px}
+#foundationRoot .fc-heading p{font-size:12px;color:#647c99;line-height:1.7;margin:0}
+#foundationRoot .fc-level{border-radius:9px;background:#e6efff;border:1px solid #cbdcf6;color:#28558e;padding:8px 10px;font-weight:850;font-size:12px}
+#foundationRoot .fc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#foundationRoot .fc-column{background:#fff;border:1px solid #dde7f5;border-radius:14px;min-width:0;padding:16px;display:flex;flex-direction:column;align-items:stretch;gap:9px}
+#foundationRoot .fc-column h4{font-size:17px;line-height:1.4;color:#25446f;margin:0}
+#foundationRoot .fc-column>p{font-size:12px;line-height:1.75;color:#607892;margin:0}
+#foundationRoot .fc-speaking-task{padding:12px 13px;background:#f4f8ff;border-radius:10px;border:1px solid #d9e5fa;color:#23476b!important;font-size:14px!important;font-weight:750;line-height:1.7}
+#foundationRoot .fc-primary{border:1px solid #3157d5;background:#3157d5;color:white;font-weight:850;font-size:12px;min-height:42px;padding:10px 12px;border-radius:10px}
+#foundationRoot .fc-primary:hover{background:#244cbd}
+#foundationRoot .fc-primary:disabled{opacity:.5;cursor:wait}
+#foundationRoot .fc-microphone{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+#foundationRoot .fc-microphone span{font-size:12px;font-weight:700;color:#53708a}
+#foundationRoot .fc-column audio{width:100%;height:43px}
+#foundationRoot .fc-link{border:0;background:transparent;color:#3561ae;text-decoration:underline;align-self:flex-start;padding:6px 0;font-size:12px;font-weight:800}
+#foundationRoot .fc-no-result{border:1px dashed #c4d7ee;background:#fafcff;color:#71859b;border-radius:10px;padding:11px 12px;font-size:12px;line-height:1.7}
+#foundationRoot .fc-report{border:1px solid #cfdfef;background:#fafdff;border-radius:12px;padding:13px;margin-top:10px;display:flex;flex-direction:column;gap:11px}
+#foundationRoot .fc-result-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#foundationRoot .fc-result-head strong{font-size:14px;color:#213e63}
+#foundationRoot .fc-result-head span{font-size:12px;font-weight:850;background:#e6f4ee;color:#236b4f;border-radius:8px;padding:6px 9px}
+#foundationRoot .fc-report-summary{background:#eef5ff;border-radius:9px;padding:10px 11px;margin:0;font-size:13px;color:#375476;line-height:1.75}
+#foundationRoot .fc-part{padding:11px 12px;border-radius:9px;background:#fff;border:1px solid #e2eaf4}
+#foundationRoot .fc-part h5{font-size:12px;font-weight:850;margin:0 0 7px;color:#315c8f}
+#foundationRoot .fc-part p,#foundationRoot .fc-part li{font-size:12px;line-height:1.75;color:#415773;overflow-wrap:anywhere}
+#foundationRoot .fc-part p{white-space:pre-wrap;margin:5px 0}
+#foundationRoot .fc-part ul,#foundationRoot .fc-part ol{margin:6px 0 0;padding-left:18px}
+#foundationRoot .fc-fix{border-top:1px solid #e0e8f3;padding:9px 0}
+#foundationRoot .fc-fix:first-of-type{border-top:0}
+#foundationRoot .fc-fix>span{font-size:10px;color:#62809e;font-weight:800}
+#foundationRoot .fc-fix .fc-wrong{color:#af4a48;text-decoration:line-through}
+#foundationRoot .fc-fix .fc-correct{color:#286d4f;font-weight:800}
+#foundationRoot .fc-fix small{font-size:11px;color:#677e94;line-height:1.6;display:block}
+#foundationRoot .fc-disclosure{font-size:11px;line-height:1.8;color:#667d93;background:#f7faff;border:1px solid #dbe6f4;border-radius:10px;padding:11px 13px;margin:16px 0 0}
+#foundationRoot .fc-message{font-size:12px;line-height:1.7;color:#396396;margin:10px 0 0;white-space:pre-wrap}
+@media(max-width:830px){#foundationRoot .fc-grid{grid-template-columns:1fr}}
+@media(max-width:550px){#foundationRoot .fc-coach{padding:12px}#foundationRoot .fc-column{padding:12px}#foundationRoot .fc-heading h3{font-size:18px}#foundationRoot .fc-heading{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){#foundationRoot .fc-coach *{animation:none!important;transition:none!important}}
