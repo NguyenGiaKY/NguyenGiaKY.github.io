@@ -95,8 +95,9 @@ async function record(){
  if(rec||loading)return;
  clearAudio();error="";
  if(!navigator.mediaDevices?.getUserMedia){error="Microphone recording requires HTTPS and a supported browser.";refresh();return;}
+ let stream=null;
  try{
-  const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
   const AudioContext=window.AudioContext||window.webkitAudioContext;if(!AudioContext)throw Error("Audio recording is not supported");
   const ctx=new AudioContext(),source=ctx.createMediaStreamSource(stream),processor=ctx.createScriptProcessor(4096,1,1),chunks=[];
   processor.onaudioprocess=e=>{chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));e.outputBuffer.getChannelData(0).fill(0);};
@@ -104,7 +105,7 @@ async function record(){
   rec={stream,ctx,source,processor,chunks,start:Date.now(),sampleRate:ctx.sampleRate};
   elapsed=0;timer=setInterval(()=>{if(!rec)return;elapsed=Math.floor((Date.now()-rec.start)/1000);const m=root.querySelector("#fc-mic-status");if(m)m.textContent="Recording "+elapsed+"s / 45s";if(elapsed>=45)stop(false);},400);
   refresh();
- }catch(e){error="Microphone unavailable: "+(e?.message||"Please allow mic access.");refresh();}
+ }catch(e){if(stream)stream.getTracks().forEach(t=>t.stop());error="Microphone unavailable: "+(e?.message||"Please allow mic access.");refresh();}
 }
 function stop(cancel){
  if(!rec)return;
@@ -149,5 +150,6 @@ root.addEventListener("click",e=>{
  else if(action==="discard"){clearAudio();refresh();}
  else if(action==="writing"||action==="speaking")void evaluate(action);
 });
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&rec)stop(true);});
 window.GKFoundationCoach={render,leave,getRecord:id=>row(id)};
 })();
