@@ -1,0 +1,750 @@
+/* Foundation thinking, meaning contrast and contextual paraphrase: 24 authored lesson sets. */
+window.GKFoundationThinkingData = {
+  "version": 1,
+  "cases": {
+    "a0-01": {
+      "id": "a0-01",
+      "principle": "A word has a sound, a meaning, and a job in a sentence.",
+      "contrast": "Don't assume the spelling tells you exactly how to pronounce the word.",
+      "pairs": [
+        {
+          "source": "My name is Anna.",
+          "equivalent": "I'm Anna.",
+          "wrong": "Her name is Anna.",
+          "why": "I'm Anna introduces the same speaker; Her name changes whose name it is."
+        },
+        {
+          "source": "I have two cats.",
+          "equivalent": "I own two cats.",
+          "wrong": "I have a cat.",
+          "why": "Two is an important detail; changing it to one changes the message."
+        }
+      ],
+      "roles": [
+        "interjection",
+        "noun",
+        "noun",
+        "noun"
+      ],
+      "usage": [
+        "say hello",
+        "my name",
+        "read a book",
+        "feed a cat"
+      ]
+    },
+    "a0-02": {
+      "id": "a0-02",
+      "principle": "A pronoun tells us who or what the sentence is about.",
+      "contrast": "Check the referent first; do not choose a pronoun just because it sounds familiar.",
+      "pairs": [
+        {
+          "source": "She is my friend.",
+          "equivalent": "We are friends.",
+          "wrong": "He is my friend.",
+          "why": "We are friends keeps the relationship; he refers to a different person in this context."
+        },
+        {
+          "source": "They are students.",
+          "equivalent": "Those people are students.",
+          "wrong": "He is a student.",
+          "why": "They refers to a group here, not one male student."
+        }
+      ],
+      "roles": [
+        "noun",
+        "noun",
+        "noun",
+        "noun"
+      ],
+      "usage": [
+        "a school student",
+        "a close friend",
+        "an English teacher",
+        "my family"
+      ]
+    },
+    "a0-03": {
+      "id": "a0-03",
+      "principle": "To be connects someone or something to an identity, place, or description.",
+      "contrast": "Ask what the speaker is describing, not just where am/is/are sits.",
+      "pairs": [
+        {
+          "source": "I am tired.",
+          "equivalent": "I'm tired.",
+          "wrong": "I am ready.",
+          "why": "Both say the speaker is tired; being ready changes the state."
+        },
+        {
+          "source": "She is not at home.",
+          "equivalent": "She isn't at home.",
+          "wrong": "She is at home.",
+          "why": "The contracted form keeps the negative meaning; dropping not reverses it."
+        }
+      ],
+      "roles": [
+        "adjective",
+        "adjective",
+        "adjective",
+        "noun"
+      ],
+      "usage": [
+        "be ready",
+        "feel tired",
+        "look happy",
+        "go home"
+      ]
+    },
+    "a0-04": {
+      "id": "a0-04",
+      "principle": "Articles help listeners identify which thing you mean.",
+      "contrast": "A/an introduces a thing; the points to an identifiable thing. Number matters, too.",
+      "pairs": [
+        {
+          "source": "I have an apple.",
+          "equivalent": "I've got an apple.",
+          "wrong": "I've got apples.",
+          "why": "Both refer to one apple; apples changes the number or specificity."
+        },
+        {
+          "source": "The apple is red.",
+          "equivalent": "That apple is red.",
+          "wrong": "An apple is red.",
+          "why": "That identifies a particular apple; an introduces an unspecified one."
+        }
+      ],
+      "roles": [
+        "noun",
+        "noun",
+        "noun",
+        "noun"
+      ],
+      "usage": [
+        "eat an apple",
+        "a blue pen",
+        "a small box",
+        "sit at a desk"
+      ]
+    },
+    "a0-05": {
+      "id": "a0-05",
+      "principle": "Present Simple commonly communicates a routine or a general truth.",
+      "contrast": "Read the time expression and the message; it is not simply a verb-ending trick.",
+      "pairs": [
+        {
+          "source": "I study every day.",
+          "equivalent": "I study daily.",
+          "wrong": "I am studying right now.",
+          "why": "Every day is a repeated routine; right now describes the current moment."
+        },
+        {
+          "source": "She plays football.",
+          "equivalent": "She enjoys playing football regularly.",
+          "wrong": "She played football yesterday.",
+          "why": "The paraphrase expresses her regular activity; yesterday moves it to the past."
+        }
+      ],
+      "roles": [
+        "verb",
+        "verb",
+        "adverb",
+        "time phrase"
+      ],
+      "usage": [
+        "study English",
+        "play football",
+        "usually study",
+        "every day after school"
+      ]
+    },
+    "a0-06": {
+      "id": "a0-06",
+      "principle": "Question words ask for different kinds of information.",
+      "contrast": "Where asks for place; why asks for reason; when asks for time; how asks for manner.",
+      "pairs": [
+        {
+          "source": "Where do you live?",
+          "equivalent": "What place do you live in?",
+          "wrong": "Why do you live there?",
+          "why": "The first two ask for a place; why asks for a reason."
+        },
+        {
+          "source": "When do you get up?",
+          "equivalent": "What time do you get up?",
+          "wrong": "Where do you get up?",
+          "why": "Both ask for time; where changes the requested information."
+        }
+      ],
+      "roles": [
+        "question adverb",
+        "question adverb",
+        "question adverb",
+        "question adverb"
+      ],
+      "usage": [
+        "where you live",
+        "why it matters",
+        "when it starts",
+        "how it works"
+      ]
+    },
+    "a1-01": {
+      "id": "a1-01",
+      "principle": "Choose the tense that expresses your intended time, not a memorised formula.",
+      "contrast": "Now and usually describe different relationships between time and action.",
+      "pairs": [
+        {
+          "source": "I am studying now.",
+          "equivalent": "I'm studying at the moment.",
+          "wrong": "I study every day.",
+          "why": "At the moment and now both focus on the current action; every day describes a routine."
+        },
+        {
+          "source": "She is cooking dinner.",
+          "equivalent": "She's preparing dinner now.",
+          "wrong": "She cooks dinner every evening.",
+          "why": "Preparing dinner now is happening at present; every evening is habitual."
+        }
+      ],
+      "roles": [
+        "time adverb",
+        "time adverb",
+        "verb",
+        "verb"
+      ],
+      "usage": [
+        "right now",
+        "currently studying",
+        "sleep well",
+        "cook dinner"
+      ]
+    },
+    "a1-02": {
+      "id": "a1-02",
+      "principle": "Tell your routine as a sequence people can imagine.",
+      "contrast": "Order words help a listener follow events, but each step needs meaning.",
+      "pairs": [
+        {
+          "source": "I always brush my teeth.",
+          "equivalent": "I brush my teeth every time.",
+          "wrong": "I sometimes brush my teeth.",
+          "why": "Always is every time, not sometimes."
+        },
+        {
+          "source": "First, I wake up.",
+          "equivalent": "I wake up before the other activities.",
+          "wrong": "Finally, I wake up.",
+          "why": "First and before the others agree; finally changes the order."
+        }
+      ],
+      "roles": [
+        "phrasal verb",
+        "verb phrase",
+        "verb phrase",
+        "sequence adverb"
+      ],
+      "usage": [
+        "wake up early",
+        "have breakfast",
+        "go to school",
+        "finally arrive"
+      ]
+    },
+    "a1-03": {
+      "id": "a1-03",
+      "principle": "A past tense places a completed event before now.",
+      "contrast": "Look for the timeline and whether the event has already finished.",
+      "pairs": [
+        {
+          "source": "I visited my friend yesterday.",
+          "equivalent": "I went to see my friend yesterday.",
+          "wrong": "I will visit my friend tomorrow.",
+          "why": "Both describe a past visit; tomorrow changes the time."
+        },
+        {
+          "source": "She went to school.",
+          "equivalent": "She travelled to school.",
+          "wrong": "She goes to school every day.",
+          "why": "Went describes a past journey; goes every day describes a routine."
+        }
+      ],
+      "roles": [
+        "time adverb",
+        "time phrase",
+        "past-tense verb",
+        "past-tense verb"
+      ],
+      "usage": [
+        "yesterday morning",
+        "last week",
+        "went home",
+        "saw a friend"
+      ]
+    },
+    "a1-04": {
+      "id": "a1-04",
+      "principle": "Distinguish a plan from a decision, promise, or prediction.",
+      "contrast": "The choice between going to and will depends on what the speaker means.",
+      "pairs": [
+        {
+          "source": "I am going to study tonight.",
+          "equivalent": "I plan to study tonight.",
+          "wrong": "I studied last night.",
+          "why": "A current plan is different from a completed activity in the past."
+        },
+        {
+          "source": "I will call you tomorrow.",
+          "equivalent": "I promise to call you tomorrow.",
+          "wrong": "I called you yesterday.",
+          "why": "A promise about tomorrow is not a past call."
+        }
+      ],
+      "roles": [
+        "time adverb",
+        "noun or verb",
+        "time adverb",
+        "time phrase"
+      ],
+      "usage": [
+        "tomorrow morning",
+        "make a plan",
+        "tonight at home",
+        "next year"
+      ]
+    },
+    "a1-05": {
+      "id": "a1-05",
+      "principle": "Descriptions of places need both an object and its location.",
+      "contrast": "There is introduces a single thing; prepositions specify spatial relationships.",
+      "pairs": [
+        {
+          "source": "There is a cat under the table.",
+          "equivalent": "A cat is beneath the table.",
+          "wrong": "A cat is on the table.",
+          "why": "Under and beneath point to the same location; on changes the location."
+        },
+        {
+          "source": "The desk is next to the window.",
+          "equivalent": "The desk is beside the window.",
+          "wrong": "The desk is between two windows.",
+          "why": "Next to and beside indicate adjacency; between changes the relation."
+        }
+      ],
+      "roles": [
+        "preposition",
+        "preposition phrase",
+        "preposition",
+        "preposition"
+      ],
+      "usage": [
+        "under the table",
+        "next to the bed",
+        "between two desks",
+        "on the shelf"
+      ]
+    },
+    "a1-06": {
+      "id": "a1-06",
+      "principle": "Some nouns are counted in units; others commonly need an amount expression.",
+      "contrast": "Rice and water are usually uncountable in these examples; apples can be counted.",
+      "pairs": [
+        {
+          "source": "I have some rice.",
+          "equivalent": "I've got some rice.",
+          "wrong": "I have two rices.",
+          "why": "Some rice is a natural amount expression; two rices is not the usual way to count rice."
+        },
+        {
+          "source": "Do you have any milk?",
+          "equivalent": "Is there any milk available?",
+          "wrong": "Is there any bread available?",
+          "why": "The first two ask about milk; bread is a different item."
+        }
+      ],
+      "roles": [
+        "uncountable noun",
+        "uncountable noun",
+        "uncountable noun",
+        "uncountable noun"
+      ],
+      "usage": [
+        "a bowl of rice",
+        "a glass of milk",
+        "drink water",
+        "a slice of bread"
+      ]
+    },
+    "a2-01": {
+      "id": "a2-01",
+      "principle": "Modals show your attitude: ability, advice, or necessity.",
+      "contrast": "Can, should and must are not interchangeable because they change the force of your message.",
+      "pairs": [
+        {
+          "source": "You should practise English.",
+          "equivalent": "It would be a good idea to practise English.",
+          "wrong": "You must practise English.",
+          "why": "Should gives advice; must expresses much stronger obligation."
+        },
+        {
+          "source": "I can swim.",
+          "equivalent": "I'm able to swim.",
+          "wrong": "I should swim.",
+          "why": "Can and be able to describe ability; should recommends an action."
+        }
+      ],
+      "roles": [
+        "noun",
+        "noun",
+        "adjective",
+        "verb or noun"
+      ],
+      "usage": [
+        "give advice",
+        "follow a rule",
+        "eat healthy food",
+        "practise daily"
+      ]
+    },
+    "a2-02": {
+      "id": "a2-02",
+      "principle": "Comparison tells the reader which difference matters.",
+      "contrast": "Than compares two; a superlative identifies an extreme within a group.",
+      "pairs": [
+        {
+          "source": "This book is easier than that one.",
+          "equivalent": "That book is harder than this one.",
+          "wrong": "This book is the hardest.",
+          "why": "The first two express the same comparison from opposite viewpoints."
+        },
+        {
+          "source": "Biology is more interesting than maths.",
+          "equivalent": "I find biology more interesting than maths.",
+          "wrong": "I find maths more interesting than biology.",
+          "why": "Switching the subjects changes the preference."
+        }
+      ],
+      "roles": [
+        "comparative adjective",
+        "comparative adjective",
+        "preposition",
+        "determiner or adverb"
+      ],
+      "usage": [
+        "easier to understand",
+        "better at reading",
+        "more than before",
+        "the most helpful"
+      ]
+    },
+    "a2-03": {
+      "id": "a2-03",
+      "principle": "Present Perfect connects a past experience to the present perspective.",
+      "contrast": "Have done and did can be different when the time period is or is not specified.",
+      "pairs": [
+        {
+          "source": "I have never tried skiing.",
+          "equivalent": "I've not tried skiing at any time.",
+          "wrong": "I tried skiing last year.",
+          "why": "Never denies the experience; last year asserts it."
+        },
+        {
+          "source": "Have you ever been to Auckland?",
+          "equivalent": "Have you visited Auckland at any time?",
+          "wrong": "Did you visit Auckland yesterday?",
+          "why": "Ever asks across your experience; yesterday asks about a particular day."
+        }
+      ],
+      "roles": [
+        "frequency adverb",
+        "frequency adverb",
+        "aspect adverb",
+        "aspect adverb"
+      ],
+      "usage": [
+        "have you ever",
+        "have never been",
+        "have already finished",
+        "not yet"
+      ]
+    },
+    "a2-04": {
+      "id": "a2-04",
+      "principle": "A linker changes how two ideas relate: reason, contrast, or result.",
+      "contrast": "Paraphrasing must preserve the logical relationship, not just change a connector.",
+      "pairs": [
+        {
+          "source": "I study English because it is useful.",
+          "equivalent": "English is useful, so I study it.",
+          "wrong": "Although English is useful, I study it.",
+          "why": "Because gives a reason; so expresses a result from that reason. Although introduces contrast."
+        },
+        {
+          "source": "Although it rained, we went out.",
+          "equivalent": "It rained, but we still went out.",
+          "wrong": "It rained, so we stayed inside.",
+          "why": "Although and but express contrast; the other changes the action."
+        }
+      ],
+      "roles": [
+        "conjunction",
+        "conjunction",
+        "linking adverb",
+        "linking adverb"
+      ],
+      "usage": [
+        "because it helps",
+        "although it is hard",
+        "however, I tried",
+        "therefore, we changed"
+      ]
+    },
+    "a2-05": {
+      "id": "a2-05",
+      "principle": "Listening comprehension begins with the event; details then refine it.",
+      "contrast": "Rephrasing time or location is useful only if you keep the exact facts.",
+      "pairs": [
+        {
+          "source": "The train leaves at nine.",
+          "equivalent": "The train departs at 9:00.",
+          "wrong": "The train departs at ten.",
+          "why": "Departs and leaves match; changing nine to ten is a factual error."
+        },
+        {
+          "source": "The meeting is in Room 4.",
+          "equivalent": "Room 4 is where the meeting takes place.",
+          "wrong": "The meeting is in Room 5.",
+          "why": "Location must remain exactly Room 4."
+        }
+      ],
+      "roles": [
+        "noun",
+        "noun",
+        "noun or verb",
+        "verb"
+      ],
+      "usage": [
+        "departure time",
+        "attend a meeting",
+        "change the room",
+        "arrive on time"
+      ]
+    },
+    "a2-06": {
+      "id": "a2-06",
+      "principle": "Find what the whole passage says before focusing on individual examples.",
+      "contrast": "A main-idea paraphrase preserves the central claim rather than copying one detail.",
+      "pairs": [
+        {
+          "source": "Many students use online lessons.",
+          "equivalent": "Online courses are used by many students.",
+          "wrong": "Only teachers use online lessons.",
+          "why": "Online courses and lessons express the same idea in context; the second changes who uses them."
+        },
+        {
+          "source": "They can study at their own pace.",
+          "equivalent": "They can learn at a speed that suits them.",
+          "wrong": "They must follow one fixed speed.",
+          "why": "At their own pace means flexible speed, not one fixed speed."
+        }
+      ],
+      "roles": [
+        "noun phrase",
+        "noun",
+        "adjective",
+        "noun"
+      ],
+      "usage": [
+        "online learning",
+        "learn at your own pace",
+        "a flexible schedule",
+        "self-discipline"
+      ]
+    },
+    "bridge-01": {
+      "id": "bridge-01",
+      "principle": "Word families change how an idea fits into a sentence.",
+      "contrast": "Decision is a noun; decide is a verb. The meaning is related, but the grammatical job differs.",
+      "pairs": [
+        {
+          "source": "I need to make a decision.",
+          "equivalent": "I need to decide.",
+          "wrong": "I need a decide.",
+          "why": "A noun phrase becomes a verb without losing the main idea; a decide is ungrammatical."
+        },
+        {
+          "source": "She made a good decision.",
+          "equivalent": "She decided wisely.",
+          "wrong": "She makes a bad decision.",
+          "why": "Decided wisely keeps the positive judgment; bad reverses it."
+        }
+      ],
+      "roles": [
+        "verb",
+        "noun",
+        "collocation",
+        "collocation"
+      ],
+      "usage": [
+        "decide quickly",
+        "make a decision",
+        "make a decision",
+        "take a short break"
+      ]
+    },
+    "bridge-02": {
+      "id": "bridge-02",
+      "principle": "Skimming locates the topic; scanning retrieves a precise detail.",
+      "contrast": "A true paraphrase must preserve the correct time or condition.",
+      "pairs": [
+        {
+          "source": "The library opens at 8 a.m.",
+          "equivalent": "The library starts operating at eight in the morning.",
+          "wrong": "The library opens at 9 a.m.",
+          "why": "Time is evidence, not an optional word to change."
+        },
+        {
+          "source": "It is closed on Sundays.",
+          "equivalent": "It does not open on Sundays.",
+          "wrong": "It opens every Sunday.",
+          "why": "Not open and closed are equivalent here; the third contradicts it."
+        }
+      ],
+      "roles": [
+        "verb",
+        "verb",
+        "verb",
+        "adjective"
+      ],
+      "usage": [
+        "skim the text",
+        "scan for a date",
+        "borrow a book",
+        "closed on Sundays"
+      ]
+    },
+    "bridge-03": {
+      "id": "bridge-03",
+      "principle": "Listening tasks regularly express one idea through different words.",
+      "contrast": "Don't hunt only for identical keywords; identify the meaning being expressed.",
+      "pairs": [
+        {
+          "source": "The course begins in May.",
+          "equivalent": "The course starts in May.",
+          "wrong": "The course ends in May.",
+          "why": "Begin and start match; end is the opposite."
+        },
+        {
+          "source": "The price is twenty dollars.",
+          "equivalent": "It costs twenty dollars.",
+          "wrong": "It costs twelve dollars.",
+          "why": "Price and cost refer to the same amount; changing the number breaks equivalence."
+        }
+      ],
+      "roles": [
+        "verb",
+        "noun or verb",
+        "noun",
+        "verb"
+      ],
+      "usage": [
+        "begin a course",
+        "the total cost",
+        "choose an occupation",
+        "reschedule a meeting"
+      ]
+    },
+    "bridge-04": {
+      "id": "bridge-04",
+      "principle": "A clear answer states a choice, gives a reason, then supports it.",
+      "contrast": "Paraphrasing an opinion should keep whose opinion it is and how strong it is.",
+      "pairs": [
+        {
+          "source": "I enjoy reading.",
+          "equivalent": "I like reading.",
+          "wrong": "I dislike reading.",
+          "why": "Enjoy and like match in this context; dislike reverses the opinion."
+        },
+        {
+          "source": "I learn new ideas.",
+          "equivalent": "I discover new ideas.",
+          "wrong": "I forget new ideas.",
+          "why": "Learn and discover are close here; forget expresses a different result."
+        }
+      ],
+      "roles": [
+        "verb",
+        "noun",
+        "linking phrase",
+        "verb"
+      ],
+      "usage": [
+        "enjoy learning",
+        "give a reason",
+        "for example",
+        "improve my English"
+      ]
+    },
+    "bridge-05": {
+      "id": "bridge-05",
+      "principle": "A paragraph develops one central claim with relevant support.",
+      "contrast": "The topic sentence states the main idea; the example should support, not replace, it.",
+      "pairs": [
+        {
+          "source": "Reading is useful for students.",
+          "equivalent": "Students benefit from reading.",
+          "wrong": "Reading is pointless for students.",
+          "why": "Benefit from keeps the positive idea; pointless contradicts it."
+        },
+        {
+          "source": "It helps them learn new words.",
+          "equivalent": "It helps them build vocabulary.",
+          "wrong": "It prevents them from learning words.",
+          "why": "Learn new words and build vocabulary are equivalent; prevents changes the result."
+        }
+      ],
+      "roles": [
+        "noun phrase",
+        "noun",
+        "verb or noun",
+        "noun"
+      ],
+      "usage": [
+        "write a topic sentence",
+        "give an explanation",
+        "support an idea",
+        "draw a conclusion"
+      ]
+    },
+    "bridge-06": {
+      "id": "bridge-06",
+      "principle": "Good communication preserves meaning while adapting wording to context.",
+      "contrast": "Choose the expression that conveys the same preference and justification.",
+      "pairs": [
+        {
+          "source": "Online learning is flexible.",
+          "equivalent": "Online courses offer flexibility.",
+          "wrong": "Online courses are always difficult.",
+          "why": "Flexible and offer flexibility express the same advantage; the other introduces an unsupported claim."
+        },
+        {
+          "source": "I prefer classroom learning.",
+          "equivalent": "I would rather study in a classroom.",
+          "wrong": "I want to avoid classroom learning.",
+          "why": "Would rather states the same preference; avoid reverses it."
+        }
+      ],
+      "roles": [
+        "adjective",
+        "verb",
+        "verb",
+        "noun"
+      ],
+      "usage": [
+        "a flexible timetable",
+        "review notes",
+        "prefer face-to-face classes",
+        "develop self-discipline"
+      ]
+    }
+  }
+};
