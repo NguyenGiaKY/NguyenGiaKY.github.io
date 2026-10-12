@@ -59,14 +59,14 @@ let h='<div class="f-wrap f-lesson-view"><button class="f-back" type="button" da
 '<div class="f-lesson-header"><span>'+esc(l.level)+' · '+esc(l.skill)+' · '+l.minutes+' phút</span><h2>'+esc(l.title)+'</h2><p>'+esc(l.goal)+'</p><div>'+tag(l.id)+'<small>'+(p.length?"Đạt bài kiểm tra vào "+p.length+" ngày khác nhau":"Chưa có lượt kiểm tra đạt")+'</small></div></div>'+
 '<div class="f-tabs" role="group" aria-label="Learning path"><button type="button" data-f-tab="learn" aria-pressed="'+(ui.tab==="learn")+'" class="'+(ui.tab==="learn"?"on":"")+'">01 · Explore & Listen</button><button type="button" data-f-tab="thinking" aria-pressed="'+(ui.tab==="thinking")+'" class="'+(ui.tab==="thinking"?"on":"")+'">02 · Think & Paraphrase</button><button type="button" data-f-tab="apply" aria-pressed="'+(ui.tab==="apply")+'" class="'+(ui.tab==="apply"?"on":"")+'">03 · Speak & Write</button><button type="button" data-f-tab="quiz" aria-pressed="'+(ui.tab==="quiz")+'" class="'+(ui.tab==="quiz"?"on":"")+'">04 · Check & Fix</button><button type="button" data-f-tab="structure" aria-pressed="'+(ui.tab==="structure")+'" class="'+(ui.tab==="structure"?"on":"")+'">05 · Deep Dive</button></div><div class="f-content">';
 if(ui.tab==="learn"){
- h+=(window.GKFoundationMissions?window.GKFoundationMissions.intro(l):"")+step("01","Understand why English works","Read the situation first. Notice how changing a word changes what people understand.")+'<details class="fm-extra-explain"><summary>Explanation in Vietnamese · Vì sao câu dùng như vậy?</summary><p>'+esc(l.explain)+'</p></details>'+ (l.level==="A0"&&window.GKFoundationVisual?'<div id="foundationVisualPanel">'+window.GKFoundationVisual.render(l.id)+'</div>':'') +'<div class="f-rules">';
+ h+=(window.GKFoundationMissions?window.GKFoundationMissions.intro(l):"")+step("01","Understand why English works","Read the situation first. Notice how changing a word changes what people understand.")+'<details class="fm-extra-explain"><summary>Explanation in Vietnamese · Vì sao câu dùng như vậy?</summary><p>'+esc(l.explain)+'</p></details>'+ (l.level==="A0"&&window.GKFoundationVisual?'<div id="foundationVisualPanel">'+window.GKFoundationVisual.render(l.id)+'</div>':'') +'<details class="fm-language-notes"><summary>Why do these words work? · Explain the language ↓</summary><div class="f-rules">';
  l.rules.forEach(x=>h+='<div><span>✓</span><p>'+esc(x)+'</p></div>');
- h+='</div>'+step("02","Nghe rồi nhắc lại","Nghe lần đầu, tự nhắc lại, nghe tiếp với tốc độ chậm nếu cần.")+
+ h+='</div></details>'+step("02","Listen, then say it yourself","Listen once for meaning. Then shadow one sentence. Try to say it without reading.")+
  '<div class="f-player"><div><strong>🔊 Listening practice</strong><small>Giọng đọc có sẵn trên thiết bị, không phải audio gốc IELTS.</small></div><div>'+button("play","▶ Nghe","primary")+button("slow","🐢 Chậm","secondary")+'</div></div><p id="foundationSpeechStatus" class="f-hint" role="status"></p><div class="f-examples">';
  l.examples.forEach((e,i)=>h+='<div><div><strong>'+esc(e[0])+'</strong><span>'+esc(e[1])+'</span></div><button type="button" data-f-speak="'+i+'" aria-label="Nghe câu ví dụ '+(i+1)+'">🔊</button></div>');
- h+='</div>'+step("03","Từ vựng đi cùng ngữ cảnh","Nói một câu mới với mỗi từ thay vì chỉ học thuộc nghĩa.")+'<div class="f-vocabulary">';
+ h+='</div>'+step("03","Notice the expressions","Choose one expression. You will learn its role and use it in a new sentence in step 02.")+'<details class="fm-quick-words"><summary>Four useful words · Show reference ↓</summary><div class="f-vocabulary">';
  l.words.forEach(w=>h+='<div><b>'+esc(w[0])+'</b><span>'+esc(w[1])+'</span></div>');
- h+='</div><div class="f-transcript">'+button("transcript",ui.transcript?"Ẩn transcript ↑":"Xem transcript ↓","secondary")+(ui.transcript?'<p>'+esc(l.audio)+'</p>':'<p class="f-hint">Thử nghe 2 lượt trước khi xem chữ.</p>')+'</div><div class="f-next">'+button("thinking","Understand meaning & paraphrase →","primary")+'</div>';
+ h+='</div></details><div class="f-transcript">'+button("transcript",ui.transcript?"Ẩn transcript ↑":"Xem transcript ↓","secondary")+(ui.transcript?'<p>'+esc(l.audio)+'</p>':'<p class="f-hint">Thử nghe 2 lượt trước khi xem chữ.</p>')+'</div><div class="f-next">'+button("thinking","Understand meaning & paraphrase →","primary")+'</div>';
 }
 if(ui.tab==="thinking")h+=window.GKFoundationThinking?'<div id="foundationThinkingPanel">'+window.GKFoundationThinking.render(l.id)+'</div>':'<p>The Thinking Studio could not load. Please refresh.</p>';
 if(ui.tab==="quiz"){
@@ -88,12 +88,12 @@ const draft=state.drafts[l.id]||"";
 h+=(window.GKFoundationMissions?window.GKFoundationMissions.apply(l):"")+'<div class="fm-writing-editor"><label class="f-draft-label" for="foundationDraft">Your own answer (English)</label><textarea id="foundationDraft" rows="4" placeholder="Write your answer in your own words. Focus on the situation above…">'+esc(draft)+'</textarea><small>Autosaved on this device. AI feedback is optional and is sent only when you request it.</small></div>'+
 (window.GKFoundationCoach?window.GKFoundationCoach.render(l):'')+'<div class="f-next">'+button("model",ui.model?"Ẩn câu mẫu":"So sánh với câu mẫu","secondary")+'</div>';
 if(ui.model){
-h+='<div class="f-model"><strong>Câu mẫu tham khảo</strong><p>'+esc(l.produce[2])+'</p><small>Đừng bắt buộc viết giống hệt; hãy kiểm tra ngữ pháp, ý nghĩa, cách dùng từ.</small></div>';
-h+='<label class="f-selfcheck"><input id="foundationSelfCheck" type="checkbox" '+(entry(l.id).selfChecked?"checked":"")+'/> Tôi đã tự viết, so sánh câu mẫu và sửa các lỗi nhận ra.</label>';
+h+='<div class="f-model"><strong>One possible response</strong><p>'+esc(l.produce[2])+'</p><small>Do not memorise it. Check the meaning and compare it with the ideas in your own answer.</small></div>';
 if(ui.score>=3||passDates(l.id).length)h+='<p class="f-hint">Đã có lượt kiểm tra đạt. Để được đánh dấu củng cố cần ôn đạt ở ít nhất 2 ngày khác nhau và tự kiểm tra phần viết.</p>';
 else h+='<p class="f-hint">Hãy làm bài trắc nghiệm đạt 3/4 trước khi tính tiến độ củng cố.</p>';
 }
-h+='<div class="f-next">'+button("quiz","Ôn câu hỏi","secondary")+button("next","Bài tiếp theo →","primary")+'</div>';
+h+='<label class="f-selfcheck fm-self-review"><input id="foundationSelfCheck" type="checkbox" '+(entry(l.id).selfChecked?"checked":"")+'/> I wrote my own answer, checked its meaning, and tried to correct my mistakes. (Self-review, not automatic grading.)</label>'+
+'<div class="f-next">'+button("quiz","Check understanding →","secondary")+button("next","Next lesson →","primary")+'</div>';
 }
 h+='</div><div class="f-foot">'+button("home","← Danh sách bài học","text")+'<span>Tiến độ Foundation tách biệt hoàn toàn với 81 IELTS tasks.</span></div></div>';
 root.innerHTML=h;
