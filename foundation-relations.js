@@ -112,7 +112,11 @@ const complete=ui.buildCorrect&&correct&&words.length>=20&&ui.showModel&&ui.refl
 h+='<div class="fr-next"><button type="button" data-r-action="complete" class="fr-btn primary" '+(!complete?"disabled":"")+'>Ghi nhận lượt thực hành →</button></div>';
 h+='</div>';
 }
-h+='</section><div class="fr-under"><p>Hãy học chậm và tự giải thích. Mỗi khi quên, quay về ví dụ đối chiếu thay vì học thuộc vị trí máy móc.</p>'+button("next","Quan hệ tiếp theo →","secondary")+'</div></div>';
+h+='</section>'+(window.GKFoundationCoach?window.GKFoundationCoach.render({
+ id:"relation-"+c.id,level:"A1",goal:c.question,
+ produce:["Write two English sentences demonstrating this relationship: "+c.title+". Explain which words are linked and why.","Use two examples with nouns, verbs, adjectives or adverbs.",c.examples[0].sentence],
+ speakingPrompt:"Make one new English sentence using the word relationship "+c.title+". Read it aloud, then explain which words are connected and what each word does."
+}):'')+'<div class="fr-under"><p>Hãy học chậm và tự giải thích. Mỗi khi quên, quay về ví dụ đối chiếu thay vì học thuộc vị trí máy móc.</p>'+button("next","Quan hệ tiếp theo →","secondary")+'</div></div>';
 return h;
 }
 function render(el){el.innerHTML=ui.id?detail():homepage();}
