@@ -8,28 +8,62 @@
     },
     "api/dictionary-explain.js": {
       "maxDuration": 30
+    },
+    "api/foundation-grade.js": {
+      "maxDuration": 60
     }
   },
   "headers": [
     {
       "source": "/api/speaking-grade",
       "headers": [
-        {"key": "Cache-Control", "value": "no-store"},
-        {"key": "X-Content-Type-Options", "value": "nosniff"}
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
       ]
     },
     {
       "source": "/api/writing-grade",
       "headers": [
-        {"key": "Cache-Control", "value": "no-store"},
-        {"key": "X-Content-Type-Options", "value": "nosniff"}
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
       ]
     },
     {
       "source": "/api/dictionary-explain",
       "headers": [
-        {"key": "Cache-Control", "value": "no-store"},
-        {"key": "X-Content-Type-Options", "value": "nosniff"}
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    },
+    {
+      "source": "/api/foundation-grade",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, private"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
       ]
     }
   ]
