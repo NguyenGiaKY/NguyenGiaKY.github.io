@@ -1,4 +1,4 @@
-/* Curated concept-first paraphrase, contextual vocabulary and word-family transformations for 24 lessons. */
+/* Carefully authored thinking, lexical and word-family contrasts for 24 Foundation lessons. */
 window.GKFoundationThinkingData = {
   "version": 1,
   "cases": {
@@ -175,9 +175,9 @@ window.GKFoundationThinkingData = {
         },
         {
           "source": "She plays football.",
-          "equivalent": "She enjoys playing football regularly.",
+          "equivalent": "Football is a sport she plays.",
           "wrong": "She played football yesterday.",
-          "why": "The paraphrase expresses her regular activity; yesterday moves it to the past."
+          "why": "Football is a sport she plays says the same activity without adding emotions or a new timeline; yesterday places it in the past."
         }
       ],
       "roles": [
@@ -289,9 +289,9 @@ window.GKFoundationThinkingData = {
       "pairs": [
         {
           "source": "I always brush my teeth.",
-          "equivalent": "I brush my teeth every time.",
+          "equivalent": "I never skip brushing my teeth.",
           "wrong": "I sometimes brush my teeth.",
-          "why": "Always is every time, not sometimes."
+          "why": "Always and never skip express the same regular habit in this context; sometimes indicates a different frequency."
         },
         {
           "source": "First, I wake up.",
@@ -375,9 +375,9 @@ window.GKFoundationThinkingData = {
         },
         {
           "source": "I will call you tomorrow.",
-          "equivalent": "I promise to call you tomorrow.",
+          "equivalent": "I will phone you tomorrow.",
           "wrong": "I called you yesterday.",
-          "why": "A promise about tomorrow is not a past call."
+          "why": "Phone and call are equivalent here; yesterday changes when the event happens."
         }
       ],
       "roles": [
@@ -455,9 +455,9 @@ window.GKFoundationThinkingData = {
         },
         {
           "source": "Do you have any milk?",
-          "equivalent": "Is there any milk available?",
+          "equivalent": "Have you got any milk?",
           "wrong": "Is there any bread available?",
-          "why": "The first two ask about milk; bread is a different item."
+          "why": "Have you got and Do you have ask about the same item and possession; bread changes the item."
         }
       ],
       "roles": [
@@ -855,9 +855,9 @@ window.GKFoundationThinkingData = {
         },
         {
           "source": "I learn new ideas.",
-          "equivalent": "I discover new ideas.",
+          "equivalent": "I gain new ideas.",
           "wrong": "I forget new ideas.",
-          "why": "Learn and discover are close here; forget expresses a different result."
+          "why": "Gain new ideas restates learning new ideas in this context; forgetting expresses a different result."
         }
       ],
       "roles": [
