@@ -35,6 +35,8 @@ const prompts={
 };
 let stored={};try{stored=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 const records=stored.records&&typeof stored.records==="object"?stored.records:{};
+const customLessons={};
+const getLesson=id=>pack.lessons.find(x=>x.id===id)||customLessons[id];
 let current=null,loading=false,error="",rec=null,clip=null,url="",elapsed=0,timer=null;
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const row=id=>records[id]||(records[id]={writing:null,speaking:null});
@@ -61,16 +63,19 @@ function fields(title,report){
  return h+'</div>';
 }
 function render(lesson){
- if(!lesson||!prompts[lesson.id])return"";
+ if(!lesson||(!prompts[lesson.id]&&!lesson.speakingPrompt))return"";
+ if(current&&current!==lesson.id)leave();
+ if(lesson.speakingPrompt)customLessons[lesson.id]=lesson;
  current=lesson.id;
  const r=row(lesson.id);
  return'<section class="fc-coach" id="foundationCoach" aria-label="Writing and speaking correction">'+
  '<div class="fc-heading"><div><span class="fc-kicker">WRITING + SPEAKING • OPENAI CORRECTION</span><h3>Get specific feedback, then try again</h3>'+
  '<p>One correction at a time: understand the mistake, fix your sentence, and practise speaking it.</p></div><span class="fc-level">'+esc(lesson.level)+'</span></div>'+
- '<div class="fc-grid"><div class="fc-column"><h4>✍️ Writing correction</h4><p>Write your answer in the text box above, then ask AI to assess it against this lesson.</p>'+
+ '<div class="fc-grid"><div class="fc-column"><h4>✍️ Writing correction</h4><p>'+esc(lesson.speakingPrompt?lesson.produce[0]:"Write your answer in the text box above, then ask AI to assess it against this lesson.")+'</p>'+
+ (lesson.speakingPrompt?'<textarea id="fc-custom-answer" rows="4" aria-label="Your English response" placeholder="Write in English…">'+esc(r.draft||"")+'</textarea>':'')+
  '<button type="button" class="fc-primary" data-fc="writing" '+(loading?'disabled':'')+'>'+(loading?'Checking…':'Check my writing with OpenAI')+'</button>'+
  '<div id="fc-writing-result">'+fields("Writing",r.writing?.report)+'</div></div>'+
- '<div class="fc-column"><h4>🎙️ Speaking practice</h4><p class="fc-speaking-task" lang="en">'+esc(prompts[lesson.id])+'</p>'+
+ '<div class="fc-column"><h4>🎙️ Speaking practice</h4><p class="fc-speaking-task" lang="en">'+esc(prompts[lesson.id]||lesson.speakingPrompt)+'</p>'+
  '<div class="fc-microphone"><button type="button" class="fc-primary" data-fc="'+(rec?'stop':'record')+'" '+(loading?'disabled':'')+'>'+(rec?'■ Stop recording':'● Record my answer')+'</button>'+
  '<span id="fc-mic-status" role="status">'+(rec?'Recording '+elapsed+'s / 45s':clip?'Recording ready':'No recording yet')+'</span></div>'+
  (clip?'<audio controls preload="none" src="'+esc(url)+'" aria-label="Review your recorded answer"></audio><button type="button" class="fc-primary" data-fc="speaking" '+(loading?'disabled':'')+'>Send recording for OpenAI feedback</button><button type="button" class="fc-link" data-fc="discard">Discard recording</button>':'')+
@@ -79,7 +84,7 @@ function render(lesson){
  '<p id="fc-message" role="status" class="fc-message">'+esc(error)+'</p></section>';
 }
 function refresh(){
- const node=root.querySelector("#foundationCoach");if(node&&current&&pack.lessons.find(x=>x.id===current)){const lesson=pack.lessons.find(x=>x.id===current);node.outerHTML=render(lesson);}
+ const node=root.querySelector("#foundationCoach");if(node&&current){const lesson=getLesson(current);if(lesson)node.outerHTML=render(lesson);}
 }
 function leave(){if(rec)stop(true);clearAudio();error="";current=null;}
 function base64(buffer){const bytes=new Uint8Array(buffer);let str="";const step=16384;for(let i=0;i<bytes.length;i+=step)str+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(str);}
@@ -119,8 +124,8 @@ function stop(cancel){
 async function evaluate(mode){
  if(loading||!current)return;
  if(mode==="speaking"&&!clip){error="Record an answer first.";refresh();return;}
- const id=current,lesson=pack.lessons.find(x=>x.id===id);if(!lesson)return;
- const answer=String(root.querySelector("#foundationDraft")?.value||"");
+ const id=current,lesson=getLesson(id);if(!lesson)return;
+ const answer=String(root.querySelector(lesson.speakingPrompt?"#fc-custom-answer":"#foundationDraft")?.value||"");
  if(mode==="writing"&&answer.trim().length<5){error="Write at least a short English sentence before grading.";refresh();return;}
  if(!window.GKCloudSync?.getIdToken){error="Sign in with Google using Save across devices to use AI corrections.";refresh();return;}
  const msg=mode==="speaking"?"Your audio will be sent to OpenAI for transcription, corrections and pronunciation feedback. OpenAI API usage can cost money. Continue?":"Your writing will be sent to OpenAI for feedback. OpenAI API usage can cost money. Continue?";
@@ -128,7 +133,7 @@ async function evaluate(mode){
  loading=true;error="Sending "+mode+" to OpenAI…";refresh();
  try{
   const token=await window.GKCloudSync.getIdToken();
-  const payload={mode,level:lesson.level,task:mode==="writing"?lesson.produce[0]:prompts[id],goal:lesson.goal,example:lesson.produce[2]};
+  const payload={mode,level:lesson.level,task:mode==="writing"?lesson.produce[0]:(prompts[id]||lesson.speakingPrompt),goal:lesson.goal,example:lesson.produce[2]};
   if(mode==="writing")payload.answer=answer;
   else{payload.audioBase64=base64(await clip.arrayBuffer());payload.format="wav";}
   const response=await fetch(EP,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
@@ -142,6 +147,7 @@ async function evaluate(mode){
  }catch(e){error="Assessment unavailable: "+String(e?.message||"Network error");}
  finally{loading=false;refresh();}
 }
+root.addEventListener("input",e=>{if(e.target?.id==="fc-custom-answer"&&current&&customLessons[current]){row(current).draft=e.target.value;persist();}});
 root.addEventListener("click",e=>{
  const button=e.target.closest("button[data-fc]");if(!button)return;
  const action=button.dataset.fc;
