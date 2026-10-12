@@ -30,6 +30,13 @@ function words(id){
  '<div class="ft-actions"><button type="button" class="ft-primary" data-ft-say="'+n+'">▶ Hear phrase</button><button type="button" class="ft-secondary" data-ft-save="'+n+'">'+(saved?'✓ Saved · Unsave':'☆ Save to this lesson')+'</button></div></div></section>';
  return html;
 }
+function family(id){
+ const f=atlas.cases[id]?.family;if(!f)return"";
+ return '<section class="ft-section ft-family"><header><span class="ft-eyebrow">WORD FAMILY · FUNCTION CHANGES</span><h3>Same idea, different job</h3><p>Instead of memorising word endings, ask why the sentence needs a noun, verb, adjective or adverb.</p></header>'+
+ '<div class="ft-family-comparison"><div><span>'+esc(f.fromRole)+'</span><h4>'+esc(f.from)+'</h4><p lang="en">'+esc(f.fromSentence)+'</p></div><span aria-hidden="true">→</span><div><span>'+esc(f.toRole)+'</span><h4>'+esc(f.to)+'</h4><p lang="en">'+esc(f.toSentence)+'</p></div></div>'+
+ '<details class="ft-family-reason"><summary>Why does the form or function change? <b>Show reasoning ↓</b></summary><p>'+esc(f.why)+'</p>'+
+ '<p class="ft-hint">Try changing the example into a sentence about your own situation. Say it aloud and notice whether you need to name an idea or describe an action.</p></details></section>';
+}
 function meaning(id){
  const d=atlas.cases[id],r=row(id);
  let html='<section class="ft-section"><header><span class="ft-eyebrow">02 · PARAPHRASE & LOGIC</span><h3>Different words. Same meaning?</h3><p>Check the speaker, event, timing, quantity and logical relationship. One wrong detail can reverse the meaning.</p></header>';
@@ -59,7 +66,7 @@ function coach(id){
 function render(id){
  if(!lessons[id]||!atlas.cases[id])return"";
  active=id;
- return'<div class="ft-studio">'+concepts(id)+words(id)+meaning(id)+coach(id)+
+ return'<div class="ft-studio">'+concepts(id)+words(id)+family(id)+meaning(id)+coach(id)+
  '<footer class="ft-footer"><p>Understanding is demonstrated when you can explain an idea and use it in a new situation—not by memorising an answer.</p><button type="button" class="ft-primary" data-ft-apply="1">Practice speaking and writing →</button></footer></div>';
 }
 function homePanel(){
