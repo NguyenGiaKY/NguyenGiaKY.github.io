@@ -59,7 +59,7 @@ let h='<div class="f-wrap f-lesson-view"><button class="f-back" type="button" da
 '<div class="f-lesson-header"><span>'+esc(l.level)+' · '+esc(l.skill)+' · '+l.minutes+' phút</span><h2>'+esc(l.title)+'</h2><p>'+esc(l.goal)+'</p><div>'+tag(l.id)+'<small>'+(p.length?"Đạt bài kiểm tra vào "+p.length+" ngày khác nhau":"Chưa có lượt kiểm tra đạt")+'</small></div></div>'+
 '<div class="f-tabs" role="group" aria-label="Learning path"><button type="button" data-f-tab="learn" aria-pressed="'+(ui.tab==="learn")+'" class="'+(ui.tab==="learn"?"on":"")+'">01 · Explore & Listen</button><button type="button" data-f-tab="thinking" aria-pressed="'+(ui.tab==="thinking")+'" class="'+(ui.tab==="thinking"?"on":"")+'">02 · Think & Paraphrase</button><button type="button" data-f-tab="apply" aria-pressed="'+(ui.tab==="apply")+'" class="'+(ui.tab==="apply"?"on":"")+'">03 · Speak & Write</button><button type="button" data-f-tab="quiz" aria-pressed="'+(ui.tab==="quiz")+'" class="'+(ui.tab==="quiz"?"on":"")+'">04 · Check & Fix</button><button type="button" data-f-tab="structure" aria-pressed="'+(ui.tab==="structure")+'" class="'+(ui.tab==="structure"?"on":"")+'">05 · Deep Dive</button></div><div class="f-content">';
 if(ui.tab==="learn"){
- h+=step("01","Hiểu trước khi ghi nhớ","Giải thích bằng tiếng Việt, sau đó xem cấu trúc trong câu.")+'<div class="f-concept">'+esc(l.explain)+'</div>'+ (l.level==="A0"&&window.GKFoundationVisual?'<div id="foundationVisualPanel">'+window.GKFoundationVisual.render(l.id)+'</div>':'') +'<div class="f-rules">';
+ h+=(window.GKFoundationMissions?window.GKFoundationMissions.intro(l):"")+step("01","Understand why English works","Read the situation first. Notice how changing a word changes what people understand.")+'<details class="fm-extra-explain"><summary>Explanation in Vietnamese · Vì sao câu dùng như vậy?</summary><p>'+esc(l.explain)+'</p></details>'+ (l.level==="A0"&&window.GKFoundationVisual?'<div id="foundationVisualPanel">'+window.GKFoundationVisual.render(l.id)+'</div>':'') +'<div class="f-rules">';
  l.rules.forEach(x=>h+='<div><span>✓</span><p>'+esc(x)+'</p></div>');
  h+='</div>'+step("02","Nghe rồi nhắc lại","Nghe lần đầu, tự nhắc lại, nghe tiếp với tốc độ chậm nếu cần.")+
  '<div class="f-player"><div><strong>🔊 Listening practice</strong><small>Giọng đọc có sẵn trên thiết bị, không phải audio gốc IELTS.</small></div><div>'+button("play","▶ Nghe","primary")+button("slow","🐢 Chậm","secondary")+'</div></div><p id="foundationSpeechStatus" class="f-hint" role="status"></p><div class="f-examples">';
@@ -70,7 +70,7 @@ if(ui.tab==="learn"){
 }
 if(ui.tab==="thinking")h+=window.GKFoundationThinking?'<div id="foundationThinkingPanel">'+window.GKFoundationThinking.render(l.id)+'</div>':'<p>The Thinking Studio could not load. Please refresh.</p>';
 if(ui.tab==="quiz"){
-h+=step("04","Tự kiểm tra kiến thức","Trả lời 4 câu. Từ 3/4 câu đúng được tính là một lượt ôn đạt.")+'<p class="f-hint">Các câu được đảo thứ tự khi thử lại. Đừng nhìn ví dụ phía trên trong lúc làm.</p>';
+h+=(window.GKFoundationMissions?window.GKFoundationMissions.detective(l):"")+step("04","Check your understanding","Explain why one sentence changes meaning, then answer four short questions.")+'<p class="f-hint">Các câu được đảo thứ tự khi thử lại. Đừng nhìn ví dụ phía trên trong lúc làm.</p>';
 ui.questions.forEach((q,i)=>{
 h+='<fieldset class="f-question"><legend><span>Câu '+(i+1)+'</span> '+esc(q.prompt)+'</legend><div class="f-options">';
 q.options.forEach((o,j)=>{const chosen=ui.answers[i]===o;h+='<button type="button" data-f-q="'+i+'" data-f-opt="'+j+'" aria-pressed="'+chosen+'" '+(ui.graded?"disabled":"")+' class="f-option '+(chosen?"selected ":"")+(ui.graded?(o===q.correct?"right":chosen?"wrong":""):"")+'"><span>'+String.fromCharCode(65+j)+'</span>'+esc(o)+'</button>';});
@@ -85,9 +85,7 @@ if(window.GKRelationsLab)h+=window.GKRelationsLab.preview();
 }
 if(ui.tab==="apply"){
 const draft=state.drafts[l.id]||"";
-h+=step("05","Tự tạo câu tiếng Anh","Viết mà không xem câu mẫu. Sau đó tự so sánh và sửa lỗi.")+
-'<div class="f-assignment"><strong>✍️ Yêu cầu</strong><p>'+esc(l.produce[0])+'</p><small>Gợi ý: '+esc(l.produce[1])+'</small></div>'+
-'<label class="f-draft-label" for="foundationDraft">Câu trả lời của mày</label><textarea id="foundationDraft" rows="5" placeholder="Write your answer in English…">'+esc(draft)+'</textarea><p class="f-hint">Câu tự viết được lưu trên trình duyệt. Dùng OpenAI bên dưới để nhận chấm chữa chi tiết và luyện nói.</p>'+
+h+=(window.GKFoundationMissions?window.GKFoundationMissions.apply(l):"")+'<div class="fm-writing-editor"><label class="f-draft-label" for="foundationDraft">Your own answer (English)</label><textarea id="foundationDraft" rows="4" placeholder="Write your answer in your own words. Focus on the situation above…">'+esc(draft)+'</textarea><small>Autosaved on this device. AI feedback is optional and is sent only when you request it.</small></div>'+
 (window.GKFoundationCoach?window.GKFoundationCoach.render(l):'')+'<div class="f-next">'+button("model",ui.model?"Ẩn câu mẫu":"So sánh với câu mẫu","secondary")+'</div>';
 if(ui.model){
 h+='<div class="f-model"><strong>Câu mẫu tham khảo</strong><p>'+esc(l.produce[2])+'</p><small>Đừng bắt buộc viết giống hệt; hãy kiểm tra ngữ pháp, ý nghĩa, cách dùng từ.</small></div>';
