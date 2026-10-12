@@ -40,3 +40,6 @@
 @media(max-width:830px){#foundationRoot .fc-grid{grid-template-columns:1fr}}
 @media(max-width:550px){#foundationRoot .fc-coach{padding:12px}#foundationRoot .fc-column{padding:12px}#foundationRoot .fc-heading h3{font-size:18px}#foundationRoot .fc-heading{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){#foundationRoot .fc-coach *{animation:none!important;transition:none!important}}
+
+#foundationRoot .fc-column textarea{display:block;width:100%;min-height:112px;border:1px solid #cbdaf0;background:#fff;border-radius:10px;color:#223d60;padding:11px 12px;font:inherit;font-size:13px;line-height:1.7;resize:vertical}
+#foundationRoot .fc-column textarea:focus-visible{outline:3px solid #87aaf1;outline-offset:2px}
