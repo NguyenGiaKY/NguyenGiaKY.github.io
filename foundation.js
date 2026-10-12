@@ -25,9 +25,9 @@ function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const k=Mat
 function generate(l){return shuffled(l.quiz.map(q=>({prompt:q[0],correct:q[1],options:shuffled(q.slice(1,4)),reason:q[4]})));}
 function notice(x){const n=root.querySelector("#foundationNotice");if(n){n.hidden=false;n.textContent=x;}}
 function scrollInto(){root.scrollIntoView({block:"start",behavior:"smooth"});}
-function render(){if((ui.page!=="lesson"||!["apply","thinking"].includes(ui.tab))&&window.GKFoundationCoach)window.GKFoundationCoach.leave();if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else if(ui.page==="wordpacks")root.innerHTML='<div id="foundationWordPacks">'+(window.GKFoundationThinking?window.GKFoundationThinking.packPage():"Vocabulary packs unavailable")+'</div>';else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else diagnostic();}
+function render(){if((ui.page!=="lesson"||!["apply","thinking"].includes(ui.tab))&&window.GKFoundationCoach)window.GKFoundationCoach.leave();if(ui.page==="home")home();else if(ui.page==="lesson"){if(!ui.classic&&window.GKFoundationFlow)window.GKFoundationFlow.render(index[ui.id]);else lesson();}else if(ui.page==="wordpacks")root.innerHTML='<div id="foundationWordPacks">'+(window.GKFoundationThinking?window.GKFoundationThinking.packPage():"Vocabulary packs unavailable")+'</div>';else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else diagnostic();}
 function home(){
-const started=data.lessons.filter(l=>(entry(l.id).attempts||[]).length||state.drafts[l.id]).length;
+const started=data.lessons.filter(l=>(entry(l.id).attempts||[]).length||state.drafts[l.id]||window.GKFoundationFlow?.getState(l.id)?.page>0).length;
 const mastered=data.lessons.filter(l=>levelStatus(l.id)==="mastered").length;
 const due=data.lessons.filter(l=>isDue(l.id));
 const next=data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0];
@@ -51,11 +51,11 @@ filtered.forEach(l=>{const seq=data.lessons.indexOf(l)+1;h+='<button class="f-le
 h+='</div><div class="f-bridge"><div><h3>Sau Foundation là 81 IELTS Tasks</h3><p>Đây là chương trình khởi động, không phải chứng nhận đạt A2. Khi đã hiểu câu cơ bản, nghe được ý chính và tự diễn đạt, hãy chuyển dần sang các IELTS tasks phù hợp.</p></div>'+button("ielts","Mở Study Queue →","secondary")+'</div></div>';
 root.innerHTML=h;
 }
-function open(id){if(!index[id])return;window.GKFoundationCoach?.leave();ui.page="lesson";ui.id=id;ui.tab="learn";ui.questions=generate(index[id]);ui.answers={};ui.graded=false;ui.score=0;ui.transcript=false;ui.model=false;render();scrollInto();}
+function open(id){if(!index[id])return;window.GKFoundationCoach?.leave();ui.page="lesson";ui.id=id;ui.classic=false;ui.tab="learn";ui.questions=generate(index[id]);ui.answers={};ui.graded=false;ui.score=0;ui.transcript=false;ui.model=false;render();scrollInto();}
 function step(n,title,subtitle){return '<div class="f-step"><span>'+n+'</span><div><h3>'+title+'</h3><p>'+subtitle+'</p></div></div>';}
 function lesson(){
 const l=index[ui.id],p=passDates(l.id);
-let h='<div class="f-wrap f-lesson-view"><button class="f-back" type="button" data-f-action="home">← Quay lại chương trình</button>'+
+let h='<div class="f-wrap f-lesson-view"><button class="f-back" type="button" data-f-action="flow">← Return to focused mini-course</button>'+
 '<div class="f-lesson-header"><span>'+esc(l.level)+' · '+esc(l.skill)+' · '+l.minutes+' phút</span><h2>'+esc(l.title)+'</h2><p>'+esc(l.goal)+'</p><div>'+tag(l.id)+'<small>'+(p.length?"Đạt bài kiểm tra vào "+p.length+" ngày khác nhau":"Chưa có lượt kiểm tra đạt")+'</small></div></div>'+
 '<div class="f-tabs" role="group" aria-label="Learning path"><button type="button" data-f-tab="learn" aria-pressed="'+(ui.tab==="learn")+'" class="'+(ui.tab==="learn"?"on":"")+'">01 · Explore & Listen</button><button type="button" data-f-tab="thinking" aria-pressed="'+(ui.tab==="thinking")+'" class="'+(ui.tab==="thinking"?"on":"")+'">02 · Think & Paraphrase</button><button type="button" data-f-tab="apply" aria-pressed="'+(ui.tab==="apply")+'" class="'+(ui.tab==="apply"?"on":"")+'">03 · Speak & Write</button><button type="button" data-f-tab="quiz" aria-pressed="'+(ui.tab==="quiz")+'" class="'+(ui.tab==="quiz"?"on":"")+'">04 · Check & Fix</button><button type="button" data-f-tab="structure" aria-pressed="'+(ui.tab==="structure")+'" class="'+(ui.tab==="structure"?"on":"")+'">05 · Deep Dive</button></div><div class="f-content">';
 if(ui.tab==="learn"){
@@ -137,7 +137,9 @@ const a=b.dataset.fAction;
 if(!a)return;
 if(a==="home"){ui.page="home";render();scrollInto();}
 else if(a==="wordPacks"){ui.page="wordpacks";render();scrollInto();}
-else if(a==="continue"){open((data.lessons.find(l=>isDue(l.id))||data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0]).id);}
+else if(a==="classic"){ui.classic=true;window.GKFoundationCoach?.leave();render();scrollInto();}
+else if(a==="flow"){ui.classic=false;window.GKFoundationCoach?.leave();render();scrollInto();}
+else if(a==="continue"){open((data.lessons.find(l=>{const f=window.GKFoundationFlow?.getState(l.id);return f?.page>0&&!f.finished;})||data.lessons.find(l=>isDue(l.id))||data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0]).id);}
 else if(a==="diagnostic"){ui.page="placement";ui.placementAnswers={};ui.placementResult=null;ui.diagnosticQuestions=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]].map(l=>({prompt:l.quiz[0][0],options:shuffled(l.quiz[0].slice(1,4)),correct:l.quiz[0][1]}));render();scrollInto();}
 else if(a==="checkDiagnostic"){const n=ui.diagnosticQuestions.reduce((sum,q,i)=>sum+(ui.placementAnswers[i]===q.correct?1:0),0);ui.placementResult={correct:n,level:n<=3?"A0":n<=5?"A1":"A2"};render();}
 else if(a==="startLevel"){ui.page="home";ui.filter=ui.placementResult.level;render();scrollInto();}
@@ -169,6 +171,7 @@ root.addEventListener("change",function(e){
 if(e.target&&e.target.id==="foundationSelfCheck"){if(!state.records[ui.id])state.records[ui.id]={attempts:[],selfChecked:false};state.records[ui.id].selfChecked=e.target.checked;save();}
 });
 window.GKFoundationOpenLesson=open;
+window.GKFoundationOpenHome=function(){ui.page="home";ui.classic=false;render();scrollInto();};
 document.querySelectorAll('.nav[data-view="foundation"]').forEach(b=>b.addEventListener("click",()=>{if(ui.page==="home")render();}));
 render();
 })();
