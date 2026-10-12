@@ -98,7 +98,11 @@ h+='<div class="fs-feedback '+(ui.score===3?"success":"error")+'"><strong>'+ui.s
 }else h+='<div class="fs-controls"><span class="fs-muted">Đã chọn '+Object.keys(ui.answers).length+'/3</span>'+
 '<button type="button" data-s-action="grade" class="fs-btn primary" '+(Object.keys(ui.answers).length!==3?"disabled":"")+'>Chấm & giải thích</button></div>';
 }
-h+='</div><div class="fs-topic-bottom">'+helper("next","Chủ đề tiếp theo →","secondary")+'<p>'+esc(days(u.id).length===0?"Tiến độ sẽ ghi nhận khi bạn hoàn thành cả hai bài tập: ghép câu đúng và 3/3 câu hỏi trong cùng một ngày.":days(u.id).length===1?"Đã đạt một ngày. Quay lại vào ngày khác và làm lại để củng cố.":"Đã củng cố ở ít nhất hai ngày khác nhau.")+'</p></div></div>';
+h+='</div>'+(window.GKFoundationCoach?window.GKFoundationCoach.render({
+  id:"sentence-"+u.id,level:"A1",goal:u.goal,
+  produce:["Write two English sentences that demonstrate "+u.title+". Explain why the words are used in those positions.","Use a subject, a verb and clear word relationships.",u.examples[0].sentence],
+  speakingPrompt:"Read this sentence aloud: "+u.examples[0].sentence+" Then explain in simple English which word is the subject, verb, adjective or adverb and why."
+}):'')+'<div class="fs-topic-bottom">'+helper("next","Chủ đề tiếp theo →","secondary")+'<p>'+esc(days(u.id).length===0?"Tiến độ sẽ ghi nhận khi bạn hoàn thành cả hai bài tập: ghép câu đúng và 3/3 câu hỏi trong cùng một ngày.":days(u.id).length===1?"Đã đạt một ngày. Quay lại vào ngày khác và làm lại để củng cố.":"Đã củng cố ở ít nhất hai ngày khác nhau.")+'</p></div></div>';
 return h;
 }
 function lessonContent(lesson){
