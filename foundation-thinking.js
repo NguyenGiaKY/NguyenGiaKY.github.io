@@ -117,5 +117,5 @@ root.addEventListener("click",evt=>{
  if(b.dataset.ftApply){const button=root.querySelector('[data-f-tab="apply"]');if(button)button.click();return;}
 });
 root.addEventListener("input",evt=>{const parts=evt.target?.dataset?.ftWordDraft;if(parts){const [id,pos]=parts.split("|"),word=lessons[id]?.words[Number(pos)]?.[0];if(word){const r=row(id);r.sentences={...(r.sentences||{}),[word]:evt.target.value};persist();}return;}const id=evt.target?.dataset?.ftDraft;if(id&&lessons[id]){row(id).draft=evt.target.value;persist();}});
-window.GKFoundationThinking={render,homePanel,packPage,stats,getRecord:id=>row(id)};
+window.GKFoundationThinking={render,homePanel,packPage,stats,getRecord:id=>row(id),toggleWord:(id,word)=>{if(!lessons[id]||!lessons[id].words.some(x=>x[0]===word))return false;const r=row(id),set=new Set(r.savedWords||[]);if(set.has(word))set.delete(word);else set.add(word);r.savedWords=[...set];persist();return set.has(word);}};
 })();
