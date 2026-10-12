@@ -11,7 +11,7 @@ const KEYS=[
  "gk_foundation_v1","gk_foundation_visual_v1","gk_foundation_sentence_v1","gk_foundation_relations_v1",
  "gk_core_skills_v1","gk_question_types_v1",
  "gkyyy_mock_test_v1","gkyyy_vocab_lab_v1","gkyyy_listening_tech_v1","gkyyy_error_center_v2",
- "gkyyy_highlights_v1","ielts_writing_task1_jobs_v1","gk_foundation_feedback_v1"
+ "gkyyy_highlights_v1","ielts_writing_task1_jobs_v1","gk_foundation_feedback_v1","gk_foundation_thinking_v1"
 ];
 const MAX_BYTES=400000;
 const escapeHtml=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
