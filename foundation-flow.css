@@ -1,0 +1,83 @@
+/* Focused Foundation pages — one visible learning activity, concise navigation. */
+#foundationRoot .gf-shell{max-width:940px;margin:0 auto;color:#203c5d;display:flex;flex-direction:column;gap:16px}
+#foundationRoot .gf-top{background:#fff;border:1px solid #d7e2ed;border-radius:18px;padding:18px 20px;display:grid;gap:13px;box-shadow:0 3px 14px rgba(23,48,78,.035)}
+#foundationRoot .gf-btn{display:inline-flex;justify-content:center;align-items:center;gap:7px;padding:11px 16px;font:inherit;font-size:13px;font-weight:800;border:1px solid #c6d8ec;border-radius:10px;min-height:43px;color:#2d5585;background:#fff;cursor:pointer}
+#foundationRoot .gf-btn.primary{background:#305fbb;border-color:#305fbb;color:#fff}
+#foundationRoot .gf-btn.text{background:transparent;border-color:transparent;color:#4e6c89;min-height:33px;padding:4px 0;justify-content:start}
+#foundationRoot .gf-btn:disabled{opacity:.48;cursor:not-allowed}
+#foundationRoot .gf-title small{display:block;color:#6982a0;font-size:11px;font-weight:800;letter-spacing:.06em}
+#foundationRoot .gf-title h1{font-size:clamp(20px,2.5vw,27px);line-height:1.3;color:#1c3f69;margin:5px 0 0;letter-spacing:-.025em}
+#foundationRoot .gf-count{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#5d7896}
+#foundationRoot .gf-count strong{font-size:13px;color:#31598d}
+#foundationRoot .gf-progress{height:7px;border-radius:20px;background:#e6eef6;overflow:hidden}
+#foundationRoot .gf-progress span{display:block;height:100%;background:#3764bb;border-radius:20px;transition:width .12s}
+#foundationRoot .gf-phases{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+#foundationRoot .gf-phases button{border:1px solid #dce6f0;background:#f8fbff;min-height:44px;color:#647c96;border-radius:9px;font-size:11px;line-height:1.5;font-weight:800;padding:7px 6px}
+#foundationRoot .gf-phases button.selected{background:#eaf1ff;color:#285aa7;border-color:#adc5ea;box-shadow:inset 0 0 0 1px #adc5ea}
+#foundationRoot .gf-focus{min-height:390px;background:#fff;border:1px solid #d6e2ee;border-radius:19px;padding:clamp(18px,3vw,32px);box-shadow:0 5px 23px rgba(28,52,88,.045)}
+#foundationRoot .gf-small{display:flex;justify-content:space-between;gap:12px;color:#6d88a4;font-size:10px;letter-spacing:.075em;font-weight:850}
+#foundationRoot .gf-screen-heading{margin:11px 0 16px;font-size:clamp(20px,3vw,27px);font-weight:850;letter-spacing:-.025em;color:#1a3b61}
+#foundationRoot .gf-task-body{max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+#foundationRoot .gf-activity-header h2{font-size:19px;line-height:1.45;color:#284968;margin:0 0 6px}
+#foundationRoot .gf-activity-header p{font-size:13px;line-height:1.8;color:#647f99;margin:0}
+#foundationRoot .gf-quote{background:#f4f8fd;border:1px solid #d8e5f2;border-left:4px solid #5b8acb;border-radius:12px;padding:22px;color:#204a74;font-size:clamp(17px,2vw,21px);font-weight:650;line-height:1.8}
+#foundationRoot .gf-tip{font-size:12px;line-height:1.7;color:#71889f;margin:0}
+#foundationRoot .gf-buttons{display:flex;flex-wrap:wrap;gap:8px}
+#foundationRoot .gf-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#foundationRoot .gf-choices button{display:flex;align-items:start;text-align:left;gap:12px;min-height:84px;font:inherit;line-height:1.7;font-size:14px;color:#365675;border-radius:12px;border:1px solid #d3e1ef;background:#fafcff;padding:15px}
+#foundationRoot .gf-choices button b{flex:none;color:#38689e;background:#eaf1fb;border-radius:7px;padding:3px 8px}
+#foundationRoot .gf-choices button.correct{background:#e9f7ef;border-color:#8dcba9}
+#foundationRoot .gf-choices button.wrong{background:#fff1ec;border-color:#d9a59a}
+#foundationRoot .gf-choices button:disabled{opacity:1;cursor:default}
+#foundationRoot .gf-feedback{padding:14px 17px;background:#f0f8f2;border:1px solid #c8e3d3;border-radius:12px;color:#305f4a;font-size:13px;line-height:1.8}
+#foundationRoot .gf-feedback strong{display:block;font-size:14px}
+#foundationRoot .gf-feedback p{margin:7px 0 13px}
+#foundationRoot .gf-word{padding:18px 21px;background:#f1f6fd;border-radius:13px;border:1px solid #d9e7f4}
+#foundationRoot .gf-word small{font-size:11px;color:#6685a6;text-transform:uppercase;font-weight:800}
+#foundationRoot .gf-word h3{font-size:30px;color:#1b4772;margin:6px 0}
+#foundationRoot .gf-word p{color:#546e87;font-size:15px;margin:0}
+#foundationRoot .gf-word strong{display:block;font-size:15px;color:#2a547f;margin-top:13px}
+#foundationRoot .gf-word-pagination{display:flex;align-items:center;gap:9px;justify-content:space-between;color:#647f9b;font-size:12px}
+#foundationRoot .gf-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#foundationRoot .gf-pair>div{padding:17px;background:#f4f7fc;border:1px solid #dae5f0;border-radius:12px}
+#foundationRoot .gf-pair>div:nth-child(2){background:#f0f8f4;border-color:#d7e9dd}
+#foundationRoot .gf-pair small{display:block;font-size:10px;letter-spacing:.07em;font-weight:850;text-transform:uppercase;color:#6e8aa4}
+#foundationRoot .gf-pair h3{font-size:23px;margin:5px 0 9px;color:#274f75}
+#foundationRoot .gf-pair p{font-size:14px;line-height:1.8;color:#3b5f7f;margin:3px 0}
+#foundationRoot .gf-label{font-size:13px;font-weight:800;color:#315b84;line-height:1.6}
+#foundationRoot .gf-field{font:inherit;font-size:14px;width:100%;border:1px solid #bfd0e4;background:#fff;resize:vertical;line-height:1.8;border-radius:11px;min-height:115px;color:#244765;padding:14px}
+#foundationRoot .gf-field:focus-visible{outline:3px solid #a5bee9;outline-offset:2px}
+#foundationRoot .gf-criteria{display:grid;gap:8px}
+#foundationRoot .gf-criteria p{display:flex;align-items:start;gap:11px;background:#f5f8fd;border:1px solid #dfebf5;border-radius:9px;padding:11px 13px;font-size:13px;line-height:1.6;margin:0;color:#496987}
+#foundationRoot .gf-criteria b{border-radius:7px;padding:3px 8px;background:#e3eefb;color:#315e99}
+#foundationRoot .gf-reveal{background:#fafcff;border:1px solid #dce6f1;border-radius:12px;padding:13px 15px}
+#foundationRoot .gf-reveal>summary{cursor:pointer;font-size:13px;font-weight:850;color:#345d8b}
+#foundationRoot .gf-reveal p{font-size:13px;line-height:1.8;color:#53728c;margin:9px 0}
+#foundationRoot .gf-priority{padding:15px;background:#edf5ff;border:1px solid #cedfee;border-radius:12px;color:#305979}
+#foundationRoot .gf-priority b{font-size:10px;letter-spacing:.07em}
+#foundationRoot .gf-priority p{font-size:14px;line-height:1.8;margin:9px 0 0}
+#foundationRoot .gf-final{padding:14px;border:1px solid #d9e7f3;background:#f3f8fd;border-radius:12px;color:#365d82}
+#foundationRoot .gf-final p{font-size:13px;line-height:1.7}
+#foundationRoot .gf-only-speech .fc-column:first-child,#foundationRoot .gf-only-writing .fc-column:nth-child(2){display:none!important}
+#foundationRoot .gf-only-speech .fc-grid,#foundationRoot .gf-only-writing .fc-grid{grid-template-columns:minmax(0,1fr)!important}
+#foundationRoot .gf-only-speech .fc-heading,#foundationRoot .gf-only-writing .fc-heading{display:none}
+#foundationRoot .gf-only-speech .fc-coach,#foundationRoot .gf-only-writing .fc-coach{padding:0!important;border:0!important;background:none!important}
+#foundationRoot .gf-only-speech .fc-column,#foundationRoot .gf-only-writing .fc-column{max-width:none!important}
+#foundationRoot .gf-footer{display:flex;flex-direction:column;gap:12px;background:#fff;border:1px solid #dce6f1;border-radius:15px;padding:16px 21px}
+#foundationRoot .gf-nav{display:flex;justify-content:space-between;gap:12px}
+#foundationRoot .gf-nav button{flex:1;max-width:220px}
+#foundationRoot .gf-footnote{display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:11px;color:#7c91a8}
+#foundationRoot .gf-footnote button{font-size:12px}
+#foundationRoot .gf-notice{color:#935a22;background:#fff6e8;padding:11px 13px;font-size:12px;border-radius:10px}
+@media(max-width:740px){
+ #foundationRoot .gf-top{padding:14px;gap:11px}
+ #foundationRoot .gf-phases{display:flex;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:3px}
+ #foundationRoot .gf-phases button{flex:0 0 135px;scroll-snap-align:start}
+ #foundationRoot .gf-focus{padding:17px;min-height:340px}
+ #foundationRoot .gf-choices,#foundationRoot .gf-pair{grid-template-columns:1fr}
+ #foundationRoot .gf-choices button{min-height:61px}
+ #foundationRoot .gf-footer{padding:13px}
+ #foundationRoot .gf-footnote{flex-direction:column;align-items:start}
+ #foundationRoot .gf-count{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){#foundationRoot .gf-shell *{transition:none!important;scroll-behavior:auto!important}}
