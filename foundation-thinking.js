@@ -27,7 +27,8 @@ function words(id){
  lesson.words.forEach((x,i)=>{html+='<button type="button" data-ft-word="'+i+'" aria-pressed="'+(i===n)+'" class="'+(i===n?"selected":"")+'"><strong>'+esc(x[0])+'</strong><span>'+esc(x[1])+'</span><small>'+esc(d.roles[i])+'</small></button>';});
  html+='</div><div class="ft-word-detail"><div><span class="ft-eyebrow">FUNCTION IN CONTEXT</span><h4>'+esc(w[0])+'</h4><p><b>'+esc(d.roles[n])+'</b> — '+esc(describe(d.roles[n]))+'</p></div>'+
  '<div class="ft-collocation"><small>NATURAL COLLOCATION / USE</small><strong lang="en">'+esc(d.usage[n])+'</strong><p>Why do these words fit together? How could you use this phrase to speak about your own life?</p></div>'+
- '<div class="ft-actions"><button type="button" class="ft-primary" data-ft-say="'+n+'">▶ Hear phrase</button><button type="button" class="ft-secondary" data-ft-save="'+n+'">'+(saved?'✓ Saved · Unsave':'☆ Save to this lesson')+'</button></div></div></section>';
+ '<div class="ft-actions"><button type="button" class="ft-primary" data-ft-say="'+n+'">▶ Hear phrase</button><button type="button" class="ft-secondary" data-ft-save="'+n+'">'+(saved?'✓ Saved · Unsave':'☆ Save to this lesson')+'</button></div>'+
+ '<div class="ft-make-sentence"><label for="ft-word-draft">Now use it naturally</label><p><b>Speaking:</b> say a new sentence using <em>'+esc(phrase)+'</em>. <b>Writing:</b> type the same idea, but make it about your own situation.</p><textarea id="ft-word-draft" data-ft-word-draft="'+esc(id)+'|'+n+'" rows="2" placeholder="My own sentence using this phrase…">'+esc(row(id).sentences?.[w[0]]||"")+'</textarea></div></div></section>';
  return html;
 }
 function family(id){
@@ -86,7 +87,9 @@ function packPage(){
    const n=l.words.findIndex(x=>x[0]===word);if(n<0)return;
    const show=!!visible[id+"|"+word];
    html+='<div class="ft-review-card"><strong>'+esc(word)+'</strong><small>'+esc(d.roles[n])+'</small><button type="button" data-ft-toggle="'+esc(id)+'|'+esc(word)+'">'+(show?'Hide explanation':'Reveal meaning')+'</button>';
-   if(show)html+='<p>'+esc(l.words[n][1])+'</p><b lang="en">'+esc(d.usage[n])+'</b><div class="ft-actions"><button type="button" data-ft-say="'+n+'" data-ft-lesson="'+esc(id)+'">▶ Listen</button><button type="button" data-ft-remove="'+esc(id)+'|'+esc(word)+'">Unsave</button></div>';
+   if(show)html+='<p>'+esc(l.words[n][1])+'</p><b lang="en">'+esc(d.usage[n])+'</b>'+
+ '<label for="ft-use-'+esc(id)+'-'+n+'">My own example sentence</label><textarea id="ft-use-'+esc(id)+'-'+n+'" rows="2" data-ft-word-draft="'+esc(id)+'|'+n+'" placeholder="Write a sentence with this phrase…">'+esc(r.sentences?.[word]||"")+'</textarea>'+
+ '<div class="ft-actions"><button type="button" data-ft-say="'+n+'" data-ft-lesson="'+esc(id)+'">▶ Listen</button><button type="button" data-ft-remove="'+esc(id)+'|'+esc(word)+'">Unsave</button></div>';
    html+='</div>';
   });
   html+='</div></section>';
@@ -113,6 +116,6 @@ root.addEventListener("click",evt=>{
  if(b.dataset.ftSay!==undefined){speak(b.dataset.ftLesson||active,Number(b.dataset.ftSay));return;}
  if(b.dataset.ftApply){const button=root.querySelector('[data-f-tab="apply"]');if(button)button.click();return;}
 });
-root.addEventListener("input",evt=>{const id=evt.target?.dataset?.ftDraft;if(id&&lessons[id]){row(id).draft=evt.target.value;persist();}});
+root.addEventListener("input",evt=>{const parts=evt.target?.dataset?.ftWordDraft;if(parts){const [id,pos]=parts.split("|"),word=lessons[id]?.words[Number(pos)]?.[0];if(word){const r=row(id);r.sentences={...(r.sentences||{}),[word]:evt.target.value};persist();}return;}const id=evt.target?.dataset?.ftDraft;if(id&&lessons[id]){row(id).draft=evt.target.value;persist();}});
 window.GKFoundationThinking={render,homePanel,packPage,stats,getRecord:id=>row(id)};
 })();
