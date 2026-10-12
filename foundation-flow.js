@@ -10,6 +10,9 @@ const API_ENDPOINT=window.location.hostname.endsWith(".vercel.app")?window.locat
 if(!root||!lessons.length)return;
 const lessonById=Object.fromEntries(lessons.map(l=>[l.id,l]));
 const KEY="gk_foundation_flow_v1",PREV="gk_foundation_v1";
+const WORD_REPORT_KEYS={A0:"gk_foundation_word_feedback_a0_v1",A1:"gk_foundation_word_feedback_a1_v1",A2:"gk_foundation_word_feedback_a2_v1",Bridge:"gk_foundation_word_feedback_bridge_v1"};
+const wordReports={};
+for(const [level,key] of Object.entries(WORD_REPORT_KEYS)){try{wordReports[level]=JSON.parse(localStorage.getItem(key)||"{}")||{};}catch(err){wordReports[level]={};}}
 const steps=[
  ["scene",0,"A meaningful situation"],["meaning",0,"Understand the message"],["listen",0,"Listen and repeat"],
  ["vocab",1,"A word in context"],["family",1,"How word families work"],["paraphrase",1,"Paraphrase the meaning"],["ownWords",1,"Explain in your own words"],
@@ -25,11 +28,24 @@ const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 function state(id){
  if(!rows[id])rows[id]={page:0,completed:{},meaning:null,para:null,word:0,wordSentences:{},draft:"",rewrite:"",outline:"",detective:"",revision:"",explanation:"",transfer:"",finished:false};
  const r=rows[id];
- if(!r.wordFeedback||typeof r.wordFeedback!=="object")r.wordFeedback={};
+ const level=lessonById[id]?.level;
+ if(level&&wordReports[level]){
+  if(!wordReports[level][id]&&r.wordFeedback&&typeof r.wordFeedback==="object")wordReports[level][id]=r.wordFeedback;
+  if(!wordReports[level][id])wordReports[level][id]={};
+  r.wordFeedback=wordReports[level][id];
+ }else if(!r.wordFeedback||typeof r.wordFeedback!=="object")r.wordFeedback={};
  if(!r.draft){try{r.draft=JSON.parse(localStorage.getItem(PREV)||"{}")?.drafts?.[id]||""}catch(err){}}
  return r;
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify({lessons:rows,lastLessonId}))}catch(err){message="Could not save progress. Check browser storage."}}
+function save(){try{
+  // Keep short learner progress separate from per-word AI feedback, so each Firebase document stays well below the 45 KB security limit.
+  const lean={};for(const [id,r] of Object.entries(rows)){const {wordFeedback,...rest}=r;lean[id]=rest;}
+  localStorage.setItem(KEY,JSON.stringify({lessons:lean,lastLessonId}));
+  for(const [level,key] of Object.entries(WORD_REPORT_KEYS)){
+   const reports=wordReports[level]||{};
+   if(Object.keys(reports).length)localStorage.setItem(key,JSON.stringify(reports));
+  }
+ }catch(err){message="Could not save progress. Check browser storage."}}
 function legacyDraft(id,val){try{const old=JSON.parse(localStorage.getItem(PREV)||"{}")||{};old.drafts=old.drafts||{};old.drafts[id]=val;localStorage.setItem(PREV,JSON.stringify(old))}catch(err){}}
 function b(name,text,style="outline",disabled=false){return '<button type="button" data-gf-action="'+name+'" class="gf-btn '+style+'" '+(disabled?"disabled":"")+'>'+text+'</button>'}
 function field(id,value,placeholder){return '<textarea data-gf-field="'+id+'" rows="4" class="gf-field" placeholder="'+esc(placeholder)+'">'+esc(value||"")+'</textarea>'}
@@ -131,6 +147,18 @@ function render(lesson){
  '<footer class="gf-footer"><div class="gf-nav">'+b("previous","← Previous","outline",r.page===0)+b("next","Next →","primary",r.page===steps.length-1)+'</div><div class="gf-footnote"><span>'+Object.keys(r.completed).length+' activities practised · clicking Next never means mastered</span>'+b("exit","Save & Exit","text")+'</div></footer></div>';
  save();
 }
+function compactWordReport(data){
+ const trim=(x,max)=>String(x??"").slice(0,max);
+ return{
+  source:"openai-foundation",score:data.score??null,task_status:trim(data.task_status,30),
+  summary_vi:trim(data.summary_vi||data.task_feedback_vi,330),
+  task_checks:(data.task_checks||[]).slice(0,3).map(x=>({criterion:trim(x.criterion,115),status:trim(x.status,15),fix_vi:trim(x.fix_vi||x.why_vi,175)})),
+  priority_fix_vi:trim(data.priority_fix_vi,250),
+  mistakes:(data.mistakes||[]).slice(0,2).map(x=>({original:trim(x.original,100),correction:trim(x.correction,130),reason_vi:trim(x.reason_vi,170)})),
+  corrected_answer:trim(data.corrected_answer,340),
+  revision_question:trim(data.revision_question,240)
+ };
+}
 async function checkWord(){
  if(checkingWord||!current)return;
  const id=current,r=state(id),lesson=lessonById[id],idx=Math.max(0,Math.min(3,r.word||0)),word=lesson.words[idx]?.[0];
@@ -157,7 +185,7 @@ async function checkWord(){
   if(!response.ok)throw new Error(data.error||"AI correction unavailable (HTTP "+response.status+")");
   if(data.source!=="openai-foundation")throw new Error("Invalid response from the grading service");
   // Keep feedback for the submitted word even when the learner switches words while awaiting a response.
-  r.wordFeedback[word]={answer,report:data,at:new Date().toISOString()};
+  r.wordFeedback[word]={answer:answer.slice(0,360),report:compactWordReport(data),at:new Date().toISOString()};
   r.completed.vocab=true;save();
   message="Correction ready. Revise your sentence and check again only when needed.";
  }catch(error){message="Sentence checking failed: "+String(error?.message||"Network error");}
