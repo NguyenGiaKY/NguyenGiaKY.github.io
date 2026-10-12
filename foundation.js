@@ -25,7 +25,7 @@ function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const k=Mat
 function generate(l){return shuffled(l.quiz.map(q=>({prompt:q[0],correct:q[1],options:shuffled(q.slice(1,4)),reason:q[4]})));}
 function notice(x){const n=root.querySelector("#foundationNotice");if(n){n.hidden=false;n.textContent=x;}}
 function scrollInto(){root.scrollIntoView({block:"start",behavior:"smooth"});}
-function render(){if((ui.page!=="lesson"||ui.tab!=="apply")&&window.GKFoundationCoach)window.GKFoundationCoach.leave();if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else diagnostic();}
+function render(){if((ui.page!=="lesson"||!["apply","thinking"].includes(ui.tab))&&window.GKFoundationCoach)window.GKFoundationCoach.leave();if(ui.page==="home")home();else if(ui.page==="lesson")lesson();else if(ui.page==="wordpacks")root.innerHTML='<div id="foundationWordPacks">'+(window.GKFoundationThinking?window.GKFoundationThinking.packPage():"Vocabulary packs unavailable")+'</div>';else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else diagnostic();}
 function home(){
 const started=data.lessons.filter(l=>(entry(l.id).attempts||[]).length||state.drafts[l.id]).length;
 const mastered=data.lessons.filter(l=>levelStatus(l.id)==="mastered").length;
@@ -34,14 +34,14 @@ const next=data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0]
 const pct=Math.round(started/data.lessons.length*100);
 const filtered=data.lessons.filter(l=>ui.filter==="all"||ui.filter===l.level);
 let h='<div class="f-wrap"><div class="f-cover"><div><div class="f-kicker">ENGLISH FOUNDATION · A0 → A2 → IELTS</div>'+
-'<h2>Tiếng Anh từ con số 0</h2><p>Bắt đầu với câu đơn giản, rồi học nghe, đọc, nói và viết. Mỗi bài có giải thích tiếng Việt, nghe mẫu, bài tập có lời giải và thực hành tự viết.</p>'+
+'<h2>English that makes sense</h2><p>Understand the message. Discover word relationships, paraphrase ideas and learn to express yourself in natural English.</p>'+
 '<div class="f-actions">'+button("continue","Học bài tiếp theo →","primary")+button("diagnostic","Kiểm tra điểm bắt đầu","secondary")+'</div></div>'+
 '<div class="f-cover-progress"><div class="f-circle" style="--value:'+pct+'%"><strong>'+pct+'%</strong><small>Đã thực hành</small></div><span>Không đánh dấu Mastered chỉ vì bấm hoàn thành.</span></div></div>'+
 '<div id="foundationNotice" hidden role="status"></div>'+
 '<div class="f-statbar"><div><small>Đã làm bài</small><strong>'+started+' / '+data.lessons.length+'</strong></div><div><small>Đã củng cố</small><strong>'+mastered+'</strong></div><div><small>Cần ôn</small><strong>'+due.length+'</strong></div></div>'+
-'<div class="f-guide"><b>5 bước học hiệu quả</b><p>Hiểu quy tắc → nghe và nhắc lại → trả lời câu hỏi → tự viết câu → ôn lại vào ngày khác. Mỗi ngày 1–2 bài, kết hợp thực hành nói thành tiếng.</p></div>'+(window.GKFoundationVisual?window.GKFoundationVisual.preview():'')+
+(window.GKFoundationThinking?window.GKFoundationThinking.homePanel():'')+'<details class="f-deep-dives"><summary><b>Extra interactive explainers</b><span>Sentence Thinking · Word Relationships ↓</span></summary><div class="f-guide"><b>Observe → Explain → Paraphrase → Use → Review</b><p>Understand the idea, identify word roles, transform a sentence, and use it in speaking/writing.</p></div>'+(window.GKFoundationVisual?window.GKFoundationVisual.preview():'')+
 '<section class="f-syntax-intro"><div class="f-syntax-symbol">Aa</div><div><span class="f-syntax-label">HỌC NGỮ PHÁP BẰNG TƯ DUY</span><h3>Giải mã câu: danh từ, tính từ, động từ, trạng từ & to be</h3><p>12 bài chuyên sâu: chạm vào từng từ để biết nó làm nhiệm vụ gì, vì sao đứng đó, tự sắp xếp câu và giải thích lỗi sai. Nên học song song từ bài A0.</p></div>'+button("syntax","Học tư duy cấu trúc câu →","primary")+'</section>'+
-'<section class="f-syntax-intro"><div class="f-syntax-symbol">↗</div><div><span class="f-syntax-label">BẢN ĐỒ 4 LOẠI TỪ · TƯ DUY TRỰC QUAN</span><h3>Danh từ – Động từ – Tính từ – Trạng từ kết nối như thế nào?</h3><p>Khám phá 10 quan hệ qua 20 câu đối chiếu. Bấm một từ để thấy nó bổ nghĩa cho từ nào, tự xây câu và lý giải cách dùng — không học mẹo vị trí cứng nhắc.</p></div>'+button("relations","Mở bản đồ quan hệ →","primary")+'</section>';
+'<section class="f-syntax-intro"><div class="f-syntax-symbol">↗</div><div><span class="f-syntax-label">BẢN ĐỒ 4 LOẠI TỪ · TƯ DUY TRỰC QUAN</span><h3>Danh từ – Động từ – Tính từ – Trạng từ kết nối như thế nào?</h3><p>Khám phá 10 quan hệ qua 20 câu đối chiếu. Bấm một từ để thấy nó bổ nghĩa cho từ nào, tự xây câu và lý giải cách dùng — không học mẹo vị trí cứng nhắc.</p></div>'+button("relations","Mở bản đồ quan hệ →","primary")+'</section></details>';
 if(due.length){h+='<section class="f-due"><h3>↻ Đến lượt ôn lại</h3><div class="f-due-row">';due.slice(0,5).forEach(l=>h+='<button type="button" data-f-id="'+esc(l.id)+'" class="f-review-link">'+esc(l.title)+' <span>Ôn →</span></button>');h+='</div></section>';}
 h+='<div class="f-section-title"><div><h3>Lộ trình 4 chặng</h3><p>24 bài nhỏ, học từ dễ đến khó. Các bài khác vẫn có thể xem trước.</p></div></div>'+
 '<div class="f-levels"><button type="button" data-f-filter="all" class="'+(ui.filter==="all"?"on":"")+'" aria-pressed="'+(ui.filter==="all")+'">Tất cả<small>24 bài</small></button>';
@@ -57,7 +57,7 @@ function lesson(){
 const l=index[ui.id],p=passDates(l.id);
 let h='<div class="f-wrap f-lesson-view"><button class="f-back" type="button" data-f-action="home">← Quay lại chương trình</button>'+
 '<div class="f-lesson-header"><span>'+esc(l.level)+' · '+esc(l.skill)+' · '+l.minutes+' phút</span><h2>'+esc(l.title)+'</h2><p>'+esc(l.goal)+'</p><div>'+tag(l.id)+'<small>'+(p.length?"Đạt bài kiểm tra vào "+p.length+" ngày khác nhau":"Chưa có lượt kiểm tra đạt")+'</small></div></div>'+
-'<div class="f-tabs" role="group" aria-label="Bước học"><button type="button" data-f-tab="learn" aria-pressed="'+(ui.tab==="learn")+'" class="'+(ui.tab==="learn"?"on":"")+'">1. Học & nghe</button><button type="button" data-f-tab="quiz" aria-pressed="'+(ui.tab==="quiz")+'" class="'+(ui.tab==="quiz"?"on":"")+'">2. Tự kiểm tra</button><button type="button" data-f-tab="apply" aria-pressed="'+(ui.tab==="apply")+'" class="'+(ui.tab==="apply"?"on":"")+'">3. Vận dụng</button><button type="button" data-f-tab="structure" aria-pressed="'+(ui.tab==="structure")+'" class="'+(ui.tab==="structure"?"on":"")+'">4. Giải mã câu</button></div><div class="f-content">';
+'<div class="f-tabs" role="group" aria-label="Learning path"><button type="button" data-f-tab="learn" aria-pressed="'+(ui.tab==="learn")+'" class="'+(ui.tab==="learn"?"on":"")+'">01 · Explore & Listen</button><button type="button" data-f-tab="thinking" aria-pressed="'+(ui.tab==="thinking")+'" class="'+(ui.tab==="thinking"?"on":"")+'">02 · Think & Paraphrase</button><button type="button" data-f-tab="apply" aria-pressed="'+(ui.tab==="apply")+'" class="'+(ui.tab==="apply"?"on":"")+'">03 · Speak & Write</button><button type="button" data-f-tab="quiz" aria-pressed="'+(ui.tab==="quiz")+'" class="'+(ui.tab==="quiz"?"on":"")+'">04 · Check & Fix</button><button type="button" data-f-tab="structure" aria-pressed="'+(ui.tab==="structure")+'" class="'+(ui.tab==="structure"?"on":"")+'">05 · Deep Dive</button></div><div class="f-content">';
 if(ui.tab==="learn"){
  h+=step("01","Hiểu trước khi ghi nhớ","Giải thích bằng tiếng Việt, sau đó xem cấu trúc trong câu.")+'<div class="f-concept">'+esc(l.explain)+'</div>'+ (l.level==="A0"&&window.GKFoundationVisual?'<div id="foundationVisualPanel">'+window.GKFoundationVisual.render(l.id)+'</div>':'') +'<div class="f-rules">';
  l.rules.forEach(x=>h+='<div><span>✓</span><p>'+esc(x)+'</p></div>');
@@ -66,8 +66,9 @@ if(ui.tab==="learn"){
  l.examples.forEach((e,i)=>h+='<div><div><strong>'+esc(e[0])+'</strong><span>'+esc(e[1])+'</span></div><button type="button" data-f-speak="'+i+'" aria-label="Nghe câu ví dụ '+(i+1)+'">🔊</button></div>');
  h+='</div>'+step("03","Từ vựng đi cùng ngữ cảnh","Nói một câu mới với mỗi từ thay vì chỉ học thuộc nghĩa.")+'<div class="f-vocabulary">';
  l.words.forEach(w=>h+='<div><b>'+esc(w[0])+'</b><span>'+esc(w[1])+'</span></div>');
- h+='</div><div class="f-transcript">'+button("transcript",ui.transcript?"Ẩn transcript ↑":"Xem transcript ↓","secondary")+(ui.transcript?'<p>'+esc(l.audio)+'</p>':'<p class="f-hint">Thử nghe 2 lượt trước khi xem chữ.</p>')+'</div><div class="f-next">'+button("quiz","Tự kiểm tra →","primary")+'</div>';
+ h+='</div><div class="f-transcript">'+button("transcript",ui.transcript?"Ẩn transcript ↑":"Xem transcript ↓","secondary")+(ui.transcript?'<p>'+esc(l.audio)+'</p>':'<p class="f-hint">Thử nghe 2 lượt trước khi xem chữ.</p>')+'</div><div class="f-next">'+button("thinking","Understand meaning & paraphrase →","primary")+'</div>';
 }
+if(ui.tab==="thinking")h+=window.GKFoundationThinking?'<div id="foundationThinkingPanel">'+window.GKFoundationThinking.render(l.id)+'</div>':'<p>The Thinking Studio could not load. Please refresh.</p>';
 if(ui.tab==="quiz"){
 h+=step("04","Tự kiểm tra kiến thức","Trả lời 4 câu. Từ 3/4 câu đúng được tính là một lượt ôn đạt.")+'<p class="f-hint">Các câu được đảo thứ tự khi thử lại. Đừng nhìn ví dụ phía trên trong lúc làm.</p>';
 ui.questions.forEach((q,i)=>{
@@ -137,6 +138,7 @@ if(b.hasAttribute("data-f-diag")&&!ui.placementResult){ui.placementAnswers[Numbe
 const a=b.dataset.fAction;
 if(!a)return;
 if(a==="home"){ui.page="home";render();scrollInto();}
+else if(a==="wordPacks"){ui.page="wordpacks";render();scrollInto();}
 else if(a==="continue"){open((data.lessons.find(l=>isDue(l.id))||data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0]).id);}
 else if(a==="diagnostic"){ui.page="placement";ui.placementAnswers={};ui.placementResult=null;ui.diagnosticQuestions=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]].map(l=>({prompt:l.quiz[0][0],options:shuffled(l.quiz[0].slice(1,4)),correct:l.quiz[0][1]}));render();scrollInto();}
 else if(a==="checkDiagnostic"){const n=ui.diagnosticQuestions.reduce((sum,q,i)=>sum+(ui.placementAnswers[i]===q.correct?1:0),0);ui.placementResult={correct:n,level:n<=3?"A0":n<=5?"A1":"A2"};render();}
@@ -145,7 +147,7 @@ else if(a==="syntax"||a==="syntaxTopic"){if(!window.GKSentenceLab)return;window.
 else if(a==="relations"){if(!window.GKRelationsLab)return;window.GKRelationsLab.open(null);ui.page="relations";render();scrollInto();}
 else if(a==="relationsBack"){ui.page="home";render();scrollInto();}
 else if(a==="ielts"){const target=document.querySelector('.nav[data-view="today"]');if(target)target.click();else location.hash="#view-today";}
-else if(a==="learn"||a==="quiz"||a==="apply"){ui.tab=a;render();}
+else if(a==="learn"||a==="quiz"||a==="apply"||a==="thinking"){ui.tab=a;render();}
 else if(a==="transcript"){ui.transcript=!ui.transcript;render();}
 else if(a==="play"||a==="slow"){speak(index[ui.id].audio,a==="slow");}
 else if(a==="retry"){ui.questions=generate(index[ui.id]);ui.answers={};ui.graded=false;ui.score=0;render();}
