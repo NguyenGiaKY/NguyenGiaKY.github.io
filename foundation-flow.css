@@ -81,3 +81,33 @@
  #foundationRoot .gf-count{font-size:11px}
 }
 @media(prefers-reduced-motion:reduce){#foundationRoot .gf-shell *{transition:none!important;scroll-behavior:auto!important}}
+
+/* Context vocabulary: example first, explanation on demand, correction only after explicit request. */
+#foundationRoot .gf-word-example{border:1px solid #d7e5f2;background:#f5f9ff;border-radius:12px;padding:15px 18px;display:flex;flex-direction:column;gap:9px}
+#foundationRoot .gf-kicker{display:block;font-size:10px;font-weight:850;letter-spacing:.09em;color:#55769d}
+#foundationRoot .gf-word-example p{font-size:16px;line-height:1.75;font-weight:650;color:#274f76;margin:0}
+#foundationRoot .gf-word-example button{align-self:start;background:transparent;border:none;color:#315e9f;font-size:12px;font-weight:800;padding:5px 0;cursor:pointer}
+#foundationRoot .gf-word-why{background:#fff;border-color:#cfddec}
+#foundationRoot .gf-word-check{display:flex;flex-direction:column;align-items:start;gap:7px}
+#foundationRoot .gf-word-check small{display:block;color:#758ba0;font-size:11px;line-height:1.7;max-width:630px}
+#foundationRoot .gf-word-hint{border:1px dashed #d2e0ec;background:#fbfdff;padding:12px 14px;border-radius:11px;color:#58728c}
+#foundationRoot .gf-word-hint b{font-size:12px;color:#355a7b}
+#foundationRoot .gf-word-hint p{font-size:12px;line-height:1.6;margin:6px 0 0}
+#foundationRoot .gf-word-report{display:flex;flex-direction:column;gap:10px;background:#fff;border:1px solid #bcd5cb;border-radius:13px;padding:17px}
+#foundationRoot .gf-word-report-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#foundationRoot .gf-word-report-top span{color:#548174;font-size:10px;font-weight:850;letter-spacing:.065em}
+#foundationRoot .gf-word-report-top strong{background:#ebf7f0;border-radius:8px;padding:7px 10px;color:#287157;font-size:14px}
+#foundationRoot .gf-word-report h3{font-size:17px;line-height:1.5;margin:0;color:#264f46}
+#foundationRoot .gf-word-report>p{font-size:13px;color:#45695f;line-height:1.75;margin:0}
+#foundationRoot .gf-word-criteria{display:flex;flex-direction:column;gap:8px}
+#foundationRoot .gf-word-criteria>div{display:grid;grid-template-columns:23px minmax(0,1fr);column-gap:8px;row-gap:4px;background:#f6faf8;border:1px solid #e0ebe5;border-radius:9px;padding:11px}
+#foundationRoot .gf-word-criteria b{grid-row:1/3;font-size:15px;color:#a06c37}
+#foundationRoot .gf-word-criteria b.met{color:#267353}
+#foundationRoot .gf-word-criteria span{font-size:12px;font-weight:800;color:#385b52}
+#foundationRoot .gf-word-criteria small{font-size:12px;color:#527368;line-height:1.65}
+#foundationRoot .gf-word-priority{background:#eff6fd;border:1px solid #d0e1f1;padding:13px 14px;border-radius:11px}
+#foundationRoot .gf-word-priority b{font-size:10px;color:#476fa0;letter-spacing:.07em}
+#foundationRoot .gf-word-priority p{margin:5px 0 0;font-size:13px;color:#365e84;line-height:1.75}
+#foundationRoot .gf-word-action{color:#385f82!important}
+#foundationRoot .gf-stale{font-size:12px;color:#936638;background:#fff8ec;padding:12px 14px;border:1px solid #edd8b5;border-radius:10px}
+@media(max-width:740px){#foundationRoot .gf-word-example{padding:13px 14px}#foundationRoot .gf-word-report{padding:14px}#foundationRoot .gf-word-check .gf-btn{width:100%}#foundationRoot .gf-word-report-top{align-items:start}}
