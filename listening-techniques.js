@@ -166,9 +166,15 @@ function halt(){
  if(attachedAudio){try{attachedAudio.pause();attachedAudio.currentTime=0;}catch(e){}attachedAudio=null;}
  if(current){current.playing=false;current.paused=false}
 }
-function voiceFor(speaker){
- if(window.GKYVoice)return window.GKYVoice.pick(window.GKYVoice.getPreferred(),speaker);
- try{return speechSynthesis.getVoices().find(v=>/^en-GB$/i.test(v.lang))||speechSynthesis.getVoices().find(v=>/^en/i.test(v.lang))||null}catch(e){return null}
+function dialogueVoices(segments){
+ if(window.GKYVoice?.planSpeakers)return window.GKYVoice.planSpeakers(segments,"en-GB");
+ return null;
+}
+function voiceFor(speaker,plan){
+ const setting=window.GKYVoice?.forSpeaker?.(plan,speaker);
+ if(setting)return setting;
+ const fallback=window.GKYVoice?.pick?.("auto",speaker,"en-GB")||null;
+ return {voice:fallback,lang:fallback?.lang||"en-GB",pitch:1,rate:1};
 }
 function playPart(indices){
  const st=current;
@@ -179,6 +185,7 @@ function playPart(indices){
  }
  halt();const token=playToken;
  st.playing=true;st.paused=false;
+ const characterVoices=dialogueVoices(st.pack.segments);
  const all=indices.length===st.pack.segments.length&&indices.every((n,i)=>n===i);
  if(all&&st.recordingURL){
   try{
@@ -196,11 +203,11 @@ function playPart(indices){
   if(pos>=indices.length){st.playing=false;st.paused=false;refreshAudioButtons();return}
   const segment=st.pack.segments[indices[pos++]];
   const utterance=new SpeechSynthesisUtterance(segment.text);
-  const voice=voiceFor(segment.speaker);
-  if(voice){utterance.voice=voice;utterance.lang=voice.lang}else utterance.lang="en-GB";
-  utterance.rate=st.mode==="exam"?1:st.rate;
-  utterance.pitch=1;utterance.volume=1;
-  utterance.onend=next;
+  const cast=voiceFor(segment.speaker,characterVoices);
+  if(cast.voice){utterance.voice=cast.voice;utterance.lang=cast.lang}else utterance.lang="en-GB";
+  utterance.rate=(st.mode==="exam"?1:st.rate)*(cast.rate||1);
+  utterance.pitch=cast.pitch||1;utterance.volume=1;
+  utterance.onend=()=>{if(playToken!==token)return;setTimeout(next,110)};
   utterance.onerror=e=>{if(playToken!==token)return;st.playing=false;refreshAudioButtons();const t=document.getElementById("ltStatus");if(t)t.textContent="Giọng đọc lỗi ("+(e.error||"unknown")+"). Hãy đổi giọng ở phần Audio.";};
   try{speechSynthesis.speak(utterance)}catch(e){st.playing=false;refreshAudioButtons()}
  }
@@ -261,6 +268,10 @@ function render(){
  h+='<div class="ltMode"><div><b>Chế độ</b><p>Exam: một lần, không pause · Learning: nghe lại có mục đích</p></div><div class="ltModeButtons"><button type="button" class="btn '+(st.mode==="exam"?"primary":"")+'" data-mode="exam" '+(st.playing?"disabled":"")+'>Exam Mode</button><button type="button" class="btn '+(st.mode==="learning"?"primary":"")+'" data-mode="learning" '+(st.playing?"disabled":"")+'>Learning Mode</button></div></div>';
  h+='<div class="ltPlayer"><div class="ltPlayerLine"><b>🎧 '+escapeHTML(st.pack.part)+'</b><span id="ltStatus">Sẵn sàng</span></div><div class="ltPlayerActions"><button type="button" id="ltPlay" class="btn primary" data-play="1">▶ Phát audio</button><button type="button" id="ltPause" class="btn" data-pause="1" hidden>⏸ Tạm dừng</button>';
  if(st.mode==="learning")h+='<label>Tốc độ <select id="ltRate"><option value="0.85" '+(st.rate===0.85?"selected":"")+'>0.85×</option><option value="1" '+(st.rate===1?"selected":"")+'>1.0×</option><option value="1.15" '+(st.rate===1.15?"selected":"")+'>1.15×</option></select></label>';
+ const voiceCast=dialogueVoices(st.pack.segments);
+ const actors=voiceCast?.speakers||[...new Set(st.pack.segments.map(x=>x.speaker))];
+ h+='<p class="ltVoiceCast"><strong>🎭 Nhân vật:</strong> '+actors.map(name=>escapeHTML(name)).join(' ↔ ')+
+ '<span> · '+(voiceCast?.distinct?'Đã chọn giọng khác nhau khi trình duyệt hỗ trợ.':'Trình duyệt thiếu giọng khác biệt: sẽ phân biệt bằng cao độ và nhịp đọc.')+'</span></p>';
  h+='</div><div class="ltQuality"><label for="ltVoice"><b>Giọng đọc</b></label><select id="ltVoice">'+(window.GKYVoice?window.GKYVoice.options():'<option value="auto">Giọng hệ thống</option>')+'</select><button type="button" class="btn" data-preview="1">🔊 Thử giọng</button><label class="ltFileLabel" for="ltAudioFile">🎵 Dùng audio MP3/WAV</label><input type="file" accept="audio/*" id="ltAudioFile" class="ltFileInput">'+(st.recordingURL?'<span class="ltRecording">✓ '+escapeHTML(st.recordingName||"Audio đã chọn")+'</span><button class="btn" data-clear-audio="1">Bỏ file</button>':'')+'</div><small>'+(st.recordingURL?'Đang dùng bản thu bạn chọn khi phát cả bài. Nghe từng câu sau chấm vẫn dùng giọng hệ thống.':'Giọng mặc định là TTS trình duyệt, không phải bản ghi IELTS. Chọn giọng tốt nhất hoặc gắn bản thu riêng khớp transcript để âm thanh tự nhiên hơn.')+' Exam Mode chỉ phát toàn bài một lần trước khi chấm.</small></div>';
  if(st.pack.map)h+='<div class="ltMap"><b>Sơ đồ tham chiếu (ground floor)</b><div class="ltMapGrid"><span>CAFE</span><span>RECEPTION</span><span>STORE</span><span> </span><span>ENTRANCE (south)</span><span> </span></div><small>Giữ hướng nhìn từ lối vào để theo dõi lời hướng dẫn.</small></div>';
  h+='<div class="ltInstructions">'+escapeHTML(st.pack.instructions)+'</div>';
