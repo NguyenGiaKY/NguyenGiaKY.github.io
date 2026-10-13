@@ -3,6 +3,15 @@
 
 const APP_KEY="ielts100_online";
 const LAB_KEY="gkyyy_vocab_lab_v1";
+const VOCAB_GRADE_KEYS=Array.from({length:4},(_,i)=>"gk_vocab_writing_feedback_"+i+"_v1");
+const vocabGradeShards=VOCAB_GRADE_KEYS.map(k=>{try{return JSON.parse(localStorage.getItem(k)||"{}")||{}}catch(e){return{}}});
+function gradeShard(key){let hash=0;for(const ch of String(key))hash=(hash*31+ch.charCodeAt(0))>>>0;return hash%4;}
+function writingGrade(key){return vocabGradeShards[gradeShard(key)][key]||null;}
+function saveGrade(key,value){
+ const idx=gradeShard(key),bucket=vocabGradeShards[idx];bucket[key]=value;
+ try{localStorage.setItem(VOCAB_GRADE_KEYS[idx],JSON.stringify(bucket));return true}catch(e){return false}
+}
+
 let lab={days:{},cards:{}};
 try{lab=Object.assign(lab,JSON.parse(localStorage.getItem(LAB_KEY)||"{}")||{});}catch(e){}
 if(!lab.days||typeof lab.days!=="object")lab.days={};
@@ -158,7 +167,7 @@ function progressOf(k,arr){
   const d=dayState(k),total=Math.max(1,arr.reduce((n,x)=>n+4+(familyQuestion(x.w,k).answer?1:0),1));
   let done=0;
   arr.forEach(x=>{const w=norm(x.w);if(d.recall[w])done++;if(d.speaking[w])done++;if(d.paraphrase[w])done++;if(d.collocation[w])done++;if(familyQuestion(x.w,k).answer&&d.family[w])done++;});
-  if(d.writing)done++;
+  if(d.writing&&writingGrade(k)?.answer===String(d.writingText||"").trim()&&writingGrade(k)?.task_status==="met")done++;
   return {done,total,pct:Math.round(done/total*100)};
 }
 function wordRow(x,k,selected){
@@ -258,13 +267,22 @@ function speakingHTML(k,arr){
       '</article>';
     }).join("")+'</div></section>';
 }
+function writingFeedbackHTML(saved,current){
+ if(!saved)return"";
+ if(saved.answer!==String(current||"").trim())return '<p class="vocabGradeStale">Your writing has changed. The previous result applies only to the earlier version.</p>';
+ return '<div class="vocabGradeResult"><strong>'+esc(saved.task_status==="met"?"✓ Task requirements met":saved.task_status==="off_topic"?"Off topic — rewrite":"Revise your response")+
+ '</strong><p>'+esc(saved.summary_vi||"Please review your answer.")+'</p>'+
+ '<p><b>Fix first:</b> '+esc(saved.priority_fix_vi||"Check the context and usage of each target word.")+'</p>'+
+ '<details><summary>View the feedback criteria</summary>'+saved.task_checks.map(c=>'<p><b>'+esc(c.status)+': '+esc(c.criterion)+'</b> '+esc(c.fix_vi||"")+'</p>').join("")+'</details>'+
+ '<small>Practice feedback · not an official IELTS band.</small></div>';
+}
 function writingHTML(k,arr,focus){
   const d=dayState(k),need=Math.min(3,arr.length),targets=arr.slice(0,Math.max(need,1));
   return '<section class="vocabPracticeBlock"><div class="vocabPracticeHead"><span>04</span><div><b>IELTS Writing</b><small>Dùng từ trong đoạn lập luận ngắn, đúng ngữ cảnh.</small></div></div>'+
     '<div class="vocabWritingTask"><p>'+esc(!contextChanged(focus.w,focus.context,k)&&wordCard(focus.w,k).writingTask||('Viết một ý cho IELTS Writing Task 2 về '+(focus.passageTitle||'chủ đề bài đọc')+', rồi giải thích và cho ví dụ.'))+' Viết <strong>2–4 câu</strong> (ít nhất 20 từ) và dùng ít nhất <strong>'+need+' từ</strong> trong bộ này. Thử dùng một collocation đã học.</p>'+
       '<div class="vocabTargetChips">'+targets.map(x=>'<span>'+esc(x.w)+'</span>').join("")+'</div>'+
       '<textarea class="vocabWritingInput" data-day="'+k+'" rows="5" placeholder="Viết một đoạn ngắn về học tập, công nghệ, cuộc sống hằng ngày...">'+esc(d.writingText||"")+'</textarea>'+
-      '<div class="vocabWritingBottom"><button class="btn primary vocabCheckWriting" data-day="'+k+'">Check đoạn viết</button><div class="vocabWritingFeedback">'+(d.writing?"✓ Hoàn thành mini writing của ngày này.":"")+'</div></div>'+
+      '<div class="vocabWritingBottom"><button class="btn primary vocabCheckWriting" data-day="'+k+'">Check</button><div class="vocabWritingFeedback" role="status">'+(writingGrade(k)?writingFeedbackHTML(writingGrade(k),d.writingText||""):"Write first, then Check. Word counts do not prove correct usage.")+'</div></div>'+
     '</div></section>';
 }
 function renderDay(k,arr){
@@ -360,7 +378,7 @@ function bind(){
     if(e.key==='Enter'){e.preventDefault();inp.closest('.vocabPhraseQuiz')?.querySelector('button')?.click();}
   }));
   document.querySelectorAll(".vocabStartSpeech").forEach(b=>b.onclick=()=>startSpeech(b));
-  document.querySelectorAll(".vocabWritingInput").forEach(t=>t.oninput=()=>{const d=dayState(t.dataset.day);d.writingText=t.value;saveLab();});
+  document.querySelectorAll(".vocabWritingInput").forEach(t=>t.oninput=()=>{const d=dayState(t.dataset.day);d.writingText=t.value;d.writing=false;saveLab();});
   document.querySelectorAll(".vocabCheckWriting").forEach(b=>b.onclick=()=>checkWriting(b));
 }
 function checkFamily(btn){
@@ -478,18 +496,54 @@ function startSpeech(btn){
     r.start();
   }catch(e){btn.disabled=false;if(out)out.textContent="Không mở được nhận giọng. Hãy thử lại sau.";}
 }
-function checkWriting(btn){
-  const k=btn.dataset.day,groups=wordsByDay(),arr=groups[k]||[],box=btn.closest(".vocabWritingTask"),ta=box&&box.querySelector(".vocabWritingInput"),fb=box&&box.querySelector(".vocabWritingFeedback");
-  const text=String(ta?.value||"").trim(),tokens=text.split(/\s+/).filter(Boolean),need=Math.min(3,arr.length);
-  const used=arr.filter(x=>new RegExp("\\b"+reEsc(x.w)+"\\b","i").test(text));
-  const sentences=text.split(/[.!?]+/).map(x=>x.trim()).filter(Boolean).length;
-  const ok=tokens.length>=20&&sentences>=2&&used.length>=need;
-  box?.classList.toggle("passed",ok);box?.classList.toggle("failed",!ok);
-  if(fb)fb.textContent=ok
-    ?"✓ Đã hoàn thành bài viết: "+tokens.length+" từ · "+sentences+" câu · có "+used.length+" từ mục tiêu. Chưa chấm ngữ pháp hoặc cách dùng từ."
-    :"Chưa đạt: hiện có "+tokens.length+"/20 từ · "+sentences+"/2 câu · "+used.length+"/"+need+" từ mục tiêu.";
-  const d=dayState(k);d.writingText=text;
-  if(ok)d.writing=true;saveLab();if(ok)updateDayProgress(k);
+async function checkWriting(btn){
+ const k=btn.dataset.day,groups=wordsByDay(),arr=groups[k]||[],box=btn.closest(".vocabWritingTask");
+ const ta=box?.querySelector(".vocabWritingInput"),fb=box?.querySelector(".vocabWritingFeedback");
+ const text=String(ta?.value||"").trim(),d=dayState(k);
+ const tokens=text.split(/\s+/).filter(Boolean),need=Math.min(3,arr.length);
+ const used=arr.filter(x=>new RegExp("\\b"+reEsc(x.w)+"\\b","i").test(text));
+ const sentences=text.split(/[.!?]+/).map(x=>x.trim()).filter(Boolean).length;
+ d.writingText=text;d.writing=false;saveLab();
+ if(tokens.length<20||sentences<2||used.length<need){
+  if(fb)fb.textContent="Chưa đủ dữ liệu để chấm: "+tokens.length+"/20 words · "+sentences+"/2 sentences · "+used.length+"/"+need+" target words.";
+  box?.classList.remove("passed");box?.classList.add("failed");return;
+ }
+ if(text.length>1700){if(fb)fb.textContent="Viết đoạn ngắn dưới 1.700 ký tự để được chấm.";return;}
+ const prior=writingGrade(k);
+ if(prior?.answer===text){if(fb)fb.innerHTML=writingFeedbackHTML(prior,text);return;}
+ if(!window.GKCloudSync?.getIdToken){if(fb)fb.textContent="Đăng nhập Google để sử dụng chức năng Check.";return;}
+ btn.disabled=true;btn.textContent="Checking…";if(fb)fb.textContent="Đang đánh giá cách dùng từ và độ liên kết…";
+ try{
+  const token=await window.GKCloudSync.getIdToken();
+  const examples=arr.slice(0,3).map(w=>w.context||"").filter(Boolean).join(" | ");
+  const taskTitle=k.startsWith("task:")?(arr[0]?.taskTitle||"Reading Task"):"Saved words";
+  const request={
+   mode:"writing",level:"Bridge",
+   scenario:"Saved vocabulary task "+taskTitle+". Reading context: "+String(examples).slice(0,450),
+   task:"Write a connected mini-paragraph (2–4 sentences) that uses at least "+need+" saved vocabulary words naturally. Topic: "+(arr[0]?.passageTitle||"English learning and daily life")+". Available target words: "+arr.map(x=>x.w).slice(0,24).join(", ")+".",
+   goal:"Judge semantic appropriateness of words IN CONTEXT, correct grammatical role, accurate collocations, coherence and relevance. Mere occurrence of a word must not be treated as successful use. Give exactly one priority correction and a revision prompt.",
+   checklist:["Uses at least "+need+" target words with correct context-sensitive meanings","Forms natural word combinations and correct grammar","Develops a relevant, coherent point with supporting detail"],
+   meaningFocus:"Using a word is not mastering its meaning; incorrect usage is a missed criterion.",
+   example:examples,
+   answer:text,revisionOf:prior?.answer||""
+  };
+  const endpoint=window.location.hostname.endsWith(".vercel.app")?window.location.origin+"/api/foundation-grade":"https://nguyen-gia-ky-github-io-rvay.vercel.app/api/foundation-grade";
+  const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify(request)});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw Error(result.error||"Checking temporarily unavailable ("+response.status+")");
+  if(result.source!=="openai-foundation")throw Error("Unexpected checking response");
+  const trim=(x,n)=>String(x||"").slice(0,n);
+  const record={answer:text,task_status:trim(result.task_status,20),
+   summary_vi:trim(result.summary_vi,300),priority_fix_vi:trim(result.priority_fix_vi,270),
+   task_checks:(result.task_checks||[]).slice(0,3).map(c=>({criterion:trim(c.criterion,90),status:trim(c.status,12),fix_vi:trim(c.fix_vi||c.why_vi,150)})),
+   score:Number.isFinite(Number(result.score))?Number(result.score):null,checkedAt:new Date().toISOString()};
+  if(!saveGrade(k,record))throw Error("Device storage full. Could not save the feedback.");
+  d.writing=record.task_status==="met"&&record.score>=3;saveLab();
+  if(fb)fb.innerHTML=writingFeedbackHTML(record,text);
+  box?.classList.toggle("passed",d.writing);box?.classList.toggle("failed",!d.writing);
+  updateDayProgress(k);
+ }catch(e){if(fb)fb.textContent="Không thể chấm ngay lúc này: "+(e?.message||"Lỗi kết nối")+". Bài viết đã được lưu.";}
+ finally{btn.disabled=false;btn.textContent="Check";}
 }
 
 window.renderSavedVocabulary=render;
