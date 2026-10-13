@@ -44,7 +44,16 @@ function planSpeakers(segments,locale){
  const options=sorted(locale||"en-GB"),speakers=[];
  for(const item of segments||[]){const name=normSpeaker(typeof item==="string"?item:item?.speaker);if(!speakers.includes(name))speakers.push(name);}
  const settings={},used=new Set(),namedUsed={};
- const roles=speakers.map((name,i)=>({name,gender:speakerGender(name)||(i===0?"F":i===1?"M":""),i}));
+ const roles=speakers.map((name,i)=>{
+  const spoken=(segments||[]).filter(x=>x&&typeof x!=="string"&&x.speaker===name).map(x=>x.text||"").join(" ");
+  const selfName=inferSpeaker(spoken,"");
+  return {name,gender:speakerGender(name)||(selfName?speakerGender(selfName):""),i};
+ });
+ if(roles.length===2){
+  if(roles[0].gender&&!roles[1].gender)roles[1].gender=roles[0].gender==="F"?"M":"F";
+  else if(!roles[0].gender&&roles[1].gender)roles[0].gender=roles[1].gender==="F"?"M":"F";
+ }
+ for(const role of roles){if(!role.gender)role.gender=role.i%2?"M":"F";}
  for(const role of roles){
   // A dialogue's roles, unlike a single-voice lecture, are never pinned to the
   // user's one preferred voice. Use distinct voiceURI identities if available.
