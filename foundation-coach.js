@@ -44,7 +44,7 @@ function persist(){try{localStorage.setItem(KEY,JSON.stringify({records}));}catc
 function clearAudio(){if(url)URL.revokeObjectURL(url);url="";clip=null;}
 function fields(mode,record){
  const report=record?.report;
- if(!report)return'<div class="fc-awaiting"><strong>No assessment yet</strong><p>First try the task yourself. OpenAI checking is optional and requires your Google sign-in and a configured API.</p></div>';
+ if(!report)return'<div class="fc-awaiting"><strong>No assessment yet</strong><p>Write or record your answer first, then press Check. The result is a practice assessment, not an official IELTS score.</p></div>';
  const errors=Array.isArray(report.mistakes)?report.mistakes:[];
  const checks=Array.isArray(report.task_checks)?report.task_checks:[];
  const status=report.task_status||"unclear",descriptions={met:"Answered the task",partial:"Some task requirements missing",off_topic:"Off topic — the question was not answered",unclear:"Task fit needs checking"};
@@ -96,14 +96,14 @@ function render(lesson){
  '<p>Understand the question first. AI marks the task, identifies actual errors and guides your next attempt.</p></div></div>'+
  '<div class="fc-grid"><div class="fc-column"><h4>01 · Check my writing</h4>'+
  (shortIntro?'<p>Use your answer from the box above. Check that it answers the exact writing mission.</p>':'<p>'+esc(lesson.produce[0])+'</p><textarea id="fc-custom-answer" rows="4" placeholder="Write an original English response…">'+esc(r.draft||"")+'</textarea>')+
- '<div class="fc-action-area"><button type="button" class="fc-primary" data-fc="writing" '+(loading?'disabled':'')+'>'+(loading?'Checking…':'Analyse my answer with OpenAI')+'</button>'+
+ '<div class="fc-action-area"><button type="button" class="fc-primary" data-fc="writing" '+(loading?'disabled':'')+'>'+(loading?'Checking…':'Check')+'</button>'+
  '<span>Task fit · grammar · vocabulary · meaning</span></div>'+
  fields("writing",r.writing)+'</div>'+
  '<div class="fc-column"><h4>02 · Speak for a real purpose</h4><p class="fc-speaking-task" lang="en">'+esc(talk)+'</p>'+
  (mission?'<p>Build the idea before recording: <b>'+esc(mission.focus)+'</b></p>':'')+
  '<div class="fc-microphone"><button type="button" class="fc-primary" data-fc="'+(rec?'stop':'record')+'" '+(loading?'disabled':'')+'>'+(rec?'■ Stop':'● Record answer')+'</button>'+
  '<span id="fc-mic-status" role="status">'+(rec?'Recording '+elapsed+'s / 45s':clip?'Ready to review':'No audio recorded')+'</span></div>'+
- (clip?'<audio controls preload="none" src="'+esc(url)+'" aria-label="Review your recording"></audio><button type="button" class="fc-primary" data-fc="speaking" '+(loading?'disabled':'')+'>Assess recording with OpenAI</button><button type="button" class="fc-link" data-fc="discard">Discard and try again</button>':'')+
+ (clip?'<audio controls preload="none" src="'+esc(url)+'" aria-label="Review your recording"></audio><button type="button" class="fc-primary" data-fc="speaking" '+(loading?'disabled':'')+'>Check</button><button type="button" class="fc-link" data-fc="discard">Discard and try again</button>':'')+
  fields("speaking",r.speaking)+'</div></div>'+
  '<p class="fc-disclosure">AI diagnostic scores /5 are not IELTS bands. OpenAI API use is billed separately. Text or audio is sent only after you press Assess and confirm. Text, transcripts and feedback can sync with your Google account; microphone recordings are not retained in your learning history.</p>'+
  '<p id="fc-message" role="status" class="fc-message">'+esc(error)+'</p></section>';
@@ -155,9 +155,8 @@ async function evaluate(mode){
  if(mode==="writing"&&previous?.answer?.trim()===answer.trim()){error="This exact version has already been checked. Revise at least one meaningful part before spending another OpenAI request.";refresh();return;}
  if(mode==="writing"&&answer.trim().length<5){error="Write at least a short English sentence before grading.";refresh();return;}
  if(!window.GKCloudSync?.getIdToken){error="Sign in with Google using Save across devices to use AI corrections.";refresh();return;}
- const msg=mode==="speaking"?"Your audio will be sent to OpenAI for transcription, corrections and pronunciation feedback. OpenAI API usage can cost money. Continue?":"Your writing will be sent to OpenAI for feedback. OpenAI API usage can cost money. Continue?";
- if(!window.confirm(msg))return;
- loading=true;error="Sending "+mode+" to OpenAI…";refresh();
+ // The learner expressly invokes checking by clicking Check. Authentication and server rate limits remain active.
+ loading=true;error="Checking "+mode+"…";refresh();
  try{
   const token=await window.GKCloudSync.getIdToken();
   const mission=window.GKFoundationMissions?.mission(id)||window.GKFoundationMissionData?.missions?.[id];
