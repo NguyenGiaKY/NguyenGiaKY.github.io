@@ -79,7 +79,7 @@ function wordResult(record,answer,kind="vocabulary"){
  let out='<section class="gf-word-report" aria-label="Sentence correction"><div class="gf-word-report-top"><span>AI PRACTICE FEEDBACK · NOT AN IELTS SCORE</span><strong>'+(report.score??"—")+'/5</strong></div>'+
  '<h3>'+esc(report.task_status==="off_topic"?(meaningTask?"The explanation misses the task":"The target meaning is missing"):report.task_status==="met"?(meaningTask?"The explanation addresses the task":"The sentence fits the task"):(meaningTask?"Review your reasoning":"Review how the word is used"))+'</h3>'+
  '<p>'+esc(report.summary_vi||report.task_feedback_vi||"Read the comments below and revise.")+'</p>';
- if(checks.length)out+='<div class="gf-word-criteria">'+checks.slice(0,3).map(c=>'<div><b class="'+esc(c.status||"missing")+'">'+(c.status==="met"?"✓":c.status==="partial"?"~":"!")+'</b><span>'+esc(c.criterion||"Task check")+'</span><small>'+esc(c.fix_vi||c.why_vi||"")+'</small></div>').join("")+'</div>';
+ if(checks.length)out+='<details class="gf-reveal"><summary>Review '+checks.length+' task criteria</summary><div class="gf-word-criteria">'+checks.slice(0,3).map(c=>'<div><b class="'+esc(c.status||"missing")+'">'+(c.status==="met"?"✓":c.status==="partial"?"~":"!")+'</b><span>'+esc(c.criterion||"Task check")+'</span><small>'+esc(c.fix_vi||c.why_vi||"")+'</small></div>').join("")+'</div></details>';
  if(report.priority_fix_vi)out+='<div class="gf-word-priority"><b>FIX THIS FIRST</b><p>'+esc(report.priority_fix_vi)+'</p></div>';
  if(errors.length)out+='<details class="gf-reveal"><summary>Specific language corrections ('+errors.length+')</summary>'+errors.slice(0,4).map(x=>'<p><b>'+esc(x.original)+' → '+esc(x.correction)+'</b><span> '+esc(x.reason_vi||"")+'</span></p>').join("")+'</details>';
  if(report.corrected_answer)out+='<details class="gf-reveal"><summary>See a corrected version of YOUR sentence</summary><p lang="en">'+esc(report.corrected_answer)+'</p></details>';
@@ -120,7 +120,8 @@ function responseRubric(id,kind){
 async function checkFreeResponse(kind){
  if(checkingWord||!current||!FREE_RESPONSE_KEYS[kind])return;
  const id=current,l=lessonById[id],r=state(id),answer=String(r[kind]||"").trim(),key=FREE_RESPONSE_KEYS[kind];
- if(answer.length<3){message="Write your answer first, then press Check.";render(l);return;}
+ if(answer.length<5){message="Write a short explanation first, then press Check.";render(l);return;}
+ if(answer.length>360){message="Keep this explanation under 360 characters, then Check.";render(l);return;}
  const prev=r.wordFeedback[key];
  if(prev?.answer===answer){message="This exact answer has already been checked. Change your answer to request another check.";render(l);return;}
  if(!window.GKCloudSync?.getIdToken){message="Sign in to save progress and use personal corrections.";render(l);return;}
@@ -268,6 +269,7 @@ async function checkRephrase(){
  if(checkingWord||!current)return;
  const id=current,lesson=lessonById[id],r=state(id),source=thoughts[id]?.pairs[0],answer=String(r.rewrite||"").trim();
  if(answer.length<8){message="Write a complete English sentence to compare with the original.";render(lesson);return;}
+ if(answer.length>360){message="Keep your paraphrase under 360 characters.";render(lesson);return;}
  const prior=r.wordFeedback?.__paraphrase__;
  if(prior?.answer?.trim()===answer){message="Already checked. Rewrite it meaningfully before requesting another API assessment.";render(lesson);return;}
  if(!window.GKCloudSync?.getIdToken){message="Sign in using Save across devices before requesting OpenAI feedback.";render(lesson);return;}
@@ -298,6 +300,7 @@ async function checkWord(){
  const normalize=x=>String(x||"").toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
  if(normalize(answer)===normalize(detail?.[0])){message="That is the example sentence. Try an original sentence of your own before requesting AI checking.";render(lesson);return;}
  if(answer.length<8){message="Write one meaningful English sentence before checking.";render(lesson);return;}
+ if(answer.length>360){message="Use a shorter example sentence (up to 360 characters).";render(lesson);return;}
  const prev=r.wordFeedback[word];
  if(prev?.answer?.trim()===answer){message="This version has already been checked. Edit it before spending another OpenAI request.";render(lesson);return;}
  if(!window.GKCloudSync?.getIdToken){message="Sign in with Google using Save across devices to get OpenAI corrections.";render(lesson);return;}
