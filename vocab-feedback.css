@@ -1,0 +1,12 @@
+/* Short, expandable vocabulary writing feedback. Avoid overwhelming the review card. */
+.vocabWritingTask .vocabWritingBottom{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px}
+.vocabWritingTask .vocabCheckWriting{min-width:110px;flex:none}
+.vocabWritingTask .vocabWritingFeedback{flex:1 1 290px;min-width:0;font-size:13px;line-height:1.65;color:#436284}
+.vocabGradeResult{background:#f4f9fd;border:1px solid #d1e1f0;border-radius:12px;padding:13px 15px;max-width:100%}
+.vocabGradeResult>strong{display:block;color:#255b87;font-size:14px;line-height:1.5}
+.vocabGradeResult p{margin:7px 0;color:#3c607c;font-size:13px}
+.vocabGradeResult details{border-top:1px solid #dbe5ef;padding-top:9px;margin-top:8px}
+.vocabGradeResult summary{cursor:pointer;color:#315f90;font-size:12px;font-weight:800}
+.vocabGradeResult small{display:block;margin-top:10px;color:#71869c;font-size:11px}
+.vocabGradeStale{background:#fff8ee;border:1px solid #ead9bf;border-radius:9px;padding:10px 13px;color:#856c45;font-size:12px}
+@media(max-width:680px){.vocabWritingTask .vocabWritingBottom{flex-direction:column}.vocabWritingTask .vocabCheckWriting{width:100%}.vocabWritingTask .vocabWritingFeedback{flex:auto;width:100%}}
