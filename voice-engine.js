@@ -62,7 +62,7 @@ function planSpeakers(segments,locale){
   if(roles[0].gender&&!roles[1].gender)roles[1].gender=roles[0].gender==="F"?"M":"F";
   else if(!roles[0].gender&&roles[1].gender)roles[0].gender=roles[1].gender==="F"?"M":"F";
  }
- for(const role of roles){if(!role.gender)role.gender=role.i%2?"M":"F";}
+ for(const role of roles){if(!role.gender&&roles.length>1)role.gender=role.i%2?"M":"F";}
  for(const role of roles){
   // A dialogue's roles, unlike a single-voice lecture, are never pinned to the
   // user's one preferred voice. Use distinct voiceURI identities if available.
@@ -70,7 +70,7 @@ function planSpeakers(segments,locale){
   if(!candidates.length)candidates=options.slice();
   const matching=role.gender?candidates.filter(v=>gender(v)===role.gender):[];
   const explicitly=getCharacterVoice(role.gender);
-  const configured=explicitly==="auto"?null:selectedVoice(explicitly,candidates);
+  const configured=explicitly==="auto"?(roles.length===1&&preferred!=="auto"?selectedVoice(preferred,candidates):null):selectedVoice(explicitly,candidates);
   const chosen=(configured||matching[0]||candidates[0]||null);
   if(chosen)used.add(chosen.voiceURI||chosen.name);
   // Pitch is a subtle differentiator when the browser exposes one voice only.
