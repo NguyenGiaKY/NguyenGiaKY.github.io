@@ -272,6 +272,12 @@ function render(){
  const actors=voiceCast?.speakers||[...new Set(st.pack.segments.map(x=>x.speaker))];
  h+='<p class="ltVoiceCast"><strong>🎭 Nhân vật:</strong> '+actors.map(name=>escapeHTML(name)).join(' ↔ ')+
  '<span> · '+(voiceCast?.distinct?'Đã chọn giọng khác nhau khi trình duyệt hỗ trợ.':'Trình duyệt thiếu giọng khác biệt: sẽ phân biệt bằng cao độ và nhịp đọc.')+'</span></p>';
+ h+='</div><details class="ltCastSettings"><summary>🎙️ Chọn / thử giọng hai nhân vật (khi cần)</summary>'+
+ '<div class="ltCastSettingsGrid"><label>Giọng nữ (Anna, Mia, Emma)<select data-character-voice="F">'+(window.GKYVoice?.castOptions?.("F")||'<option>Browser default</option>')+'</select></label>'+
+ '<button type="button" class="btn" data-preview-character="F">▶ Thử giọng nữ</button>'+
+ '<label>Giọng nam (Leo, Daniel)<select data-character-voice="M">'+(window.GKYVoice?.castOptions?.("M")||'<option>Browser default</option>')+'</select></label>'+
+ '<button type="button" class="btn" data-preview-character="M">▶ Thử giọng nam</button></div>'+
+ '<small>Giọng phụ thuộc vào macOS / iPhone / trình duyệt. Nếu chỉ có một giọng, hãy tải thêm English voices trong cài đặt thiết bị.</small></details>';
  h+='</div><div class="ltQuality"><label for="ltVoice"><b>Giọng đọc</b></label><select id="ltVoice">'+(window.GKYVoice?window.GKYVoice.options():'<option value="auto">Giọng hệ thống</option>')+'</select><button type="button" class="btn" data-preview="1">🔊 Thử giọng</button><label class="ltFileLabel" for="ltAudioFile">🎵 Dùng audio MP3/WAV</label><input type="file" accept="audio/*" id="ltAudioFile" class="ltFileInput">'+(st.recordingURL?'<span class="ltRecording">✓ '+escapeHTML(st.recordingName||"Audio đã chọn")+'</span><button class="btn" data-clear-audio="1">Bỏ file</button>':'')+'</div><small>'+(st.recordingURL?'Đang dùng bản thu bạn chọn khi phát cả bài. Nghe từng câu sau chấm vẫn dùng giọng hệ thống.':'Giọng mặc định là TTS trình duyệt, không phải bản ghi IELTS. Chọn giọng tốt nhất hoặc gắn bản thu riêng khớp transcript để âm thanh tự nhiên hơn.')+' Exam Mode chỉ phát toàn bài một lần trước khi chấm.</small></div>';
  if(st.pack.map)h+='<div class="ltMap"><b>Sơ đồ tham chiếu (ground floor)</b><div class="ltMapGrid"><span>CAFE</span><span>RECEPTION</span><span>STORE</span><span> </span><span>ENTRANCE (south)</span><span> </span></div><small>Giữ hướng nhìn từ lối vào để theo dõi lời hướng dẫn.</small></div>';
  h+='<div class="ltInstructions">'+escapeHTML(st.pack.instructions)+'</div>';
@@ -338,6 +344,10 @@ function handler(e){
   }
   refreshAudioButtons();return;
  }
+ if(button.dataset.previewCharacter){
+  if(st.mode==="exam"&&st.played&&!st.graded)return;
+  halt();window.GKYVoice?.previewCharacter?.(button.dataset.previewCharacter);return;
+ }
  if(button.dataset.preview){
   if(st.mode==="exam"&&st.played&&!st.graded)return;
   halt();if(window.GKYVoice&&!window.GKYVoice.preview()){const t=document.getElementById("ltStatus");if(t)t.textContent="Không có giọng phù hợp trên trình duyệt."}
@@ -398,6 +408,7 @@ document.addEventListener("input",e=>{
 document.addEventListener("change",e=>{
  if(current&&e.target.id==="ltRate"){current.rate=Number(e.target.value)||1;if(attachedAudio)attachedAudio.playbackRate=current.rate;}
  if(current&&e.target.id==="ltVoice"&&window.GKYVoice){window.GKYVoice.setPreferred(e.target.value);}
+ if(current&&e.target.dataset.characterVoice&&window.GKYVoice){window.GKYVoice.setCharacterVoice(e.target.dataset.characterVoice,e.target.value);}
  if(current&&e.target.id==="ltAudioFile"){
   const file=e.target.files&&e.target.files[0];
   if(!file)return;
