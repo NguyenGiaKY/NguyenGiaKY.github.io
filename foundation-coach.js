@@ -80,7 +80,7 @@ function fields(mode,record){
  }
  if(report.corrected_answer)h+='<details class="fc-model"><summary>See minimal corrections to your original wording</summary><p lang="en">'+esc(report.corrected_answer)+'</p></details>';
  if(report.model_answer)h+='<details class="fc-model"><summary>See a possible on-topic answer (not for copying)</summary><p lang="en">'+esc(report.model_answer)+'</p></details>';
- if(report.next_practice?.length)h+='<div class="fc-part"><h5>Your next 5-minute practice</h5><ol>'+report.next_practice.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol></div>';
+ if(report.next_practice?.length)h+='<details class="fc-model"><summary>Optional extra practice</summary><ol>'+report.next_practice.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol></details>';
  return h+'</section>';
 }
 function render(lesson){
@@ -159,7 +159,7 @@ async function evaluate(mode){
  loading=true;error="Sending "+mode+" to OpenAI…";refresh();
  try{
   const token=await window.GKCloudSync.getIdToken();
-  const mission=window.GKFoundationMissions?.mission(id);
+  const mission=window.GKFoundationMissions?.mission(id)||window.GKFoundationMissionData?.missions?.[id];
   const payload={mode,level:lesson.level,task:mode==="writing"?(mission?.writing||lesson.produce[0]):(lesson.speakingPrompt||mission?.speaking||prompts[id]),goal:lesson.goal,example:lesson.produce[2],
     scenario:mission?.scene||"",checklist:mission?.checklist||[],meaningFocus:mission?.focus||"",
     revisionOf:mode==="writing"&&previous?.answer?previous.answer:""};
