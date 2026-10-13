@@ -263,7 +263,7 @@ function speakingHTML(k,arr){
         (x.context?'<p class="vocabSourceContext">Trong bài: '+highlightContext(x.context,x.w)+'</p>':'')+
         '<p class="vocabSpeakCue">'+esc(!contextChanged(x.w,x.context,k)&&wordCard(x.w,k).speakingTask||('Trả lời một câu hỏi IELTS Speaking về '+(x.passageTitle||'chủ đề bài đọc')+', dùng từ '+x.w+' trong câu giải thích.'))+(!contextChanged(x.w,x.context,k)&&wordCard(x.w,k).collocations?.[0]?' Thử dùng cụm <b>'+esc(wordCard(x.w,k).collocations[0])+'</b>.':'')+' Cố gắng 6–15 từ.</p>'+
         '<button class="btn primary vocabStartSpeech" data-day="'+k+'" data-word="'+esc(x.w)+'">🎙️ '+(ok?"Nói lại":"Bắt đầu nói")+'</button>'+
-        '<div class="vocabSpeechTranscript">'+(ok?"✓ Đã dùng được từ này trong câu nói.":"")+'</div>'+
+        '<div class="vocabSpeechTranscript">'+(ok?"✓ Máy đã nhận diện từ trong câu nói. Chưa chấm nghĩa hoặc phát âm.":"")+'</div>'+
       '</article>';
     }).join("")+'</div></section>';
 }
@@ -292,7 +292,7 @@ function renderDay(k,arr){
   return '<section class="vocabDayCard '+(d.open?"open":"")+'" data-vocab-day="'+k+'">'+
     '<button class="vocabDayHeader" data-toggle-day="'+k+'">'+
       '<div><span class="vocabDatePill">'+(isTask?esc(k.slice(5))+' · Reading Task':formatDay(k))+'</span><h3>'+(isTask?esc(arr[0].taskTitle||"Reading")+" Vocabulary":arr.length+' từ đã lưu')+'</h3><p>'+(isTask?esc(arr[0].passageTitle||"")+" · "+arr.length+" words":arr.slice(0,5).map(x=>esc(x.w)).join(" · ")+(arr.length>5?" · …":""))+'</p></div>'+
-      '<div class="vocabDayProgress"><b>'+p.pct+'%</b><span>'+p.done+'/'+p.total+' hoạt động</span><i><em style="width:'+p.pct+'%"></em></i></div>'+
+      '<div class="vocabDayProgress"><b>'+p.pct+'%</b><span>'+p.done+'/'+p.total+' hoạt động đã luyện (không phải điểm IELTS)</span><i><em style="width:'+p.pct+'%"></em></i></div>'+
     '</button>'+
     (isTask?'<button type="button" class="btn primary vocabStartReview" data-start-review="'+esc(k)+'">Start Review · '+arr.length+' words</button>':'')+
     '<div class="vocabDayBody">'+
@@ -466,7 +466,7 @@ function updateDayProgress(k){
   const groups=wordsByDay(),arr=groups[k]||[],p=progressOf(k,arr),card=document.querySelector('[data-vocab-day="'+CSS.escape(k)+'"]');
   if(!card)return;
   const box=card.querySelector(".vocabDayProgress");
-  if(box)box.innerHTML='<b>'+p.pct+'%</b><span>'+p.done+'/'+p.total+' hoạt động</span><i><em style="width:'+p.pct+'%"></em></i>';
+  if(box)box.innerHTML='<b>'+p.pct+'%</b><span>'+p.done+'/'+p.total+' hoạt động đã luyện (không phải điểm IELTS)</span><i><em style="width:'+p.pct+'%"></em></i>';
 }
 function startSpeech(btn){
   const word=btn.dataset.word,k=btn.dataset.day,card=btn.closest(".vocabSpeakCard"),out=card&&card.querySelector(".vocabSpeechTranscript");
