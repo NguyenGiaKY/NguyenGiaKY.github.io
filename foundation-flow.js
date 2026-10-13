@@ -107,8 +107,16 @@ function content(lesson,r){
   wordResult(checked,answer)+
   '<div class="gf-word-pagination">'+b("word-back","←", "outline",n===0)+'<span>Word '+(n+1)+' of 4</span>'+b("word-forward","→","outline",n===3)+'</div>';
  }
- if(type==="family"){const f=t.family;return header("Why do the word forms change?","The sentence needs different grammatical functions.")+
-  '<div class="gf-pair"><div><small>'+esc(f.fromRole)+'</small><h3>'+esc(f.from)+'</h3><p>'+esc(f.fromSentence)+'</p></div><div><small>'+esc(f.toRole)+'</small><h3>'+esc(f.to)+'</h3><p>'+esc(f.toSentence)+'</p></div></div>'+reveal("Understand the reasoning",f.why);}
+ if(type==="family"){
+  const f=t.family,order=lessons.findIndex(x=>x.id===lesson.id)%2===0?[f.fromRole,f.toRole]:[f.toRole,f.fromRole];
+  const chosen=r.familyChoice??null;
+  return header("What job is this word doing?","Look at the real sentence before choosing its grammatical role.")+
+  quote(f.fromSentence)+
+  '<p class="gf-label">In this sentence, the word "'+esc(f.from)+'" functions as a…</p>'+
+  '<div class="gf-choices">'+order.map((opt,i)=>'<button type="button" data-gf-action="answer-family" data-gf-option="'+i+'" '+(chosen!==null?'disabled':'')+' class="'+(chosen!==null?(opt===f.fromRole?'correct':chosen===i?'wrong':''):'')+'><b>'+String.fromCharCode(65+i)+'</b>'+esc(opt)+'</button>').join("")+'</div>'+
+  (chosen!==null?'<div class="gf-feedback" role="status"><strong>'+(order[chosen]===f.fromRole?'✓ Correct — role identified.':'Try again — focus on the word in this sentence.')+'</strong><p>'+esc(f.why)+'</p>'+b("try-again","Try again")+'</div>':'')+
+  '<details class="gf-reveal"><summary>Compare the other word form</summary><p lang="en">'+esc(f.toSentence)+'</p><p>Here '+esc(f.to)+' works as a '+esc(f.toRole)+'.</p></details>';
+}
  if(type==="paraphrase"){const p=t.pairs[0],opts=(lesson.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];return quote(p.source)+choice("Which sentence means the same?",opts,r.para,opts.indexOf(p.equivalent),"answer-para",p.why)}
  if(type==="ownWords")return header("Change the words, keep the idea","The time, number, people and meaning must remain the same.")+quote(t.pairs[0].source)+field("rewrite",r.rewrite,"Try a different way to say it…")+reveal("One example",t.pairs[0].equivalent);
  if(type==="plan")return window.GKFoundationGuidedPages?.plan(lesson,r,m)||header("Plan your answer",m.writing);
@@ -213,8 +221,9 @@ root.addEventListener("click",ev=>{
  if(act==="hear-scene"){speak(m.dialog);r.completed.scene=true;save();return}
  if(act==="hear-example"||act==="slow-example"){speak(l.examples[0]?.[0]||m.dialog,act==="slow-example");r.completed.listen=true;save();return}
  if(act==="spoke"){r.completed.listen=true;save();render(l);return}
- if(act==="try-again"){if(type==="meaning")r.meaning=null;else r.para=null;save();render(l);return}
+ if(act==="try-again"){if(type==="meaning")r.meaning=null;else if(type==="family")r.familyChoice=null;else if(type==="paraphrase")r.para=null;save();render(l);return}
  if(act==="answer-meaning"&&r.meaning===null){r.meaning=Number(node.dataset.gfOption);if(r.meaning===m.correct)r.completed.meaning=true;save();render(l);return}
+ if(act==="answer-family"&&(r.familyChoice===undefined||r.familyChoice===null)){r.familyChoice=Number(node.dataset.gfOption);const opts=lessons.findIndex(x=>x.id===l.id)%2===0?[t.family.fromRole,t.family.toRole]:[t.family.toRole,t.family.fromRole];if(opts[r.familyChoice]===t.family.fromRole)r.completed.family=true;save();render(l);return}
  if(act==="answer-para"&&r.para===null){r.para=Number(node.dataset.gfOption);const p=t.pairs[0],opts=(l.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];if(opts[r.para]===p.equivalent)r.completed.paraphrase=true;save();render(l);return}
  if(act==="word-back"||act==="word-forward"){r.word=Math.max(0,Math.min(3,r.word+(act==="word-forward"?1:-1)));save();render(l);return}
  if(act==="hear-word"){speak(t.usage[r.word]);r.completed.vocab=true;save();return}
