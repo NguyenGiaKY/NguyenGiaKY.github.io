@@ -271,7 +271,7 @@ function render(){
  const voiceCast=dialogueVoices(st.pack.segments);
  const actors=voiceCast?.speakers||[...new Set(st.pack.segments.map(x=>x.speaker))];
  h+='<p class="ltVoiceCast"><strong>🎭 Nhân vật:</strong> '+actors.map(name=>escapeHTML(name)).join(' ↔ ')+
- '<span> · '+(voiceCast?.distinct?'Đã chọn giọng khác nhau khi trình duyệt hỗ trợ.':'Trình duyệt thiếu giọng khác biệt: sẽ phân biệt bằng cao độ và nhịp đọc.')+'</span></p>';
+ '<span> · '+(voiceCast?.distinct&&voiceCast?.genderCoverage?'Đã tìm thấy giọng nhân vật phân biệt được.':'Chưa xác nhận có đủ giọng nam/nữ khác biệt. Hãy mở mục Chọn/Thử giọng bên dưới để nghe và chọn thủ công.')+'</span></p>';
  h+='</div><details class="ltCastSettings"><summary>🎙️ Chọn / thử giọng hai nhân vật (khi cần)</summary>'+
  '<div class="ltCastSettingsGrid"><label>Giọng nữ (Anna, Mia, Emma)<select data-character-voice="F">'+(window.GKYVoice?.castOptions?.("F")||'<option>Browser default</option>')+'</select></label>'+
  '<button type="button" class="btn" data-preview-character="F">▶ Thử giọng nữ</button>'+
