@@ -47,14 +47,18 @@ function detective(lesson){
  (s.review?'<div class="fm-analysis"><strong>Reasoning</strong><p>'+esc(c.why)+'</p><p><b>Matching meaning:</b> '+esc(c.equivalent)+'</p></div>':'')+'</section>';
 }
 function speakScene(id){
- const m=source[id];if(!m||!window.speechSynthesis||!window.SpeechSynthesisUtterance){status="Audio playback is unavailable on this browser.";return;}
- try{
-  window.speechSynthesis.cancel();
-  const utter=new window.SpeechSynthesisUtterance(m.dialog);utter.lang="en-NZ";utter.rate=.88;
-  const all=window.speechSynthesis.getVoices()||[];
-  utter.voice=all.find(v=>/^en-(NZ|AU|GB)/i.test(v.lang))||all.find(v=>/^en/i.test(v.lang))||null;
-  window.speechSynthesis.speak(utter);
- }catch(e){status="Audio playback failed. Try reading aloud.";}
+ const m=source[id];if(!m)return;
+ const scene=window.GKFoundationScenes?.[id];
+ if(window.GKYVoice?.playConversation&&scene){
+  const result=window.GKYVoice.playConversation(scene,{locale:"en-NZ",rate:.9});
+  if(!result.ok)status="Audio playback unavailable on this browser.";return;
+ }
+ if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){status="Audio playback unavailable.";return;}
+ try{window.speechSynthesis.cancel();const u=new window.SpeechSynthesisUtterance(m.dialog);
+  const narrator=window.GKYVoice?.inferSpeaker?.(m.dialog,"Narrator")||"Narrator";
+  const v=window.GKYVoice?.pick?.("auto",narrator,"en-NZ");
+  u.lang=v?.lang||"en-NZ";if(v)u.voice=v;u.rate=.9;window.speechSynthesis.speak(u);
+ }catch(e){status="Audio playback failed.";}
 }
 function refreshPart(selector,renderFn){
  const node=root.querySelector(selector);
