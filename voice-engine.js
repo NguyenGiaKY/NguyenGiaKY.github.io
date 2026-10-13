@@ -7,6 +7,15 @@
 const KEY="gky_voice_preferences_v2";
 let preferred="auto";try{preferred=localStorage.getItem(KEY)||"auto";}catch(e){}
 const listeners=new Set();
+const CAST_KEY="gky_character_voice_pref_v1";
+let castPref={F:"auto",M:"auto"};
+try{castPref={...castPref,...JSON.parse(localStorage.getItem(CAST_KEY)||"{}")}}catch(e){}
+function setCharacterVoice(role,key){
+ const which=role==="M"?"M":"F";
+ castPref[which]=key||"auto";try{localStorage.setItem(CAST_KEY,JSON.stringify(castPref))}catch(e){}
+ notify();
+}
+function getCharacterVoice(role){return castPref[role==="M"?"M":"F"]||"auto"}
 const F=/(female|woman|emma|mia|maya|anna|priya|jenny|sonia|aria|samantha|victoria|serena|kate|ava|karen|moira|olivia|susan|tessa|allison|zira|hazel|fiona|siri female|google uk english female)/i;
 const M=/(male|man|leo|daniel|ryan|guy|alex|oliver|tom|aaron|fred|reed|arthur|david|mark|george|james|siri male|google uk english male)/i;
 const narratorNames={Mia:"F",Anna:"F",Emma:"F",Maya:"F",Priya:"F",Lina:"F",Daniel:"M",Leo:"M",Tom:"M"};
@@ -60,7 +69,9 @@ function planSpeakers(segments,locale){
   let candidates=options.filter(v=>!used.has(v.voiceURI||v.name));
   if(!candidates.length)candidates=options.slice();
   const matching=role.gender?candidates.filter(v=>gender(v)===role.gender):[];
-  const chosen=(matching[0]||candidates[0]||null);
+  const explicitly=getCharacterVoice(role.gender);
+  const configured=explicitly==="auto"?null:selectedVoice(explicitly,candidates);
+  const chosen=(configured||matching[0]||candidates[0]||null);
   if(chosen)used.add(chosen.voiceURI||chosen.name);
   // Pitch is a subtle differentiator when the browser exposes one voice only.
   // It is NOT a claim that we generated a true female/male voice.
@@ -108,6 +119,24 @@ function playConversation(lines,{locale="en-GB",rate=0.94,onFinish,onError,onTur
  next();return {ok:true,plan,cancel:()=>{if(token===playbackToken)stopConversation()}};
 }
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function castOptions(role){
+ const vals=sorted("en-GB"),selected=getCharacterVoice(role);
+ let out='<option value="auto">Auto · try to match this role</option>',seen=new Set();
+ for(const v of vals){const key=v.voiceURI||v.name;if(seen.has(key))continue;seen.add(key);
+  out+='<option value="'+esc(key)+'"'+(selected===key?" selected":"")+'>'+esc(v.name+" · "+v.lang)+'</option>';
+ }return out;
+}
+function previewCharacter(role){
+ const speaker=role==="M"?"Leo":"Anna";
+ const greeting=role==="M"?"Hi, I'm Leo. Nice to meet you.":"Hi, I'm Anna. Nice to meet you.";
+ const plan=planSpeakers([{speaker,text:greeting}],"en-GB");
+ const setting=forSpeaker(plan,speaker);
+ if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return false;
+ try{stopConversation();const u=new SpeechSynthesisUtterance(greeting);
+ u.lang=setting.lang||"en-GB";if(setting.voice)u.voice=setting.voice;
+ u.pitch=setting.pitch||1;u.rate=.94;window.speechSynthesis.speak(u);return true;
+ }catch(e){return false;}
+}
 function options(){const list=sorted("en-GB");let out='<option value="auto">Auto · best available English voice</option>',seen=new Set();for(const v of list){const key=v.voiceURI||v.name;if(seen.has(key))continue;seen.add(key);out+='<option value="'+esc(key)+'"'+(key===preferred?" selected":"")+'>'+esc(v.name+" · "+v.lang)+'</option>';}return out;}
 function preview(pref){
  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return false;
@@ -116,6 +145,6 @@ function preview(pref){
 function notify(){for(const fn of listeners)try{fn()}catch(e){}}
 try{window.speechSynthesis?.addEventListener("voiceschanged",notify)}catch(e){}
 window.GKYVoice={voices,score,sorted,pick,options,preview,setPreferred,getPreferred,
- voiceGender:gender,speakerGender,planSpeakers,forSpeaker,inferSpeaker,playConversation,stopConversation,
+ voiceGender:gender,speakerGender,planSpeakers,forSpeaker,inferSpeaker,playConversation,stopConversation,castOptions,setCharacterVoice,getCharacterVoice,previewCharacter,
  onVoices(fn){listeners.add(fn);return()=>listeners.delete(fn)}};
 })();
