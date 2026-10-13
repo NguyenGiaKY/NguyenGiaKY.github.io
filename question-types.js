@@ -119,7 +119,7 @@ root.addEventListener("click",function(e){
  if(a==="reset"){ui.choice=null;ui.graded=false;render();return;}
  if(a==="listen"){const t=byId[ui.id];if(!t||t.skill!=="listening")return;
   const synth=window.speechSynthesis;if(!synth||typeof window.SpeechSynthesisUtterance!=="function"){notice("Trình duyệt không hỗ trợ đọc tự động. Hãy dùng transcript sau khi chấm.");return;}
-  try{synth.cancel();const talk=new window.SpeechSynthesisUtterance(t.practice.stimulus);talk.lang="en-NZ";talk.rate=.85;synth.speak(talk);}catch(e){notice("Không thể phát giọng đọc trên thiết bị này.");}return;}
+  try{synth.cancel();const talk=new window.SpeechSynthesisUtterance(t.practice.stimulus);talk.lang="en-NZ";talk.rate=.85;const v=window.GKYVoice?.pick?.("auto","Lecturer","en-NZ");if(v){talk.voice=v;talk.lang=v.lang;}synth.speak(talk);}catch(e){notice("Không thể phát giọng đọc trên thiết bị này.");}return;}
  if(a==="model"){ui.model=!ui.model;render();return;}
  if(a==="saveError"){const note=root.querySelector("#qtNote")?.value?.trim()||"";if(!ui.tag){notice("Hãy chọn một nhãn lỗi trước khi lưu.");return;}if(!note){notice("Viết ngắn nguyên nhân lỗi trước khi lưu.");return;}per(ui.id).errors.push({tag:ui.tag,note,at:Date.now()});save();ui.tag="";ui.note="";render();return;}
 });
