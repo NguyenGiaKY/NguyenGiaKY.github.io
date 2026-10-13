@@ -51,23 +51,24 @@ function fields(mode,record){
  let h='<section class="fc-report" aria-label="AI correction result"><header class="fc-report-hero"><div><span class="fc-kicker">DIAGNOSTIC FEEDBACK · '+(mode==="writing"?"WRITING":"SPEAKING")+'</span><h4>'+esc(descriptions[status])+'</h4></div><strong>'+ (report.score===null||report.score===undefined?"—":esc(report.score))+'/5 <small>practice</small></strong></header>'+
  '<p class="fc-report-summary">'+esc(report.summary_vi||report.task_feedback_vi)+'</p>';
  if(record?.at)h+='<p class="fc-result-date">Checked '+esc(new Date(record.at).toLocaleString())+'</p>';
+ if(report.priority_fix_vi)h+='<div class="fc-priority"><span>FIX THIS FIRST</span><strong>'+esc(report.priority_fix_vi)+'</strong></div>';
  const previous=row(current).history?.[mode]||[];
  if(previous.length)h+='<details class="fc-previous"><summary>Compare with '+previous.length+' earlier attempt'+(previous.length>1?'s':'')+'</summary>'+
  previous.slice().reverse().map(v=>'<div><strong>'+esc((v.score??"—")+'/5')+'</strong><span>'+esc(v.task_status||"")+'</span><p lang="en">'+esc(v.answer||"")+'</p></div>').join("")+'</details>';
 
  if(report.transcript)h+='<div class="fc-part"><h5>What I heard (audio transcript)</h5><p lang="en">'+esc(report.transcript)+'</p></div>';
- if(checks.length){h+='<div class="fc-part"><h5>Did you answer the actual question?</h5><div class="fc-criteria">';
+ if(checks.length){h+='<details class="fc-model"><summary>Task checklist — view '+checks.length+' criteria</summary><div class="fc-criteria">';
   for(const c of checks)h+='<div class="fc-criterion"><div><span class="fc-criterion-label '+esc(c.status)+'">'+(c.status==="met"?"✓":c.status==="partial"?"~":"!")+' '+esc(c.status)+'</span><strong>'+esc(c.criterion)+'</strong></div>'+
   (c.evidence?'<p><b>Evidence:</b> '+esc(c.evidence)+'</p>':'')+(c.why_vi?'<p>'+esc(c.why_vi)+'</p>':'')+(c.fix_vi?'<p class="fc-criterion-fix">Next: '+esc(c.fix_vi)+'</p>':'')+'</div>';
-  h+='</div></div>';
+  h+='</div></details>';
  }else if(report.task_feedback_vi)h+='<div class="fc-part"><h5>Task fit</h5><p>'+esc(report.task_feedback_vi)+'</p></div>';
- if(report.priority_fix_vi)h+='<div class="fc-priority"><span>FIX THIS FIRST</span><strong>'+esc(report.priority_fix_vi)+'</strong></div>';
+ 
  if(errors.length){
-  h+='<div class="fc-part"><h5>Fix the actual mistakes</h5><p class="fc-hint">Read what you wrote. Try correcting it before expanding the explanation.</p>';
+  h+='<details class="fc-model"><summary>See '+errors.length+' language corrections</summary><p class="fc-hint">Try correcting the errors yourself before looking at the answer.</p>';
   errors.forEach((c,i)=>{h+='<details class="fc-error-item"><summary><span>'+esc(c.original||"Sentence "+(i+1))+'</span><b>How to fix ↓</b></summary>'+
   '<div><p class="fc-correct" lang="en">'+esc(c.correction)+'</p><p>'+esc(c.reason_vi)+'</p>'+(c.rule_vi?'<small>'+esc(c.rule_vi)+'</small>':'')+'</div></details>';});
-  h+='</div>';
- }else h+='<div class="fc-part"><h5>Language corrections</h5><p>No definite errors identified in this answer. Check task fit and development above before moving on.</p></div>';
+  h+='</details>';
+ }else h+='<p class="fc-hint">No definite errors detected; focus on meaning and task fulfilment.</p>';
  if(report.pronunciation_vi)h+='<div class="fc-part"><h5>Pronunciation — from the recording</h5><p>'+esc(report.pronunciation_vi)+'</p></div>';
  if(report.rhythm_vi)h+='<div class="fc-part"><h5>Rhythm and pace</h5><p>'+esc(report.rhythm_vi)+'</p></div>';
  if(report.revision_feedback_vi)h+='<div class="fc-part"><h5>Compared with your previous attempt</h5><p>'+esc(report.revision_feedback_vi)+'</p></div>';
