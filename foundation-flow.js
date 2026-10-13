@@ -17,7 +17,7 @@ const steps=[
  ["scene",0,"A meaningful situation"],["meaning",0,"Understand the message"],["listen",0,"Listen and repeat"],
  ["vocab",1,"A word in context"],["family",1,"How word families work"],["paraphrase",1,"Paraphrase the meaning"],["ownWords",1,"Explain in your own words"],
  ["plan",2,"Plan your answer"],["write",2,"Write your answer"],["speak",2,"Practise speaking"],
- ["ai",3,"AI correction (optional)"],["detective",3,"Find a meaning error"],["retry",3,"Fix and try again"],
+ ["ai",3,"Understand and fix the mistake"],["detective",3,"Find a meaning error"],["retry",3,"Fix and try again"],
  ["deep",4,"Explain why it works"],["summary",4,"Transfer to a new situation"]
 ];
 const phases=["Explore & Listen","Think & Paraphrase","Speak & Write","Check & Fix","Deep Dive"];
