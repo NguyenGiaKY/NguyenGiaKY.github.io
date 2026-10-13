@@ -117,8 +117,9 @@ if(!("speechSynthesis" in window)||typeof SpeechSynthesisUtterance==="undefined"
 try{
 window.speechSynthesis.cancel();
 const u=new SpeechSynthesisUtterance(text);u.lang="en-NZ";u.rate=slow?.78:.96;u.pitch=1;u.volume=1;
-const voices=window.speechSynthesis.getVoices();
-const voice=voices.find(v=>/^en-(NZ|AU|GB)/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang));if(voice)u.voice=voice;
+const person=window.GKYVoice?.inferSpeaker?.(text,"Narrator")||"Narrator";
+const voice=window.GKYVoice?.pick?.("auto",person,"en-NZ")||null;
+if(voice){u.voice=voice;u.lang=voice.lang;}
 if(status)status.textContent=slow?"Đang đọc chậm...":"Đang đọc...";
 u.onend=()=>{if(status)status.textContent="Đã phát xong.";};
 u.onerror=()=>{if(status)status.textContent="Không đọc được trên trình duyệt này. Thử lại hoặc dùng câu mẫu."};
