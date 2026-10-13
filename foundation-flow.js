@@ -111,9 +111,10 @@ function content(lesson,r){
   '<div class="gf-pair"><div><small>'+esc(f.fromRole)+'</small><h3>'+esc(f.from)+'</h3><p>'+esc(f.fromSentence)+'</p></div><div><small>'+esc(f.toRole)+'</small><h3>'+esc(f.to)+'</h3><p>'+esc(f.toSentence)+'</p></div></div>'+reveal("Understand the reasoning",f.why);}
  if(type==="paraphrase"){const p=t.pairs[0],opts=(lesson.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];return quote(p.source)+choice("Which sentence means the same?",opts,r.para,opts.indexOf(p.equivalent),"answer-para",p.why)}
  if(type==="ownWords")return header("Change the words, keep the idea","The time, number, people and meaning must remain the same.")+quote(t.pairs[0].source)+field("rewrite",r.rewrite,"Try a different way to say it…")+reveal("One example",t.pairs[0].equivalent);
- if(type==="plan")return header("Plan one focused answer",m.writing)+'<div class="gf-criteria">'+m.checklist.map((c,i)=>'<p><b>'+(i+1)+'</b>'+esc(c)+'</p>').join("")+'</div>'+field("outline",r.outline,"Main point, reason and example…");
- if(type==="write")return header("Write an answer of your own",m.writing)+'<label class="gf-label">Your written answer</label>'+field("draft",r.draft,"Write your answer in English…")+'<p class="gf-tip">Your draft saves automatically. You choose whether to ask AI for feedback.</p>';
- if(type==="speak"||type==="ai")return coach(lesson,r,type);
+ if(type==="plan")return window.GKFoundationGuidedPages?.plan(lesson,r,m)||header("Plan your answer",m.writing);
+ if(type==="write")return window.GKFoundationGuidedPages?.writing(lesson,r,m)||header("Write your answer",m.writing);
+ if(type==="speak")return coach(lesson,r,"speak");
+ if(type==="ai")return window.GKFoundationGuidedPages?.review(lesson,r)||header("Fix and review","Return to writing to get feedback.");
  if(type==="detective"){const p=t.pairs[1];return header("What detail changed?","Find the altered time, fact, person, quantity or logic.")+'<div class="gf-pair"><div><small>ORIGINAL</small><p>'+esc(p.source)+'</p></div><div><small>CHANGED</small><p>'+esc(p.wrong)+'</p></div></div>'+field("detective",r.detective,"The meaning changes because…")+reveal("See reasoning",p.why)}
  if(type==="retry"){
   const report=window.GKFoundationCoach?.getRecord(lesson.id)?.writing?.report;
@@ -195,7 +196,7 @@ async function checkWord(){
 }
 function move(to){
  if(!current)return;const r=state(current),index=Math.min(steps.length-1,Math.max(0,to));if(index===r.page)return;
- if(["speak","ai"].includes(steps[r.page][0]))window.GKFoundationCoach?.leave();
+ if(["speak","write"].includes(steps[r.page][0]))window.GKFoundationCoach?.leave();
  r.page=index;message="";save();render(lessonById[current]);try{root.scrollIntoView({block:"start",behavior:"smooth"})}catch(err){}
 }
 function speak(text,slow){
@@ -232,5 +233,5 @@ root.addEventListener("input",ev=>{
  }
  if(ev.target.id==="foundationDraft"){r.draft=ev.target.value;legacyDraft(current,r.draft);save()}
 });
-window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,screenCount:steps.length};
+window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,goTo:move,persist:save,screenCount:steps.length};
 })();
