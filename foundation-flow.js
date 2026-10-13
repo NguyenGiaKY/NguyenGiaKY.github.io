@@ -67,16 +67,17 @@ function coach(lesson,r,kind){
  return header("Find the most important mistake","Task relevance matters first. AI feedback may use paid API credits.")+
  '<label class="gf-label" for="foundationDraft">Your answer for checking</label><textarea id="foundationDraft" class="gf-field" data-gf-field="draft" rows="4">'+esc(r.draft)+'</textarea><div class="gf-only-writing">'+widget+'</div>';
 }
-function wordResult(record,answer){
+function wordResult(record,answer,kind="vocabulary"){
  if(!record)return '<div class="gf-word-hint"><b>What gets checked?</b><p>Did you use the target word naturally? Does your sentence make sense? Is the grammar correct for your meaning?</p></div>';
  const report=record.report||{};
  const same=record.answer?.trim()===answer.trim();
+ const meaningTask=kind!=="vocabulary";
  if(!same)return '<p class="gf-stale" role="status">You changed your sentence. The feedback below applies to the earlier version. Check the new version when ready.</p>'+
  '<details class="gf-reveal"><summary>Earlier AI feedback</summary><p>'+esc(report.summary_vi||report.task_feedback_vi||"Feedback available")+'</p></details>';
  const checks=Array.isArray(report.task_checks)?report.task_checks:[];
  const errors=Array.isArray(report.mistakes)?report.mistakes:[];
  let out='<section class="gf-word-report" aria-label="Sentence correction"><div class="gf-word-report-top"><span>AI PRACTICE FEEDBACK · NOT AN IELTS SCORE</span><strong>'+(report.score??"—")+'/5</strong></div>'+
- '<h3>'+esc(report.task_status==="off_topic"?"The target meaning is missing":report.task_status==="met"?"The sentence fits the task":"Review how the word is used")+'</h3>'+
+ '<h3>'+esc(report.task_status==="off_topic"?(meaningTask?"The explanation misses the task":"The target meaning is missing"):report.task_status==="met"?(meaningTask?"The explanation addresses the task":"The sentence fits the task"):(meaningTask?"Review your reasoning":"Review how the word is used"))+'</h3>'+
  '<p>'+esc(report.summary_vi||report.task_feedback_vi||"Read the comments below and revise.")+'</p>';
  if(checks.length)out+='<div class="gf-word-criteria">'+checks.slice(0,3).map(c=>'<div><b class="'+esc(c.status||"missing")+'">'+(c.status==="met"?"✓":c.status==="partial"?"~":"!")+'</b><span>'+esc(c.criterion||"Task check")+'</span><small>'+esc(c.fix_vi||c.why_vi||"")+'</small></div>').join("")+'</div>';
  if(report.priority_fix_vi)out+='<div class="gf-word-priority"><b>FIX THIS FIRST</b><p>'+esc(report.priority_fix_vi)+'</p></div>';
@@ -85,6 +86,63 @@ function wordResult(record,answer){
  if(report.revision_question)out+='<p class="gf-word-action">'+esc(report.revision_question)+'</p>';
  out+='<p class="gf-word-action"><b>Next:</b> Edit your sentence above using the feedback, then check the changed version if you need another assessment.</p></section>';
  return out;
+}
+const FREE_RESPONSE_KEYS={detective:"__detective__",explanation:"__explanation__",transfer:"__transfer__",errorFix:"__errorFix__"};
+function freeCheckPanel(r,kind,help){
+ const feedback=r.wordFeedback?.[FREE_RESPONSE_KEYS[kind]];
+ const answer=String(r[kind]||"");
+ return '<div class="gf-word-check">'+b("check-"+kind,checkingWord?"Checking…":"Check","primary",checkingWord)+
+ '<small>'+esc(help||"")+' AI checks are requested only when you press Check.</small></div>'+
+ (feedback?wordResult(feedback,answer,kind):'<div class="gf-word-hint"><b>Not checked yet</b><p>Write your explanation, then press Check for a personal response. Revealing the example is not grading.</p></div>');
+}
+function responseRubric(id,kind){
+ const l=lessonById[id],t=thoughts[id],m=missions[id],g=window.GKFoundationGuides?.[id]||{},sample=l.examples?.[0]?.[0]||t.pairs[0].source;
+ if(kind==="detective"){
+  const pair=t.pairs[1];
+  return {task:"Explain what changed in meaning between these two sentences. ORIGINAL: "+pair.source+" CHANGED: "+pair.wrong,
+   goal:"This is a meaning comprehension question, not an English grammar test. Accept clear correct explanations in Vietnamese OR English. Check exact meaning changed: quantity, time, people, negation or fact. Distinguish changed detail from merely rephrasing the sentences.",
+   meaningFocus:pair.why,example:pair.equivalent,
+   checklist:["Names the exact detail changed","Explains the original and altered meanings accurately","Explains why the two sentences are not equivalent"]};
+ }
+ if(kind==="explanation")return {task:"Explain why the key English word or relationship works in this example: "+sample,
+  goal:"Assess understanding of grammatical function and meaning in the example. Accept Vietnamese or English. Do not require grammar terminology if their reasoning correctly describes the function.",
+  meaningFocus:t.principle+" "+l.explain,example:sample,
+  checklist:["Identifies the relevant word or relationship","Explains its role correctly","Links the explanation to this actual sentence"]};
+ if(kind==="errorFix")return {task:"Correct the error in this sentence: "+g.commonError,
+  goal:"Judge whether the corrected sentence fixes the specific mistake, preserving meaning. A0 can use very short correct sentences. Answer should be an English correction, not just a description of grammar.",
+  meaningFocus:g.correction,example:g.model,
+  checklist:["Corrects the specific target mistake","Preserves the intended meaning","Produces a complete correct English sentence"]};
+ return {task:"Create a NEW English example to demonstrate this concept: "+t.principle+". Learner has already seen: "+t.pairs[1].source,
+  goal:"Check that the student's NEW example applies the lesson concept meaningfully. Do not demand copying the original sentence. Require English for this production task.",
+  meaningFocus:g.transfer||t.contrast,example:g.model||t.pairs[0].equivalent,
+  checklist:["Applies the target concept accurately","Creates a meaningful original English example","Uses understandable vocabulary and grammatical form"]};
+}
+async function checkFreeResponse(kind){
+ if(checkingWord||!current||!FREE_RESPONSE_KEYS[kind])return;
+ const id=current,l=lessonById[id],r=state(id),answer=String(r[kind]||"").trim(),key=FREE_RESPONSE_KEYS[kind];
+ if(answer.length<3){message="Write your answer first, then press Check.";render(l);return;}
+ const prev=r.wordFeedback[key];
+ if(prev?.answer===answer){message="This exact answer has already been checked. Change your answer to request another check.";render(l);return;}
+ if(!window.GKCloudSync?.getIdToken){message="Sign in to save progress and use personal corrections.";render(l);return;}
+ const criteria=responseRubric(id,kind);
+ checkingWord=true;message="Checking your answer…";render(l);
+ try{
+  const token=await window.GKCloudSync.getIdToken();
+  const request={mode:"writing",level:l.level,scenario:"Foundation "+l.title+", activity "+kind,
+   task:criteria.task,goal:criteria.goal,meaningFocus:criteria.meaningFocus,example:criteria.example,
+   checklist:criteria.checklist,answer,revisionOf:prev?.answer||""};
+  const response=await fetch(API_ENDPOINT,{method:"POST",
+   headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(request)});
+  const report=await response.json().catch(()=>({}));
+  if(!response.ok)throw Error(report.error||"Checking is temporarily unavailable (HTTP "+response.status+")");
+  if(report.source!=="openai-foundation")throw Error("Invalid grading response");
+  r.wordFeedback[key]={answer:answer.slice(0,360),report:compactWordReport(report),at:new Date().toISOString()};
+  // A typed answer is an attempt. A checked response is graded; a successful result is marked separately.
+  r.verified=r.verified||{};
+  r.verified[kind]={status:report.task_status||"unclear",score:report.score??null,at:new Date().toISOString()};
+  save();message="Checked. Read the specific correction, revise and try again.";
+ }catch(error){message="Could not check your answer: "+String(error?.message||error);}
+ finally{checkingWord=false;if(current===id&&["detective","deep","summary","ai"].includes(steps[state(id).page][0]))render(l);}
 }
 function content(lesson,r){
  const m=missions[lesson.id],t=thoughts[lesson.id],type=steps[r.page][0];if(!m||!t)return "<p>Lesson content unavailable. Refresh this page.</p>";
@@ -117,7 +175,7 @@ function content(lesson,r){
   '<div class="gf-buttons">'+b("hear-word","▶ Hear phrase")+b("toggle-word",saved?"✓ Saved · Remove":"☆ Save to lesson")+'</div>'+
   '<label class="gf-label">Your turn — use this word or expression in a new sentence</label>'+
   '<textarea class="gf-field" data-gf-field="wordSentence" id="gf-word-sentence" rows="3" placeholder="Write a DIFFERENT sentence about your life…">'+esc(answer)+'</textarea>'+
-  '<div class="gf-word-check">'+b("check-word",checkingWord?"Checking with AI…":"✓ Check my sentence with OpenAI","primary",checkingWord)+
+  '<div class="gf-word-check">'+b("check-word",checkingWord?"Checking…":"Check","primary",checkingWord)+
   '<small>Checks meaning, word choice, collocation and grammar. Requires Google sign-in; OpenAI API may cost money.</small></div>'+
   wordResult(checked,answer)+
   '<div class="gf-word-pagination">'+b("word-back","←", "outline",n===0)+'<span>Word '+(n+1)+' of 4</span>'+b("word-forward","→","outline",n===3)+'</div>';
@@ -137,8 +195,8 @@ function content(lesson,r){
  const prev=r.wordFeedback?.__paraphrase__,valid=prev?.answer?.trim()===r.rewrite.trim();
  return header("Rephrase without changing the meaning","Keep the speaker, time, quantities and original claim unchanged.")+quote(t.pairs[0].source)+
  '<label class="gf-label">My paraphrase</label>'+field("rewrite",r.rewrite,"Write the same idea in your own English…")+
- '<div class="gf-word-check">'+b("check-rewrite",checkingWord?"Checking…":"✓ Check my paraphrase with OpenAI","primary",checkingWord)+
- '<small>Checks meaning preservation and natural English. Requires sign-in and uses API credits only when you click.</small></div>'+
+ '<div class="gf-word-check">'+b("check-rewrite",checkingWord?"Checking…":"Check","primary",checkingWord)+
+ '<small>Checks whether the original meaning is preserved. Sign-in is required; a check can use API credits.</small></div>'+
  (prev?wordResult(prev,r.rewrite):'<p class="gf-tip">No AI evaluation yet. You can also check the comparison example below for free.</p>')+
  reveal("One possible meaning-preserving paraphrase",t.pairs[0].equivalent+" — "+t.pairs[0].why);
 }
@@ -146,7 +204,15 @@ function content(lesson,r){
  if(type==="write")return window.GKFoundationGuidedPages?.writing(lesson,r,m)||header("Write your answer",m.writing);
  if(type==="speak")return coach(lesson,r,"speak");
  if(type==="ai")return window.GKFoundationGuidedPages?.review(lesson,r)||header("Fix and review","Return to writing to get feedback.");
- if(type==="detective"){const p=t.pairs[1];return header("What detail changed?","Find the altered time, fact, person, quantity or logic.")+'<div class="gf-pair"><div><small>ORIGINAL</small><p>'+esc(p.source)+'</p></div><div><small>CHANGED</small><p>'+esc(p.wrong)+'</p></div></div>'+field("detective",r.detective,"The meaning changes because…")+reveal("See reasoning",p.why)}
+ if(type==="detective"){
+ const p=t.pairs[1];
+ return header("What detail changed?","Compare the two statements. Explain WHAT changed and WHY the meaning is different. Vietnamese explanations are accepted here.")+
+ '<div class="gf-pair"><div><small>ORIGINAL</small><p lang="en">'+esc(p.source)+'</p></div><div><small>CHANGED</small><p lang="en">'+esc(p.wrong)+'</p></div></div>'+
+ '<label class="gf-label">Explain the difference in your own words</label>'+
+ field("detective",r.detective,"The meaning changes because… / Câu thứ hai thay đổi…")+
+ freeCheckPanel(r,"detective","Checks the fact that changed, your explanation and how to correct it.")+
+ reveal("See one possible explanation",p.why);
+}
  if(type==="retry"){
   const report=window.GKFoundationCoach?.getRecord(lesson.id)?.writing?.report;
   return header("Fix the most important problem","Rewrite using your own words. A second AI request is optional.")+
@@ -154,11 +220,16 @@ function content(lesson,r){
   field("revision",r.revision||r.draft,"Improve the answer…")+b("use-revision","Use revision and return to feedback","primary")+
   reveal("Review your original answer",r.draft);
  }
- if(type==="deep")return header("Explain the word relationship",t.principle)+quote(lesson.examples[0]?.[0]||t.pairs[0].source)+field("explanation",r.explanation,"Which word names, describes or connects something?")+reveal("See why",lesson.explain);
+ if(type==="deep")return header("Explain the word relationship",t.principle)+quote(lesson.examples[0]?.[0]||t.pairs[0].source)+
+ '<label class="gf-label">Explain the function and evidence</label>'+
+ field("explanation",r.explanation,"Which word names, describes or connects something? Why?")+
+ freeCheckPanel(r,"explanation","Checks your reasoning, not how long your answer is. Vietnamese is accepted for explanations.")+
+ reveal("See another explanation",lesson.explain);
  if(type==="summary"){
   const pair=t.pairs[0],options=(lesson.id.length%2)?[pair.equivalent,pair.wrong]:[pair.wrong,pair.equivalent];
   const ready=r.meaning===m.correct&&options[r.para]===pair.equivalent&&r.draft.trim().length>=8&&r.transfer.trim().length>=8;
   return header("Transfer this idea somewhere new","Show understanding with a different situation.")+quote(t.pairs[1].source)+field("transfer",r.transfer,"My own new example…")+
+  freeCheckPanel(r,"transfer","Checks whether your new example uses the lesson's idea accurately, not just whether you typed something.")+
   '<div class="gf-final"><b>'+(ready?"Core practice ready":"More practice needed")+'</b><p>'+(ready?"Speaking and AI checking are optional.":"To finish, answer the meaning question, attempt paraphrasing, write an answer and make a final example.")+'</p></div>'+
   (ready?b("finish","Finish & return to Foundation","primary"):"")+
   '<details class="gf-reveal"><summary>Older examples and four-question quizzes</summary><p>These remain available if you need more practice.</p><button type="button" class="gf-btn outline" data-f-action="classic">Open classic lesson</button></details>';
@@ -199,7 +270,6 @@ async function checkRephrase(){
  const prior=r.wordFeedback?.__paraphrase__;
  if(prior?.answer?.trim()===answer){message="Already checked. Rewrite it meaningfully before requesting another API assessment.";render(lesson);return;}
  if(!window.GKCloudSync?.getIdToken){message="Sign in using Save across devices before requesting OpenAI feedback.";render(lesson);return;}
- if(!window.confirm("Send this paraphrase to OpenAI for checking? It may incur API charges."))return;
  checkingWord=true;message="Checking meaning preservation…";render(lesson);
  try{
   const token=await window.GKCloudSync.getIdToken();
@@ -230,7 +300,6 @@ async function checkWord(){
  const prev=r.wordFeedback[word];
  if(prev?.answer?.trim()===answer){message="This version has already been checked. Edit it before spending another OpenAI request.";render(lesson);return;}
  if(!window.GKCloudSync?.getIdToken){message="Sign in with Google using Save across devices to get OpenAI corrections.";render(lesson);return;}
- if(!window.confirm("Send this sentence to OpenAI for contextual corrections? Each request may incur separate OpenAI API charges."))return;
  checkingWord=true;message="Checking your sentence…";render(lesson);
  try{
   const token=await window.GKCloudSync.getIdToken();
@@ -299,6 +368,9 @@ root.addEventListener("click",ev=>{
  if(act==="hear-word"){speak(t.usage[r.word]);r.completed.vocab=true;save();return}
  if(act==="hear-example-word"){speak(wordContexts[current]?.[r.word]?.[0]||t.usage[r.word]);return}
  if(act==="check-word"){void checkWord();return}
+ if(act==="check-detective"){void checkFreeResponse("detective");return}
+ if(act==="check-explanation"){void checkFreeResponse("explanation");return}
+ if(act==="check-transfer"){void checkFreeResponse("transfer");return}
  if(act==="check-rewrite"){void checkRephrase();return}
  if(act==="toggle-word"){window.GKFoundationThinking?.toggleWord?.(current,l.words[r.word][0]);r.completed.vocab=true;save();render(l);return}
  if(act==="use-revision"){if(!r.revision.trim()){message="Write a revision before submitting again.";render(l);return}r.draft=r.revision;legacyDraft(current,r.draft);r.completed.retry=true;save();move(10);return}
@@ -321,5 +393,5 @@ window.GKYVoice?.onVoices?.(()=>{
  const lists=root.querySelectorAll?.("select[data-gf-character]")||[];
  for(const sel of lists){const existing=sel.value;sel.innerHTML=window.GKYVoice.castOptions(sel.dataset.gfCharacter);if([...sel.options].some(x=>x.value===existing))sel.value=existing;}
 });
-window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,goTo:move,persist:save,screenCount:steps.length};
+window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,goTo:move,persist:save,checkFreeResponse,freeCheckPanel,screenCount:steps.length};
 })();
