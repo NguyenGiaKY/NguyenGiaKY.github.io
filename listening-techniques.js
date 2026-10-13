@@ -395,8 +395,10 @@ function open(task){
 }
 window.openListeningStudioTask=open;
 if(window.GKYVoice)window.GKYVoice.onVoices(()=>{
- const sel=document.getElementById("ltVoice");if(!sel)return;
- const was=sel.value;sel.innerHTML=window.GKYVoice.options();if([...sel.options].some(o=>o.value===was))sel.value=was;
+ const sel=document.getElementById("ltVoice");
+ if(sel){const was=sel.value;sel.innerHTML=window.GKYVoice.options();if([...sel.options].some(o=>o.value===was))sel.value=was;}
+ const roleSelects=document.querySelectorAll("select[data-character-voice]");
+ for(const role of roleSelects){const prev=role.value;role.innerHTML=window.GKYVoice.castOptions(role.dataset.characterVoice);if([...role.options].some(o=>o.value===prev))role.value=prev;}
 });
 document.addEventListener("click",handler);
 document.addEventListener("input",e=>{
