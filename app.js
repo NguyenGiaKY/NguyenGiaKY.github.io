@@ -232,7 +232,7 @@ function lessonText(type,d){
     '</div>'+
     '<div class="listenSettings">'+
       '<label><span>Tốc độ</span><input id="listenRate" type="range" min="0.65" max="1.25" step="0.05" value="0.90"><b id="listenRateLabel">0.90×</b></label>'+
-      '<label><span>Giọng</span><select id="listenVoice"><option value="auto-uk">Tự nhiên • UK</option><option value="auto-us">Tự nhiên • US</option></select></label>'+
+      '<label><span>Giọng</span><select id="listenVoice"><option value="auto-uk">Giọng tổng hợp · UK</option><option value="auto-us">Giọng tổng hợp · US</option></select></label>'+
     '</div>'+
     '<div class="listenStatus"><span id="listenStatusText">Sẵn sàng</span><span id="listenProgress"></span></div>'+
   '</div>'+
@@ -296,7 +296,7 @@ function chooseListeningVoice(mode){
 function populateListeningVoices(){
  let sel=document.getElementById('listenVoice');if(!sel)return;
  let current=sel.value||'auto-uk',vs=listeningVoices().filter(v=>/^en[-_]/i.test(v.lang||'')||/^English/i.test(v.name||''));
- let seen=new Set(),html='<option value="auto-uk">Tự nhiên • UK</option><option value="auto-us">Tự nhiên • US</option>';
+ let seen=new Set(),html='<option value="auto-uk">Giọng tổng hợp · UK</option><option value="auto-us">Giọng tổng hợp · US</option>';
  vs.sort((a,b)=>voiceQualityScore(b,'UK')-voiceQualityScore(a,'UK')).forEach(v=>{
    if(seen.has(v.name))return;seen.add(v.name);
    html+='<option value="voice:'+encodeURIComponent(v.name)+'">'+descape(v.name)+' • '+descape(v.lang||'English')+'</option>';
@@ -421,7 +421,7 @@ function speakListeningChunk(){
  u.volume=1;
  u.onstart=()=>{s.playing=true;s.paused=false;s.startedAt=performance.now();s.elapsedInChunk=0;startListeningUITimer();setListeningStatus('Đang phát')};
  u.onend=()=>{if(s.stopped)return;s.startedAt=0;s.elapsedInChunk=0;s.index++;setTimeout(speakListeningChunk,80)};
- u.onerror=()=>{if(s.stopped)return;s.startedAt=0;s.elapsedInChunk=0;s.index++;setTimeout(speakListeningChunk,80)};
+ u.onerror=()=>{if(s.stopped)return;s.startedAt=0;s.elapsedInChunk=0;s.playing=false;s.paused=false;s.stopped=true;stopListeningUITimer();setListeningStatus('Lỗi audio ở câu '+(s.index+1)+'. Câu này chưa được phát; hãy thử lại.');};
  s.utterance=u;
  try{speechSynthesis.speak(u)}catch(e){setListeningStatus('Không thể phát audio')}
 }
