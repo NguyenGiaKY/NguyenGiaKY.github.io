@@ -174,17 +174,18 @@
 
   function playListening(){
     if(exam.listeningPlayed)return;
-    exam.listeningPlayed=true;
     const btn=document.getElementById("mockListenPlay");
-    if(btn){btn.disabled=true;btn.textContent="▶ Audio đang phát · chỉ 1 lần";}
-    if(!window.speechSynthesis){
-      if(btn)btn.textContent="Trình duyệt không hỗ trợ audio";
+    if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
+      if(btn){btn.disabled=false;btn.textContent="Thiết bị không hỗ trợ giọng đọc";}
       return;
     }
+    exam.listeningPlayed=true;
+    if(btn){btn.disabled=true;btn.textContent="▶ Đang phát giọng tổng hợp";}
     utterance=new SpeechSynthesisUtterance(exam.listening.script);
     utterance.lang="en-GB";utterance.rate=.94;utterance.pitch=1;
     const v=(window.GKYVoice&&window.GKYVoice.pick(null,"Lecturer"))||bestVoice();if(v){utterance.voice=v;utterance.lang=v.lang||"en-GB";}
-    utterance.onend=()=>{if(btn)btn.textContent="✓ Audio đã phát xong";};
+    utterance.onend=()=>{if(btn)btn.textContent="✓ Audio luyện tập đã phát xong";};
+    utterance.onerror=()=>{if(btn)btn.textContent="⚠ Audio gặp lỗi — bản luyện tập không hoàn tất";};
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }
@@ -192,7 +193,7 @@
   function renderListening(){
     const p=exam.listening,body=document.getElementById("mockExamBody");
     body.innerHTML=
-      '<div class="mockListeningHead"><div><h2>Listening Mock</h2><p>Audio chỉ phát một lần. Transcript bị ẩn cho đến khi nộp bài.</p></div>'+
+      '<div class="mockListeningHead"><div><h2>Listening Mock</h2><p>Giọng tổng hợp của trình duyệt (không phải audio IELTS chính thức). Chỉ phát một lần; transcript ẩn đến khi nộp.</p></div>'+
       '<button id="mockListenPlay" class="mockAudioBtn" '+(exam.listeningPlayed?'disabled':'')+'>'+(exam.listeningPlayed?'Audio đã bắt đầu':'▶ Bắt đầu audio')+'</button></div>'+
       '<div class="mockListeningQuestions">'+p.q.map((q,i)=>
         '<label class="mockListenQ"><span>'+(i+1)+'</span><div><b>'+esc(q[0])+'</b><input data-la="'+i+'" value="'+esc(exam.answers.listening[i]||"")+'" placeholder="Your answer"></div></label>'
