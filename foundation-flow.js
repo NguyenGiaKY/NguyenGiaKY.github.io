@@ -4,6 +4,7 @@
 const root=document.getElementById("foundationRoot");
 const lessons=window.GKFoundationData?.lessons||[];
 const missions=window.GKFoundationMissionData?.missions||{};
+const voiceScenes=window.GKFoundationScenes||{};
 const thoughts=window.GKFoundationThinkingData?.cases||{};
 const wordContexts=window.GKFoundationWordContextData||{};
 const API_ENDPOINT=window.location.hostname.endsWith(".vercel.app")?window.location.origin+"/api/foundation-grade":"https://nguyen-gia-ky-github-io-rvay.vercel.app/api/foundation-grade";
@@ -87,7 +88,14 @@ function wordResult(record,answer){
 }
 function content(lesson,r){
  const m=missions[lesson.id],t=thoughts[lesson.id],type=steps[r.page][0];if(!m||!t)return "<p>Lesson content unavailable. Refresh this page.</p>";
- if(type==="scene")return header("What is happening here?",m.scene)+quote(m.dialog)+b("hear-scene","▶ Hear the conversation","primary")+'<p class="gf-tip">First understand the purpose, not the grammar formula.</p>';
+ if(type==="scene"){
+  const turns=voiceScenes[lesson.id]||[{speaker:window.GKYVoice?.inferSpeaker(m.dialog,"Narrator")||"Narrator",text:m.dialog}];
+  const people=[...new Set(turns.map(x=>x.speaker))],multi=people.length>1;
+  return header("Listen for the meaning",m.scene)+
+    '<div class="gf-scene-turns">'+turns.map((turn,i)=>'<div class="gf-scene-turn '+(i%2?'alt':'')+'"><span class="gf-character">'+esc(turn.speaker)+'</span><p lang="en">'+esc(turn.text)+'</p></div>').join("")+'</div>'+
+    b("hear-scene","▶ "+(multi?"Play the conversation":"Listen to the speaker"),"primary")+
+    '<p class="gf-tip">'+(multi?"Each character has a consistent voice when your device provides different English voices.":"This is one person speaking; no extra speaker is added.")+' Focus on the message before memorising anything.</p>';
+}
  if(type==="meaning")return choice(m.question,m.choices,r.meaning,m.correct,"answer-meaning",m.focus);
  if(type==="listen")return header("Repeat without reading","Listen once. Say the sentence from memory.")+quote(lesson.examples[0]?.[0]||m.dialog)+
  '<div class="gf-buttons">'+b("hear-example","▶ Listen","primary")+b("slow-example","🐢 Slower")+'</div>'+b("spoke","I repeated it aloud");
@@ -242,11 +250,21 @@ async function checkWord(){
 function move(to){
  if(!current)return;const r=state(current),index=Math.min(steps.length-1,Math.max(0,to));if(index===r.page)return;
  if(["speak","write"].includes(steps[r.page][0]))window.GKFoundationCoach?.leave();
+ window.GKYVoice?.stopConversation?.();
  r.page=index;message="";save();render(lessonById[current]);try{root.scrollIntoView({block:"start",behavior:"smooth"})}catch(err){}
 }
 function speak(text,slow){
- if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){message="Audio playback is unavailable.";return}
- try{window.speechSynthesis.cancel();const u=new window.SpeechSynthesisUtterance(text);u.lang="en-NZ";u.rate=slow?.77:.9;window.speechSynthesis.speak(u)}catch(err){message="Could not play audio."}
+ if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){message="Audio playback is unavailable.";return;}
+ try{
+  window.GKYVoice?.stopConversation?.();
+  window.speechSynthesis.cancel();
+  const u=new window.SpeechSynthesisUtterance(text);
+  const who=window.GKYVoice?.inferSpeaker?.(text,"Narrator")||"Narrator";
+  const v=window.GKYVoice?.pick?.("auto",who,"en-NZ");
+  u.lang=v?.lang||"en-NZ";if(v)u.voice=v;
+  u.rate=slow?.77:.92;u.pitch=1;
+  window.speechSynthesis.speak(u);
+ }catch(err){message="Could not play audio.";}
 }
 root.addEventListener("click",ev=>{
  const node=ev.target.closest("button");if(!node||!root.contains(node)||!current)return;
@@ -254,8 +272,15 @@ root.addEventListener("click",ev=>{
  const act=node.dataset.gfAction;if(!act)return;
  const r=state(current),l=lessonById[current],m=missions[current],t=thoughts[current],type=steps[r.page][0];
  if(act==="next"){move(r.page+1);return}if(act==="previous"){move(r.page-1);return}
- if(act==="exit"){window.GKFoundationCoach?.leave();window.GKFoundationOpenHome?.();return}
- if(act==="hear-scene"){speak(m.dialog);r.completed.scene=true;save();return}
+ if(act==="exit"){window.GKYVoice?.stopConversation?.();window.GKFoundationCoach?.leave();window.GKFoundationOpenHome?.();return}
+ if(act==="hear-scene"){
+ const turns=voiceScenes[current]||[{speaker:window.GKYVoice?.inferSpeaker(m.dialog,"Narrator")||"Narrator",text:m.dialog}];
+ if(window.GKYVoice?.playConversation){
+  const playback=window.GKYVoice.playConversation(turns,{locale:"en-NZ",rate:.94,onError:()=>{message="Playback failed. Check your device voice settings.";render(l);}});
+  if(!playback.ok){message=playback.reason||"Audio unavailable.";render(l);return;}
+ }else{speak(m.dialog);}
+ r.completed.scene=true;save();return;
+}
  if(act==="hear-example"||act==="slow-example"){speak(l.examples[0]?.[0]||m.dialog,act==="slow-example");r.completed.listen=true;save();return}
  if(act==="spoke"){r.completed.listen=true;save();render(l);return}
  if(act==="try-again"){if(type==="meaning")r.meaning=null;else if(type==="family")r.familyChoice=null;else if(type==="paraphrase")r.para=null;save();render(l);return}
