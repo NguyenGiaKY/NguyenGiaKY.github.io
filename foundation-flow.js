@@ -242,6 +242,8 @@ function render(lesson){
  const l=typeof lesson==="string"?lessonById[lesson]:lesson;if(!l)return;
  current=l.id;lastLessonId=current;const r=state(current);r.page=Math.max(0,Math.min(steps.length-1,Number(r.page)||0));
  const phase=steps[r.page][1],percent=Math.round((r.page+1)/steps.length*100);
+ const coachStatus=window.GKFoundationCoach?.getRecord?.(l.id)||{};
+ const checksDone=Object.keys(r.verified||{}).length+Object.values(r.wordFeedback||{}).filter(v=>v&&v.report).length+Number(!!coachStatus.writing?.report)+Number(!!coachStatus.speaking?.report);
  const parts=phases.map((p,i)=>'<button type="button" data-gf-phase="'+i+'" class="'+(i===phase?"selected":"")+'">'+String(i+1).padStart(2,"0")+' · '+esc(p)+'</button>').join("");
  root.innerHTML='<div class="gf-shell"><header class="gf-top">'+b("exit","← Foundation lessons","text")+'<div class="gf-title"><small>'+esc(l.level)+' · '+esc(l.skill)+'</small><h1>'+esc(l.title)+'</h1></div>'+
  '<div class="gf-count"><span>'+esc(phases[phase])+'</span><strong>Page '+(r.page+1)+' of '+steps.length+'</strong></div>'+
@@ -250,7 +252,7 @@ function render(lesson){
  '<section class="gf-focus"><div class="gf-small"><span>ACTIVITY '+String(r.page+1).padStart(2,"0")+'</span><span>'+esc(phases[phase])+'</span></div>'+
  '<h2 tabindex="-1" class="gf-screen-heading">'+esc(steps[r.page][2])+'</h2><div class="gf-task-body">'+content(l,r)+'</div>'+
  (message?'<p class="gf-notice" role="status">'+esc(message)+'</p>':"")+'</section>'+
- '<footer class="gf-footer"><div class="gf-nav">'+b("previous","← Previous","outline",r.page===0)+b("next","Next →","primary",r.page===steps.length-1)+'</div><div class="gf-footnote"><span>'+Object.keys(r.completed).length+' activities practised · clicking Next never means mastered</span>'+b("exit","Save & Exit","text")+'</div></footer></div>';
+ '<footer class="gf-footer"><div class="gf-nav">'+b("previous","← Previous","outline",r.page===0)+b("next","Next →","primary",r.page===steps.length-1)+'</div><div class="gf-footnote"><span>'+Object.keys(r.completed).length+' activities attempted · '+checksDone+' checks recorded · Next is not mastery</span>'+b("exit","Save & Exit","text")+'</div></footer></div>';
  save();
 }
 function compactWordReport(data){
