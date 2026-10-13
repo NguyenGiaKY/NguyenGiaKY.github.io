@@ -66,5 +66,6 @@
         }
       ]
     }
-  ]
+  ],
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- api/ vercel.json package.json"
 }
