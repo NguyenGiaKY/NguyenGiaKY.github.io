@@ -118,7 +118,15 @@ function content(lesson,r){
   '<details class="gf-reveal"><summary>Compare the other word form</summary><p lang="en">'+esc(f.toSentence)+'</p><p>Here '+esc(f.to)+' works as a '+esc(f.toRole)+'.</p></details>';
 }
  if(type==="paraphrase"){const p=t.pairs[0],opts=(lesson.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];return quote(p.source)+choice("Which sentence means the same?",opts,r.para,opts.indexOf(p.equivalent),"answer-para",p.why)}
- if(type==="ownWords")return header("Change the words, keep the idea","The time, number, people and meaning must remain the same.")+quote(t.pairs[0].source)+field("rewrite",r.rewrite,"Try a different way to say it…")+reveal("One example",t.pairs[0].equivalent);
+ if(type==="ownWords"){
+ const prev=r.wordFeedback?.__paraphrase__,valid=prev?.answer?.trim()===r.rewrite.trim();
+ return header("Rephrase without changing the meaning","Keep the speaker, time, quantities and original claim unchanged.")+quote(t.pairs[0].source)+
+ '<label class="gf-label">My paraphrase</label>'+field("rewrite",r.rewrite,"Write the same idea in your own English…")+
+ '<div class="gf-word-check">'+b("check-rewrite",checkingWord?"Checking…":"✓ Check my paraphrase with OpenAI","primary",checkingWord)+
+ '<small>Checks meaning preservation and natural English. Requires sign-in and uses API credits only when you click.</small></div>'+
+ (prev?wordResult(prev,r.rewrite):'<p class="gf-tip">No AI evaluation yet. You can also check the comparison example below for free.</p>')+
+ reveal("One possible meaning-preserving paraphrase",t.pairs[0].equivalent+" — "+t.pairs[0].why);
+}
  if(type==="plan")return window.GKFoundationGuidedPages?.plan(lesson,r,m)||header("Plan your answer",m.writing);
  if(type==="write")return window.GKFoundationGuidedPages?.writing(lesson,r,m)||header("Write your answer",m.writing);
  if(type==="speak")return coach(lesson,r,"speak");
@@ -167,6 +175,34 @@ function compactWordReport(data){
   corrected_answer:trim(data.corrected_answer,340),
   revision_question:trim(data.revision_question,240)
  };
+}
+async function checkRephrase(){
+ if(checkingWord||!current)return;
+ const id=current,lesson=lessonById[id],r=state(id),source=thoughts[id]?.pairs[0],answer=String(r.rewrite||"").trim();
+ if(answer.length<8){message="Write a complete English sentence to compare with the original.";render(lesson);return;}
+ const prior=r.wordFeedback?.__paraphrase__;
+ if(prior?.answer?.trim()===answer){message="Already checked. Rewrite it meaningfully before requesting another API assessment.";render(lesson);return;}
+ if(!window.GKCloudSync?.getIdToken){message="Sign in using Save across devices before requesting OpenAI feedback.";render(lesson);return;}
+ if(!window.confirm("Send this paraphrase to OpenAI for checking? It may incur API charges."))return;
+ checkingWord=true;message="Checking meaning preservation…";render(lesson);
+ try{
+  const token=await window.GKCloudSync.getIdToken();
+  const req={mode:"writing",level:lesson.level,
+   task:"Paraphrase the ORIGINAL sentence without changing meaning. Original: "+source.source,
+   goal:"Prioritise semantic equivalence: people, number, negation, timing, factual precision and tone. A grammatical but semantically changed sentence is off-topic.",
+   scenario:"Foundation paraphrasing exercise: "+lesson.title,
+   example:source.equivalent,
+   meaningFocus:source.why,
+   checklist:["Preserves the original speaker, quantity and time","Preserves original truth conditions and negation","Expresses the message naturally in different English words"],
+   answer,revisionOf:prior?.answer||""};
+  const res=await fetch(API_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(req)});
+  const feedback=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(feedback.error||"Assessment API unavailable (HTTP "+res.status+")");
+  if(feedback.source!=="openai-foundation")throw new Error("Invalid grading response");
+  r.wordFeedback.__paraphrase__={answer:answer.slice(0,360),report:compactWordReport(feedback),at:new Date().toISOString()};
+  save();message="Paraphrase feedback ready. Revise your sentence using the main correction.";
+ }catch(err){message="Paraphrase assessment unavailable: "+String(err?.message||"Network error");}
+ finally{checkingWord=false;if(current===id&&steps[state(id).page][0]==="ownWords")render(lesson);}
 }
 async function checkWord(){
  if(checkingWord||!current)return;
@@ -229,6 +265,7 @@ root.addEventListener("click",ev=>{
  if(act==="hear-word"){speak(t.usage[r.word]);r.completed.vocab=true;save();return}
  if(act==="hear-example-word"){speak(wordContexts[current]?.[r.word]?.[0]||t.usage[r.word]);return}
  if(act==="check-word"){void checkWord();return}
+ if(act==="check-rewrite"){void checkRephrase();return}
  if(act==="toggle-word"){window.GKFoundationThinking?.toggleWord?.(current,l.words[r.word][0]);r.completed.vocab=true;save();render(l);return}
  if(act==="use-revision"){if(!r.revision.trim()){message="Write a revision before submitting again.";render(l);return}r.draft=r.revision;legacyDraft(current,r.draft);r.completed.retry=true;save();move(10);return}
  if(act==="finish"){if(r.meaning!==m.correct||r.para===null||!r.draft.trim()||!r.transfer.trim())return;r.finished=true;r.completed.summary=true;save();window.GKFoundationOpenHome?.();return}
