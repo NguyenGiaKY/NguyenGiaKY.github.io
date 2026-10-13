@@ -143,3 +143,19 @@
 #foundationRoot .gf-mistake-task .gf-quote{font-size:16px;padding:13px 16px}
 #foundationRoot .gf-reveal p{line-height:1.8}
 @media(max-width:740px){#foundationRoot .gf-plan-row{padding:11px}#foundationRoot .gf-mistake-task{padding:10px}#foundationRoot .gf-writing-feedback h3{font-size:16px}}
+
+
+/* Character dialogue presentation: compact, readable turns; voice options hidden until requested. */
+#foundationRoot .gf-scene-turns{display:flex;flex-direction:column;gap:9px}
+#foundationRoot .gf-scene-turn{max-width:88%;align-self:start;background:#f1f6ff;border:1px solid #d9e5f6;border-radius:15px 15px 15px 4px;padding:12px 16px;color:#244d77}
+#foundationRoot .gf-scene-turn.alt{align-self:end;background:#edf8f3;border-color:#cbe6d9;border-radius:15px 15px 4px 15px}
+#foundationRoot .gf-character{font-size:11px;font-weight:850;letter-spacing:.02em;color:#5279a6}
+#foundationRoot .gf-scene-turn.alt .gf-character{color:#348168}
+#foundationRoot .gf-scene-turn p{font-size:17px;line-height:1.7;margin:5px 0 0;color:#214567}
+#foundationRoot .gf-cast-settings{padding:12px 15px;border:1px solid #d7e4f2;border-radius:12px;background:#fafdff}
+#foundationRoot .gf-cast-settings>summary{font-size:12px;font-weight:800;color:#355e8f;cursor:pointer}
+#foundationRoot .gf-cast-settings p{font-size:11px;color:#728aa4;line-height:1.65}
+#foundationRoot .gf-cast-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
+#foundationRoot .gf-cast-grid label{display:flex;flex-direction:column;gap:5px;color:#40648a;font-size:12px;font-weight:750}
+#foundationRoot .gf-cast-grid select{min-height:40px;width:100%;font:inherit;font-size:12px;color:#294d76;background:white;border:1px solid #bfcfe0;border-radius:8px;padding:7px}
+@media(max-width:680px){#foundationRoot .gf-scene-turn{max-width:98%;padding:11px 13px}#foundationRoot .gf-cast-grid{grid-template-columns:1fr}#foundationRoot .gf-cast-grid .gf-btn{width:100%}}
