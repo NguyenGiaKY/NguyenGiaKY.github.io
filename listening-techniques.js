@@ -270,7 +270,9 @@ function render(){
  if(st.mode==="learning")h+='<label>Tốc độ <select id="ltRate"><option value="0.85" '+(st.rate===0.85?"selected":"")+'>0.85×</option><option value="1" '+(st.rate===1?"selected":"")+'>1.0×</option><option value="1.15" '+(st.rate===1.15?"selected":"")+'>1.15×</option></select></label>';
  const voiceCast=dialogueVoices(st.pack.segments);
  const actors=voiceCast?.speakers||[...new Set(st.pack.segments.map(x=>x.speaker))];
- h+='<p class="ltVoiceCast"><strong>🎭 Nhân vật:</strong> '+actors.map(name=>escapeHTML(name)).join(' ↔ ')+
+ const canShowNames=st.mode==="learning"||st.graded;
+ h+='<p class="ltVoiceCast"><strong>🎭 '+(canShowNames?'Nhân vật:':'Các giọng nói:')+'</strong> '+
+ (canShowNames?actors.map(name=>escapeHTML(name)).join(' ↔ '):actors.length+' speaker(s)')+
  '<span> · '+(voiceCast?.distinct&&voiceCast?.genderCoverage?'Đã tìm thấy giọng nhân vật phân biệt được.':'Chưa xác nhận có đủ giọng nam/nữ khác biệt. Hãy mở mục Chọn/Thử giọng bên dưới để nghe và chọn thủ công.')+'</span></p>';
  h+='</div><details class="ltCastSettings"><summary>🎙️ Chọn / thử giọng hai nhân vật (khi cần)</summary>'+
  '<div class="ltCastSettingsGrid"><label>Giọng nữ (Anna, Mia, Emma)<select data-character-voice="F">'+(window.GKYVoice?.castOptions?.("F")||'<option>Browser default</option>')+'</select></label>'+
