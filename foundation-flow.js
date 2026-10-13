@@ -228,9 +228,10 @@ function content(lesson,r){
  if(type==="summary"){
   const pair=t.pairs[0],options=(lesson.id.length%2)?[pair.equivalent,pair.wrong]:[pair.wrong,pair.equivalent];
   const ready=r.meaning===m.correct&&options[r.para]===pair.equivalent&&r.draft.trim().length>=8&&r.transfer.trim().length>=8;
+  const checked=Object.keys(r.verified||{}).filter(k=>r.verified[k]?.status==="met").length;
   return header("Transfer this idea somewhere new","Show understanding with a different situation.")+quote(t.pairs[1].source)+field("transfer",r.transfer,"My own new example…")+
   freeCheckPanel(r,"transfer","Checks whether your new example uses the lesson's idea accurately, not just whether you typed something.")+
-  '<div class="gf-final"><b>'+(ready?"Core practice ready":"More practice needed")+'</b><p>'+(ready?"Speaking and AI checking are optional.":"To finish, answer the meaning question, attempt paraphrasing, write an answer and make a final example.")+'</p></div>'+
+  '<div class="gf-final"><b>'+(ready?"Practice attempted — mastery not assumed":"More practice needed")+'</b><p>'+(ready?"You attempted the core tasks. "+checked+" open-ended explanation(s) were marked as meeting the task. Try checking and revising any unassessed answers.":"Answer the meaning question correctly, choose the meaning-preserving paraphrase, write your response, and create a final example. Written answers aren't automatically graded just because you typed them.")+'</p></div>'+
   (ready?b("finish","Finish & return to Foundation","primary"):"")+
   '<details class="gf-reveal"><summary>Older examples and four-question quizzes</summary><p>These remain available if you need more practice.</p><button type="button" class="gf-btn outline" data-f-action="classic">Open classic lesson</button></details>';
  }
@@ -371,6 +372,7 @@ root.addEventListener("click",ev=>{
  if(act==="check-detective"){void checkFreeResponse("detective");return}
  if(act==="check-explanation"){void checkFreeResponse("explanation");return}
  if(act==="check-transfer"){void checkFreeResponse("transfer");return}
+ if(act==="check-errorFix"){void checkFreeResponse("errorFix");return}
  if(act==="check-rewrite"){void checkRephrase();return}
  if(act==="toggle-word"){window.GKFoundationThinking?.toggleWord?.(current,l.words[r.word][0]);r.completed.vocab=true;save();render(l);return}
  if(act==="use-revision"){if(!r.revision.trim()){message="Write a revision before submitting again.";render(l);return}r.draft=r.revision;legacyDraft(current,r.draft);r.completed.retry=true;save();move(10);return}
