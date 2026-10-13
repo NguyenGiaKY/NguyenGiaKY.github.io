@@ -82,8 +82,13 @@ function planSpeakers(segments,locale){
     distinctVoice:!!chosen};
   namedUsed[role.name]=chosen?.name||"Browser default";
  }
- return {settings,speakers,distinct:speakers.length<=1||new Set(Object.values(namedUsed)).size===speakers.length,
-  available:options.length,labels:namedUsed};
+ const distinct=speakers.length<=1||new Set(Object.values(namedUsed)).size===speakers.length;
+ const genderCoverage=roles.every(role=>!role.gender||(
+  settings[role.name].voice&&(
+   gender(settings[role.name].voice)===role.gender||
+   getCharacterVoice(role.gender)!=="auto"
+  )));
+ return {settings,speakers,distinct,genderCoverage,available:options.length,labels:namedUsed};
 }
 function forSpeaker(plan,speaker){return plan?.settings?.[normSpeaker(speaker)]||{voice:null,lang:"en-GB",rate:1,pitch:1}}
 function inferSpeaker(text,defaultSpeaker="Narrator"){
