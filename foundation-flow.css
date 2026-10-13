@@ -111,3 +111,35 @@
 #foundationRoot .gf-word-action{color:#385f82!important}
 #foundationRoot .gf-stale{font-size:12px;color:#936638;background:#fff8ec;padding:12px 14px;border:1px solid #edd8b5;border-radius:10px}
 @media(max-width:740px){#foundationRoot .gf-word-example{padding:13px 14px}#foundationRoot .gf-word-report{padding:14px}#foundationRoot .gf-word-check .gf-btn{width:100%}#foundationRoot .gf-word-report-top{align-items:start}}
+
+/* Foundation guided v2 — one writing task, genuinely related scaffolds and visible feedback */
+#foundationRoot .gf-plan-prompts{display:grid;gap:12px}
+#foundationRoot .gf-plan-row{display:flex;flex-direction:column;gap:7px;border:1px solid #dce7f2;background:#f7faff;border-radius:12px;padding:14px}
+#foundationRoot .gf-plan-row>span{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:800;color:#35597d}
+#foundationRoot .gf-plan-row b{background:#e4eefb;border-radius:8px;padding:5px 9px;color:#3264a9;font-size:12px}
+#foundationRoot .gf-plan-row input{font:inherit;line-height:1.6;font-size:14px;padding:11px 12px;border:1px solid #c1d3e9;border-radius:9px;background:#fff;color:#244866;width:100%}
+#foundationRoot .gf-plan-row input:focus-visible{outline:3px solid #abc7ed;outline-offset:2px}
+#foundationRoot .gf-plan-feedback{background:#eff8f3;border:1px solid #c7dfd0;padding:14px;border-radius:11px;color:#35694f}
+#foundationRoot .gf-plan-feedback strong{font-size:13px}
+#foundationRoot .gf-plan-feedback p{font-size:12px;line-height:1.7;margin:6px 0 10px}
+#foundationRoot .gf-task-criteria{display:grid;gap:8px}
+#foundationRoot .gf-task-criteria>div{display:flex;align-items:center;gap:10px;border:1px solid #dae5ef;border-radius:10px;padding:11px 13px;background:#f6faff;color:#47627d;font-size:13px}
+#foundationRoot .gf-task-criteria b{background:#e5eff9;color:#2c6298;min-width:24px;padding:3px 6px;text-align:center;border-radius:7px}
+#foundationRoot .gf-ai-status{font-size:12px;line-height:1.7;border-radius:9px;border:1px solid #e2e9f2;padding:10px 12px;background:#fafcff;color:#6b8098}
+#foundationRoot .gf-ai-status:has(+.gf-writing-feedback) {max-width:740px}
+#foundationRoot .gf-writing-feedback{border-top:1px solid #e3ebf3;padding-top:15px;display:flex;flex-direction:column;gap:9px}
+#foundationRoot .gf-writing-feedback h3{font-size:18px;color:#28527c;margin:0}
+#foundationRoot .gf-writing-feedback>p{font-size:12px;color:#6e8297;line-height:1.7;margin:0 0 3px}
+#foundationRoot .gf-writing-feedback .fc-awaiting{display:none}
+#foundationRoot .gf-writing-feedback .fc-grid{grid-template-columns:1fr!important}
+#foundationRoot .gf-writing-feedback .fc-column:first-child{display:flex!important}
+#foundationRoot .gf-writing-feedback .fc-column:nth-child(2){display:none!important}
+#foundationRoot .gf-writing-feedback .fc-coach{padding:0!important;border:0!important;background:none!important}
+#foundationRoot .gf-writing-feedback .fc-heading{display:none!important}
+#foundationRoot .gf-writing-feedback .fc-column{max-width:none!important}
+#foundationRoot .gf-writing-feedback .fc-disclosure{font-size:10px;color:#7089a0;line-height:1.65}
+#foundationRoot .gf-mistake-task{display:flex;flex-direction:column;gap:12px;border:1px solid #d5e2ef;padding:14px;border-radius:13px;background:#fbfdff}
+#foundationRoot .gf-mistake-task>strong{font-size:14px;color:#2d547b}
+#foundationRoot .gf-mistake-task .gf-quote{font-size:16px;padding:13px 16px}
+#foundationRoot .gf-reveal p{line-height:1.8}
+@media(max-width:740px){#foundationRoot .gf-plan-row{padding:11px}#foundationRoot .gf-mistake-task{padding:10px}#foundationRoot .gf-writing-feedback h3{font-size:16px}}
