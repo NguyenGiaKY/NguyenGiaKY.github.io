@@ -141,7 +141,8 @@ function content(lesson,r){
  }
  if(type==="deep")return header("Explain the word relationship",t.principle)+quote(lesson.examples[0]?.[0]||t.pairs[0].source)+field("explanation",r.explanation,"Which word names, describes or connects something?")+reveal("See why",lesson.explain);
  if(type==="summary"){
-  const ready=r.meaning===m.correct&&r.para!==null&&r.draft.trim().length>0&&r.transfer.trim().length>0;
+  const pair=t.pairs[0],options=(lesson.id.length%2)?[pair.equivalent,pair.wrong]:[pair.wrong,pair.equivalent];
+  const ready=r.meaning===m.correct&&options[r.para]===pair.equivalent&&r.draft.trim().length>=8&&r.transfer.trim().length>=8;
   return header("Transfer this idea somewhere new","Show understanding with a different situation.")+quote(t.pairs[1].source)+field("transfer",r.transfer,"My own new example…")+
   '<div class="gf-final"><b>'+(ready?"Core practice ready":"More practice needed")+'</b><p>'+(ready?"Speaking and AI checking are optional.":"To finish, answer the meaning question, attempt paraphrasing, write an answer and make a final example.")+'</p></div>'+
   (ready?b("finish","Finish & return to Foundation","primary"):"")+
@@ -268,7 +269,7 @@ root.addEventListener("click",ev=>{
  if(act==="check-rewrite"){void checkRephrase();return}
  if(act==="toggle-word"){window.GKFoundationThinking?.toggleWord?.(current,l.words[r.word][0]);r.completed.vocab=true;save();render(l);return}
  if(act==="use-revision"){if(!r.revision.trim()){message="Write a revision before submitting again.";render(l);return}r.draft=r.revision;legacyDraft(current,r.draft);r.completed.retry=true;save();move(10);return}
- if(act==="finish"){if(r.meaning!==m.correct||r.para===null||!r.draft.trim()||!r.transfer.trim())return;r.finished=true;r.completed.summary=true;save();window.GKFoundationOpenHome?.();return}
+ if(act==="finish"){const p=t.pairs[0],opts=(l.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];if(r.meaning!==m.correct||opts[r.para]!==p.equivalent||r.draft.trim().length<8||r.transfer.trim().length<8)return;r.finished=true;r.completed.summary=true;save();window.GKFoundationOpenHome?.();return}
 });
 root.addEventListener("input",ev=>{
  if(!current||!ev.target?.dataset)return;const r=state(current),key=ev.target.dataset.gfField;
