@@ -94,7 +94,13 @@ function content(lesson,r){
   return header("Listen for the meaning",m.scene)+
     '<div class="gf-scene-turns">'+turns.map((turn,i)=>'<div class="gf-scene-turn '+(i%2?'alt':'')+'"><span class="gf-character">'+esc(turn.speaker)+'</span><p lang="en">'+esc(turn.text)+'</p></div>').join("")+'</div>'+
     b("hear-scene","▶ "+(multi?"Play the conversation":"Listen to the speaker"),"primary")+
-    '<p class="gf-tip">'+(multi?"Each character has a consistent voice when your device provides different English voices.":"This is one person speaking; no extra speaker is added.")+' Focus on the message before memorising anything.</p>';
+    (multi?'<details class="gf-cast-settings"><summary>🎙️ Change or preview character voices</summary>'+
+    '<p>Available voices depend on your computer or phone. Listen first, then choose two voices that are genuinely easy to distinguish.</p>'+
+    '<div class="gf-cast-grid"><label>Anna / Mia / Emma<select data-gf-character="F">'+(window.GKYVoice?.castOptions?.("F")||'<option>Default English voice</option>')+'</select></label>'+
+    b("preview-female","▶ Preview Anna")+
+    '<label>Leo / Daniel<select data-gf-character="M">'+(window.GKYVoice?.castOptions?.("M")||'<option>Default English voice</option>')+'</select></label>'+
+    b("preview-male","▶ Preview Leo")+'</div></details>':'')+
+    '<p class="gf-tip">'+(multi?"Characters keep their assigned voice through the conversation.":"This is one person speaking; no extra speaker is added.")+' Focus on the meaning, not just individual words.</p>';
 }
  if(type==="meaning")return choice(m.question,m.choices,r.meaning,m.correct,"answer-meaning",m.focus);
  if(type==="listen")return header("Repeat without reading","Listen once. Say the sentence from memory.")+quote(lesson.examples[0]?.[0]||m.dialog)+
@@ -273,6 +279,7 @@ root.addEventListener("click",ev=>{
  const r=state(current),l=lessonById[current],m=missions[current],t=thoughts[current],type=steps[r.page][0];
  if(act==="next"){move(r.page+1);return}if(act==="previous"){move(r.page-1);return}
  if(act==="exit"){window.GKYVoice?.stopConversation?.();window.GKFoundationCoach?.leave();window.GKFoundationOpenHome?.();return}
+ if(act==="preview-female"||act==="preview-male"){window.GKYVoice?.previewCharacter?.(act==="preview-female"?"F":"M");return;}
  if(act==="hear-scene"){
  const turns=voiceScenes[current]||[{speaker:window.GKYVoice?.inferSpeaker(m.dialog,"Narrator")||"Narrator",text:m.dialog}];
  if(window.GKYVoice?.playConversation){
@@ -304,6 +311,10 @@ root.addEventListener("input",ev=>{
  if(r[key].trim())r.completed[steps[r.page][0]]=true;save();
  }
  if(ev.target.id==="foundationDraft"){r.draft=ev.target.value;legacyDraft(current,r.draft);save()}
+});
+root.addEventListener("change",event=>{
+ const role=event.target?.dataset?.gfCharacter;
+ if(role&&window.GKYVoice?.setCharacterVoice){window.GKYVoice.setCharacterVoice(role,event.target.value);}
 });
 window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,goTo:move,persist:save,screenCount:steps.length};
 })();
