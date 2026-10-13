@@ -81,6 +81,32 @@ function inferSpeaker(text,defaultSpeaker="Narrator"){
  if(intro){const name=Object.keys(narratorNames).find(x=>x.toLowerCase()===intro[1].toLowerCase());return name||defaultSpeaker;}
  return defaultSpeaker;
 }
+let playbackToken=0;
+function stopConversation(){
+ playbackToken++;
+ try{window.speechSynthesis?.cancel()}catch(e){}
+}
+function playConversation(lines,{locale="en-GB",rate=0.94,onFinish,onError,onTurn}={}){
+ stopConversation();const token=playbackToken;
+ const engine=window.speechSynthesis,Ctor=window.SpeechSynthesisUtterance;
+ if(!engine||!Ctor)return {ok:false,reason:"Speech synthesis unavailable",cancel:stopConversation};
+ const entries=(lines||[]).filter(l=>l&&String(l.text||"").trim());
+ const plan=planSpeakers(entries,locale);let n=0;
+ const next=()=>{
+  if(token!==playbackToken)return;
+  if(n>=entries.length){onFinish?.();return;}
+  const line=entries[n++],role=forSpeaker(plan,line.speaker);
+  const u=new Ctor(String(line.text));u.lang=role.lang||locale;
+  if(role.voice)u.voice=role.voice;
+  u.rate=Math.max(.65,Math.min(1.35,rate*(role.rate||1)));
+  u.pitch=role.pitch||1;u.volume=1;
+  u.onstart=()=>{if(token===playbackToken)onTurn?.(line.speaker,n)};
+  u.onend=()=>{if(token===playbackToken)setTimeout(next,125)};
+  u.onerror=event=>{if(token===playbackToken)onError?.(event?.error||"speech error")};
+  try{engine.speak(u)}catch(e){onError?.(String(e))}
+ };
+ next();return {ok:true,plan,cancel:()=>{if(token===playbackToken)stopConversation()}};
+}
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function options(){const list=sorted("en-GB");let out='<option value="auto">Auto · best available English voice</option>',seen=new Set();for(const v of list){const key=v.voiceURI||v.name;if(seen.has(key))continue;seen.add(key);out+='<option value="'+esc(key)+'"'+(key===preferred?" selected":"")+'>'+esc(v.name+" · "+v.lang)+'</option>';}return out;}
 function preview(pref){
@@ -90,6 +116,6 @@ function preview(pref){
 function notify(){for(const fn of listeners)try{fn()}catch(e){}}
 try{window.speechSynthesis?.addEventListener("voiceschanged",notify)}catch(e){}
 window.GKYVoice={voices,score,sorted,pick,options,preview,setPreferred,getPreferred,
- voiceGender:gender,speakerGender,planSpeakers,forSpeaker,inferSpeaker,
+ voiceGender:gender,speakerGender,planSpeakers,forSpeaker,inferSpeaker,playConversation,stopConversation,
  onVoices(fn){listeners.add(fn);return()=>listeners.delete(fn)}};
 })();
