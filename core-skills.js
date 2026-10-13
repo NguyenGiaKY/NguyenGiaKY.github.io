@@ -100,7 +100,7 @@ else if(a==="journey"){document.querySelector('.nav[data-view="journey"]')?.clic
 else if(a==="ielts"){document.querySelector('.nav[data-view="today"]')?.click();}
 else if(a==="speak"){
 if(!("speechSynthesis" in window)||typeof SpeechSynthesisUtterance==="undefined")return;
-try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(index[ui.id].example);u.lang="en-NZ";u.rate=.9;speechSynthesis.speak(u);}catch(e){}
+try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(index[ui.id].example);u.lang="en-NZ";u.rate=.9;const v=window.GKYVoice?.pick?.("auto","Lecturer","en-NZ");if(v){u.voice=v;u.lang=v.lang;}speechSynthesis.speak(u);}catch(e){}
 }
 });
 root.addEventListener("input",e=>{if(e.target.id==="csDraft"&&ui.id){get(ui.id).draft=e.target.value;persist();}});
