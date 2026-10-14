@@ -5,11 +5,25 @@
 "use strict";
 const catalog=window.GKStage3EvidenceData;if(!catalog)return;
 const KEY="gk_stage3_evidence_v1";
+const SHARDS={listening:"gk_s3_listening_v1",reading:"gk_s3_reading_v1",writing:"gk_s3_writing_v1",speaking:"gk_s3_speaking_v1",support:"gk_s3_support_v1"};
 let stored={};try{stored=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
-const records=stored.records||{},esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const records={...(stored.records||{})};
+for(const shard of Object.values(SHARDS)){try{Object.assign(records,JSON.parse(localStorage.getItem(shard)||"{}").records||{})}catch(e){}}
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let current="",info=null,busy=false,message="",overlay=null;
 const row=id=>records[id]||(records[id]={source:"",evidence:"",answer:"",repair:"",feedback:null,checks:[],attempts:[],reviewAt:null,reviewHistory:[],reviewDraft:{source:"",response:"",evidence:""}});
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({records}))}catch(e){message="Không thể lưu dữ liệu trên thiết bị."}};
+const save=()=>{
+ try{
+  const data={listening:{},reading:{},writing:{},speaking:{},support:{}};
+  for(const [id,value] of Object.entries(records)){
+   const group=/^L/.test(id)?"listening":/^R/.test(id)?"reading":/^W/.test(id)?"writing":/^S/.test(id)?"speaking":"support";
+   data[group][id]=value;
+  }
+  for(const [skill,k] of Object.entries(SHARDS))localStorage.setItem(k,JSON.stringify({version:2,records:data[skill]}));
+  // Preserve contents during the migration; replace the old oversized aggregate only after every shard was saved.
+  localStorage.setItem(KEY,JSON.stringify({version:2,migratedTo:Object.values(SHARDS)}));
+ }catch(e){message="Không thể lưu đầy đủ tiến độ. Hãy xuất bản sao dự phòng trong Sync."}
+};
 const allowed=id=>!!catalog.challenges[id];
 const rubrics=skill=>catalog.rubrics[skill]||catalog.rubrics.support;
 const official="https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test";
