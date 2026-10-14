@@ -43,3 +43,10 @@
 .s3-choice:disabled{opacity:.86;cursor:default}
 .s3-explanation{padding:10px 12px;background:#f1f6fd;color:#294d7b;border-radius:9px;line-height:1.6}
 .s3-micro details{margin:14px 0;padding:10px 13px;border:1px solid #d6e2ee;border-radius:9px}
+
+/* Audio evidence requires real browser recording, not typed scoring. */
+.s3-spoken{border-color:#8aabd6;background:#f7fbff}
+.s3-spoken audio{display:block;width:min(100%,400px);margin:14px 0}
+.s3-spoken button{margin:7px 9px 7px 0;background:#e7effa;color:#163f7c;border:1px solid #93afd2;padding:9px 13px;border-radius:10px;cursor:pointer}
+.s3-spoken button:hover{background:#d8e8fb}
+.s3-spoken button:disabled{opacity:.55}
