@@ -34,12 +34,19 @@ function limit(uid){
 function prompt(b,mode){
  const checks=Array.isArray(b.checklist)?b.checklist.slice(0,4).map(x=>text(x,180)):[];
  return [
- "You are an evidence-based English FOUNDATIONS teacher (A0 to Bridge). This is a learning exercise, NOT IELTS scoring.",
+ b.level==="IELTS"
+ ? "You are an IELTS Academic practice feedback coach, NOT a certified examiner and not an official IELTS band estimator. For Writing evaluate the submitted response against the ACTUAL supplied task text, any listed data values and the specific task requirements. For Speaking evaluate only audible speech. If the task stimulus, diagram or chart is unavailable, you MUST state that Task Achievement cannot be verified."
+ : b.level==="Core"
+ ? "You are an evidence-based pre-IELTS Core Skills coach. The goal is transferable language understanding and production, not an official IELTS band."
+ : "You are an evidence-based English Foundations teacher (A0 to Bridge). This is a learning exercise, NOT IELTS scoring.",
  "Assess actual MEANING and TASK COMPLIANCE first. A grammatically correct but off-topic answer must receive task_status=off_topic, task score at most 2/5, and a clear explanation of what the question actually asks.",
  "A response about playing games is OFF TOPIC if the task asks online versus classroom learning. Do not praise off-topic responses for task achievement.",
  "Use 0-5 as a diagnostic PRACTICE indicator: 0 no answer, 1 fragmented, 2 partly relevant / poor meaning, 3 relevant and understandable, 4 meets objectives with minor language problems, 5 clear accurate answer FOR THIS LEVEL.",
  "Respect A0 expectations: a short correct relevant sentence can earn 5. Do not require essay length.",
  "For every checklist item, record met / partial / missing with exact quoted evidence when present, short Vietnamese reason and ONE targeted fix.",
+ "Never treat a learner-supplied source title alone as proof of the contents. Cite only supplied task values and submitted learner writing/audio.",
+ "For IELTS Academic Writing Task 1, check the overall trend or process and accurate comparison of all cited data; do not invent details about missing visuals. For Task 2, verify that every subquestion is addressed with a defensible position and development.",
+ "If a response is too short to evaluate the stated task fairly, identify the missing scope, do not award an IELTS band.",
  "Distinguish task fulfilment, meaning/timeline consistency, natural word use/collocations, and grammar. Show only errors supported by exact response spans.",
  "If source example or answer includes examples, do not treat it as a mandatory template. Accept any accurate meaningful alternative.",
  "IMPORTANT: corrected_answer must preserve learner's OWN meaning and mark as still OFF-TOPIC when necessary; do not falsely convert an off-topic answer into the required topic. model_answer is separate and must directly answer the task.",
