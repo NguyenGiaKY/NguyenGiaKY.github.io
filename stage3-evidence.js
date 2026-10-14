@@ -70,7 +70,8 @@ function render(){
  '<p><a href="'+source+'" target="_blank" rel="noopener noreferrer">Official IELTS Academic practice and test format ↗</a></p></section>'+
  '<section class="s3-panel"><h3>02 · What evidence is necessary?</h3><ol>'+rubrics(kind).map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>'+
  '<p class="s3-tip">Lưu ý: phiên bản hiện có chỉ kiểm tra bạn đã ghi đủ thông tin; nó KHÔNG tự chấm đúng/sai của audio, passage hoặc phát âm.</p></section>'+
- '<section class="s3-panel"><h3>03 · Perform → Explain → Fix</h3>'+
+ (window.GKStage3Micro?.render(id)||"")+
+ '<section class="s3-panel"><h3>04 · Perform → Explain → Fix</h3>'+
  '<label for="s3Source">Source / test ID (recording, passage, cue card, chart)</label><input id="s3Source" data-s3-field="source" maxlength="220" value="'+esc(r.source)+'" placeholder="e.g. IELTS Academic sample, Listening Part 2, question 14">'+
  '<label for="s3Evidence">Specific evidence (e.g., timestamp, passage phrase, data point, feedback)</label><textarea id="s3Evidence" data-s3-field="evidence" rows="3" maxlength="2800" placeholder="Point to the actual relevant evidence…">'+esc(r.evidence)+'</textarea>'+
  '<label for="s3Answer">Your own answer / reasoning or short excerpt from your own draft</label><textarea id="s3Answer" data-s3-field="answer" rows="5" maxlength="4000" placeholder="Your own original response…">'+esc(r.answer)+'</textarea>'+
@@ -141,6 +142,6 @@ document.addEventListener("input",e=>{
  if(field==="answer"){const btn=overlay.querySelector('[data-s3-action="writing"]');if(btn)btn.disabled=row(current).answer.trim().length<25||busy;}
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&current)close()});
-window.GKStage3Evidence={open,close,status,summary,homePanel,getRecord:row,extras:catalog.extras};
+window.GKStage3Evidence={open,close,refresh:render,status,summary,homePanel,getRecord:row,extras:catalog.extras};
 window.flexRenderHome?.();
 })();
