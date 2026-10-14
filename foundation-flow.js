@@ -21,6 +21,11 @@ const steps=[
  ["ai",3,"Understand and fix the mistake"],["detective",3,"Find a meaning error"],["retry",3,"Fix and try again"],
  ["deep",4,"Explain why it works"],["summary",4,"Transfer to a new situation"]
 ];
+// A0-01 is a 10-screen curriculum pilot. Other lessons retain their existing sequence.
+const a001Steps=steps.filter(([type])=>!["family","paraphrase","ownWords","detective","deep"].includes(type));
+const activeSteps=id=>id==="a0-01"?a001Steps:steps;
+const phasesA001=["Explore & Listen","Words in context","Speak & Write","Check & Fix","Transfer"];
+const activePhases=id=>id==="a0-01"?phasesA001:phases;
 const phases=["Explore & Listen","Think & Paraphrase","Speak & Write","Check & Fix","Deep Dive"];
 let loaded={};try{loaded=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(err){}
 const rows=loaded.lessons||{};let lastLessonId=loaded.lastLessonId||"";
@@ -29,6 +34,14 @@ const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 function state(id){
  if(!rows[id])rows[id]={page:0,completed:{},meaning:null,para:null,word:0,wordSentences:{},draft:"",rewrite:"",outline:"",detective:"",revision:"",explanation:"",transfer:"",finished:false};
  const r=rows[id];
+ if(id==="a0-01"&&r.flowPlanVersion!==2){
+  // Migrate only the screen pointer. Never discard drafts, history, feedback or completion evidence.
+  const old=Math.max(0,Math.min(steps.length-1,Number(r.page)||0));
+  const oldType=steps[old][0],same=a001Steps.findIndex(s=>s[0]===oldType);
+  r.page=same>=0?same:Math.max(0,a001Steps.reduce((best,s,i)=>steps.findIndex(x=>x[0]===s[0])<=old?i:best,0));
+  r.flowPlanVersion=2;
+ }
+
  const level=lessonById[id]?.level;
  if(level&&wordReports[level]){
   if(!wordReports[level][id]&&r.wordFeedback&&typeof r.wordFeedback==="object")wordReports[level][id]=r.wordFeedback;
@@ -150,7 +163,7 @@ async function checkFreeResponse(kind){
   r.verified[kind]={status:report.task_status||"unclear",score:report.score??null,at:new Date().toISOString()};
   save();message="Checked. Read the specific correction, revise and try again.";
  }catch(error){message="Could not check your answer: "+String(error?.message||error);}
- finally{checkingWord=false;if(current===id&&["detective","deep","summary","ai"].includes(steps[state(id).page][0]))render(l);}
+ finally{checkingWord=false;if(current===id&&["detective","deep","summary","ai"].includes(activeSteps(id)[state(id).page][0]))render(l);}
 }
 
 const a001Checks=[
@@ -195,7 +208,7 @@ function a001Checkpoint(r){
 }
 
 function content(lesson,r){
- const m=missions[lesson.id],t=thoughts[lesson.id],type=steps[r.page][0];if(!m||!t)return "<p>Lesson content unavailable. Refresh this page.</p>";
+ const m=missions[lesson.id],t=thoughts[lesson.id],type=activeSteps(current)[r.page][0];if(!m||!t)return "<p>Lesson content unavailable. Refresh this page.</p>";
  if(type==="scene"){
   const turns=voiceScenes[lesson.id]||[{speaker:window.GKYVoice?.inferSpeaker(m.dialog,"Narrator")||"Narrator",text:m.dialog}];
   const people=[...new Set(turns.map(x=>x.speaker))],multi=people.length>1;
@@ -290,19 +303,19 @@ function content(lesson,r){
 }
 function render(lesson){
  const l=typeof lesson==="string"?lessonById[lesson]:lesson;if(!l)return;
- current=l.id;lastLessonId=current;const r=state(current);r.page=Math.max(0,Math.min(steps.length-1,Number(r.page)||0));
- const phase=steps[r.page][1],percent=Math.round((r.page+1)/steps.length*100);
+ current=l.id;lastLessonId=current;const r=state(current);r.page=Math.max(0,Math.min(activeSteps(current).length-1,Number(r.page)||0));
+ const phase=activeSteps(current)[r.page][1],percent=Math.round((r.page+1)/activeSteps(current).length*100);
  const coachStatus=window.GKFoundationCoach?.getRecord?.(l.id)||{};
  const checksDone=Object.keys(r.verified||{}).length+Object.values(r.wordFeedback||{}).filter(v=>v&&v.report).length+Number(!!coachStatus.writing?.report)+Number(!!coachStatus.speaking?.report);
- const parts=phases.map((p,i)=>'<button type="button" data-gf-phase="'+i+'" class="'+(i===phase?"selected":"")+'">'+String(i+1).padStart(2,"0")+' · '+esc(p)+'</button>').join("");
+ const parts=activePhases(current).map((p,i)=>'<button type="button" data-gf-phase="'+i+'" class="'+(i===phase?"selected":"")+'">'+String(i+1).padStart(2,"0")+' · '+esc(p)+'</button>').join("");
  root.innerHTML='<div class="gf-shell"><header class="gf-top">'+b("exit","← Foundation lessons","text")+'<div class="gf-title"><small>'+esc(l.level)+' · '+esc(l.skill)+'</small><h1>'+esc(l.title)+'</h1></div>'+
- '<div class="gf-count"><span>'+esc(phases[phase])+'</span><strong>Page '+(r.page+1)+' of '+steps.length+'</strong></div>'+
- '<div class="gf-progress" role="progressbar" aria-label="Screens visited" aria-valuemin="0" aria-valuemax="'+steps.length+'" aria-valuenow="'+(r.page+1)+'"><span style="width:'+percent+'%"></span></div>'+
+ '<div class="gf-count"><span>'+esc(activePhases(current)[phase])+'</span><strong>Page '+(r.page+1)+' of '+activeSteps(current).length+'</strong></div>'+
+ '<div class="gf-progress" role="progressbar" aria-label="Screens visited" aria-valuemin="0" aria-valuemax="'+activeSteps(current).length+'" aria-valuenow="'+(r.page+1)+'"><span style="width:'+percent+'%"></span></div>'+
  '<div class="gf-phases" role="group" aria-label="Five learning phases">'+parts+'</div></header>'+
- '<section class="gf-focus"><div class="gf-small"><span>ACTIVITY '+String(r.page+1).padStart(2,"0")+'</span><span>'+esc(phases[phase])+'</span></div>'+
- '<h2 tabindex="-1" class="gf-screen-heading">'+esc(steps[r.page][2])+'</h2><div class="gf-task-body">'+content(l,r)+'</div>'+
+ '<section class="gf-focus"><div class="gf-small"><span>ACTIVITY '+String(r.page+1).padStart(2,"0")+'</span><span>'+esc(activePhases(current)[phase])+'</span></div>'+
+ '<h2 tabindex="-1" class="gf-screen-heading">'+esc(activeSteps(current)[r.page][2])+'</h2><div class="gf-task-body">'+content(l,r)+'</div>'+
  (message?'<p class="gf-notice" role="status">'+esc(message)+'</p>':"")+'</section>'+
- '<footer class="gf-footer"><div class="gf-nav">'+b("previous","← Previous","outline",r.page===0)+b("next","Next →","primary",r.page===steps.length-1)+'</div><div class="gf-footnote"><span>'+Object.keys(r.completed).length+' activities attempted · '+checksDone+' checks recorded · Next is not mastery</span>'+b("exit","Save & Exit","text")+'</div></footer></div>';
+ '<footer class="gf-footer"><div class="gf-nav">'+b("previous","← Previous","outline",r.page===0)+b("next","Next →","primary",r.page===activeSteps(current).length-1)+'</div><div class="gf-footnote"><span>'+Object.keys(r.completed).length+' activities attempted · '+checksDone+' checks recorded · Next is not mastery</span>'+b("exit","Save & Exit","text")+'</div></footer></div>';
  save();
 }
 function compactWordReport(data){
@@ -343,7 +356,7 @@ async function checkRephrase(){
   r.wordFeedback.__paraphrase__={answer:answer.slice(0,360),report:compactWordReport(feedback),at:new Date().toISOString()};
   save();message="Paraphrase feedback ready. Revise your sentence using the main correction.";
  }catch(err){message="Paraphrase assessment unavailable: "+String(err?.message||"Network error");}
- finally{checkingWord=false;if(current===id&&steps[state(id).page][0]==="ownWords")render(lesson);}
+ finally{checkingWord=false;if(current===id&&activeSteps(id)[state(id).page][0]==="ownWords")render(lesson);}
 }
 async function checkWord(){
  if(checkingWord||!current)return;
@@ -377,11 +390,11 @@ async function checkWord(){
   r.completed.vocab=true;save();
   message="Correction ready. Revise your sentence and check again only when needed.";
  }catch(error){message="Sentence checking failed: "+String(error?.message||"Network error");}
- finally{checkingWord=false;if(current===id&&steps[state(id).page][0]==="vocab")render(lesson);}
+ finally{checkingWord=false;if(current===id&&activeSteps(id)[state(id).page][0]==="vocab")render(lesson);}
 }
 function move(to){
- if(!current)return;const r=state(current),index=Math.min(steps.length-1,Math.max(0,to));if(index===r.page)return;
- if(["speak","write"].includes(steps[r.page][0]))window.GKFoundationCoach?.leave();
+ if(!current)return;const r=state(current),index=Math.min(activeSteps(current).length-1,Math.max(0,to));if(index===r.page)return;
+ if(["speak","write"].includes(activeSteps(current)[r.page][0]))window.GKFoundationCoach?.leave();
  window.GKYVoice?.stopConversation?.();
  r.page=index;message="";save();render(lessonById[current]);try{root.scrollIntoView({block:"start",behavior:"smooth"})}catch(err){}
 }
@@ -400,9 +413,9 @@ function speak(text,slow){
 }
 root.addEventListener("click",ev=>{
  const node=ev.target.closest("button");if(!node||!root.contains(node)||!current)return;
- if(node.dataset.gfPhase!==undefined){const i=Number(node.dataset.gfPhase);const first=steps.findIndex(x=>x[1]===i);if(first>=0)move(first);return}
+ if(node.dataset.gfPhase!==undefined){const i=Number(node.dataset.gfPhase);const first=activeSteps(current).findIndex(x=>x[1]===i);if(first>=0)move(first);return}
  const act=node.dataset.gfAction;if(!act)return;
- const r=state(current),l=lessonById[current],m=missions[current],t=thoughts[current],type=steps[r.page][0];
+ const r=state(current),l=lessonById[current],m=missions[current],t=thoughts[current],type=activeSteps(current)[r.page][0];
  if(act==="pilot-answer"&&current==="a0-01"&&type==="summary"){
   const c=r.checkpoint||(r.checkpoint={variant:0,answers:[null,null],checked:false,passed:false,attempts:0});
   if(c.checked)return;
@@ -466,7 +479,7 @@ root.addEventListener("input",ev=>{
  if(key==="wordSentence"){const w=lessonById[current].words[r.word][0];r.wordSentences[w]=ev.target.value;if(ev.target.value.trim())r.completed.vocab=true;save();return}
  if(["rewrite","outline","draft","detective","revision","explanation","transfer"].includes(key)){
  r[key]=ev.target.value;if(key==="draft")legacyDraft(current,r.draft);
- if(r[key].trim())r.completed[steps[r.page][0]]=true;save();
+ if(r[key].trim())r.completed[activeSteps(current)[r.page][0]]=true;save();
  }
  if(ev.target.id==="foundationDraft"){r.draft=ev.target.value;legacyDraft(current,r.draft);save()}
 });
@@ -478,5 +491,5 @@ window.GKYVoice?.onVoices?.(()=>{
  const lists=root.querySelectorAll?.("select[data-gf-character]")||[];
  for(const sel of lists){const existing=sel.value;sel.innerHTML=window.GKYVoice.castOptions(sel.dataset.gfCharacter);if([...sel.options].some(x=>x.value===existing))sel.value=existing;}
 });
-window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,goTo:move,persist:save,checkFreeResponse,freeCheckPanel,screenCount:steps.length};
+window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,goTo:move,persist:save,checkFreeResponse,freeCheckPanel,screenCount:steps.length,screenCountFor:activeSteps};
 })();
