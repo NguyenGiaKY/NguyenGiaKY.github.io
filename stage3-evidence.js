@@ -38,14 +38,15 @@ function status(id){
 }
 function summary(){
  const ids=Object.keys(catalog.challenges);
- return{tasks:ids.length,ielts:ids.filter(id=>!catalog.unscoredSupport.includes(id)).length,support:catalog.unscoredSupport.length,
+ const minis=window.GKStage3Micro?.cases||{},mini=Object.keys(minis).filter(id=>window.GKStage3Micro?.getRecord?.(id)?.attempts?.length>0).length;
+ return{tasks:ids.length,ielts:ids.filter(id=>!catalog.unscoredSupport.includes(id)).length,support:catalog.unscoredSupport.length,micro:mini,
  attempted:ids.filter(id=>records[id]?.answer||records[id]?.evidence).length,documented:ids.filter(id=>records[id]?.attempts?.length>0).length,
  due:ids.filter(id=>records[id]?.reviewAt&&Date.now()>=records[id].reviewAt).length};
 }
 function homePanel(){
  const s=summary();
  return '<section class="s3-home"><h3>Independent IELTS Task Evidence</h3><p>'+s.ielts+' IELTS Academic practice tasks + '+s.support+' support/repair tasks. '+s.documented+' hồ sơ thực hành đã ghi; '+s.due+' đến lượt tự kiểm tra lại. Đây là các bản ghi việc học, KHÔNG phải số câu đúng hay band.</p>'+
- '<p>IELTS Listening cần audio người thật; Reading cần passages gốc; Writing và Speaking cần đánh giá bài làm thực tế. Một task có checklist không tự chứng minh đạt mục tiêu.</p></section>';
+ '<p>'+s.micro+'/'+s.ielts+' microclinics đã Check (chỉ trắc nghiệm kỹ thuật). IELTS Listening cần audio người thật; Reading cần passages gốc; Writing và Speaking cần đánh giá bài thực tế. Checklist không tự chứng minh đạt mục tiêu.</p></section>';
 }
 function createOverlay(){
  if(overlay)return overlay;
@@ -101,7 +102,11 @@ function render(){
  if(kind==="writing"){
   h+='<section class="s3-panel"><h3>04 · Optional writing feedback</h3><p>Chỉ đánh giá phần tiếng Anh bạn tự nhập và yêu cầu đã ghi, không thể xem biểu đồ/đề gốc chỉ từ tên nguồn. Đây không phải giám khảo IELTS.</p>'+
   '<button type="button" data-s3-action="writing" class="s3-primary" '+(busy||r.answer.trim().length<25?"disabled":"")+'>Check</button>'+
-  (r.feedback?.answer===r.answer.trim()?'<div class="s3-result"><b>Automated practice feedback</b><p>'+esc(r.feedback.report.summary_vi||"")+'</p><p>'+esc(r.feedback.report.priority_fix_vi||"")+'</p></div>':r.feedback?'<p>Feedback cũ không áp dụng sau khi sửa bài.</p>':"")+'</section>';
+  (r.feedback?.answer===r.answer.trim()?'<div class="s3-result"><b>Automated practice feedback — not an IELTS band</b><p>'+esc(r.feedback.report.summary_vi||"")+'</p><p>'+esc(r.feedback.report.priority_fix_vi||"")+'</p>'+
+ (r.feedback.report.task_checks||[]).map(x=>'<p><b>'+esc(x.criterion)+'</b> · '+esc(x.status)+' — '+esc(x.fix_vi)+'</p>').join("")+
+ (r.feedback.report.mistakes||[]).map(x=>'<p><b>Original:</b> '+esc(x.original)+' <b>Fix:</b> '+esc(x.correction)+' <span>'+esc(x.reason_vi)+'</span></p>').join("")+
+ (r.feedback.report.corrected_answer?'<details><summary>Suggested corrected version</summary><p>'+esc(r.feedback.report.corrected_answer)+'</p></details>':"")+
+ (r.feedback.report.revision_question?'<p><b>Next new task:</b> '+esc(r.feedback.report.revision_question)+'</p>':"")+'</div>':r.feedback?'<p>Feedback cũ không áp dụng sau khi sửa bài.</p>':"")+'</section>';
  }
  const attempts=r.attempts||[];
  h+='<section class="s3-panel"><h3>Review · Evidence over time</h3><p>'+attempts.length+' hồ sơ đã ghi; ngày ôn kế tiếp: '+esc(timeLabel(r.reviewAt))+'.</p>'+
@@ -141,7 +146,10 @@ async function writing(){
   const url=location.hostname.endsWith(".vercel.app")?location.origin+"/api/foundation-grade":"https://nguyen-gia-ky-github-io-rvay.vercel.app/api/foundation-grade";
   const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
   const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||"Check unavailable");if(data.source!=="openai-foundation")throw Error("Unexpected feedback");
-  r.feedback={answer,at:Date.now(),report:{task_status:data.task_status,summary_vi:String(data.summary_vi||"").slice(0,1200),priority_fix_vi:String(data.priority_fix_vi||"").slice(0,700)}};save();message="Đã có phản hồi luyện tập cho phần văn bản; không phải band IELTS.";
+  r.feedback={answer,at:Date.now(),report:{task_status:data.task_status,summary_vi:String(data.summary_vi||"").slice(0,1200),priority_fix_vi:String(data.priority_fix_vi||"").slice(0,700),
+ task_checks:(data.task_checks||[]).slice(0,4).map(x=>({criterion:String(x.criterion||"").slice(0,120),status:String(x.status||""),fix_vi:String(x.fix_vi||"").slice(0,400)})),
+ mistakes:(data.mistakes||[]).slice(0,6).map(x=>({original:String(x.original||"").slice(0,260),correction:String(x.correction||"").slice(0,260),reason_vi:String(x.reason_vi||"").slice(0,340)})),
+ corrected_answer:String(data.corrected_answer||"").slice(0,3500),revision_question:String(data.revision_question||"").slice(0,550)}};save();message="Đã có phản hồi luyện tập cho phần văn bản; không phải band IELTS.";
  }catch(e){message="Check unavailable: "+String(e?.message||"network error")}
  finally{busy=false;if(current===id)render()}
 }
