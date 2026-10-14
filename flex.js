@@ -839,7 +839,7 @@ function renderProgressHub(){
  const tasks=allTasks();
  const summaries=tasks.map(t=>({t:t,s:taskProgressSummary(t)}));
  const started=summaries.filter(x=>x.s.status!=='not-started').length;
- const mastered=summaries.filter(x=>x.s.status==='mastered').length;
+ const mastered=summaries.filter(x=>x.s.status==='reviewed').length;
  const review=summaries.filter(x=>x.s.status==='review').length;
  const activeSummaries=summaries.filter(x=>x.s.status!=='not-started');
  const avg=tasks.length?summaries.reduce((n,x)=>n+(x.s.coverage||0),0)/tasks.length:0;
@@ -855,9 +855,9 @@ function renderProgressHub(){
  el.innerHTML=
   '<div class="progressHubHero"><div><span class="phase">TASK PROGRESS</span><h2>Progress Hub</h2><p>Mỗi task tự lưu số lần làm, điểm, thời gian và lịch sử. Tiến độ số câu và tỷ lệ trả lời đúng là hai chỉ số riêng. Bấm “hoàn thành” hoặc mở bài không tự tạo phần trăm. Task thiếu dữ liệu số câu hiện dấu —.</p></div>'+
    '<div class="progressOverall"><span>Tiến độ có chứng cứ</span><strong>'+progressFmt(avg)+'</strong></div></div>'+
-  '<div class="progressSummaryGrid"><div><span>Đã bắt đầu</span><b>'+started+'/'+tasks.length+'</b></div><div><span>Verified</span><b>'+mastered+'</b></div><div><span>Cần ôn</span><b>'+review+'</b></div><div><span>Chưa học</span><b>'+(tasks.length-started)+'</b></div></div>'+
+  '<div class="progressSummaryGrid"><div><span>Đã bắt đầu</span><b>'+started+'/'+tasks.length+'</b></div><div><span>Repeated familiar quiz</span><b>'+mastered+'</b></div><div><span>Cần ôn</span><b>'+review+'</b></div><div><span>Chưa học</span><b>'+(tasks.length-started)+'</b></div></div>'+
   '<div class="progressSkillGrid">'+skillCards+'</div>'+
-  '<div class="progressHubTools"><b>Tất cả task</b><div><button class="btn primary" data-progress-filter="all">Tất cả</button><button class="btn" data-progress-filter="review">Cần ôn</button><button class="btn" data-progress-filter="mastered">Verified</button></div></div>'+
+  '<div class="progressHubTools"><b>Tất cả task</b><div><button class="btn primary" data-progress-filter="all">Tất cả</button><button class="btn" data-progress-filter="review">Cần ôn</button><button class="btn" data-progress-filter="reviewed">Reviewed</button></div></div>'+
   '<div id="progressTaskList" class="progressTaskList">'+tasks.map(progressTaskRow).join('')+'</div>';
 
  bindTaskButtons(el);
