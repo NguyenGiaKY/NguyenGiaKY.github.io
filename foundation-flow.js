@@ -112,6 +112,13 @@ function responseRubric(id,kind){
   goal:"Judge whether the corrected sentence fixes the specific mistake, preserving meaning. A0 can use very short correct sentences. Answer should be an English correction, not just a description of grammar.",
   meaningFocus:g.correction,example:g.model,
   checklist:["Corrects the specific target mistake","Preserves the intended meaning","Produces a complete correct English sentence"]};
+ if(kind==="transfer"&&id==="a0-01")return {
+  task:"You meet a NEW student: introduce your own name and a different object you are carrying in TWO English sentences.",
+  goal:"Assess accurate communication for a beginning learner. Require both self-introduction and pointing to an object. A very short grammatically correct answer is enough; do not assess pronunciation from text.",
+  meaningFocus:"Use I'm/My name is for a person, and This is my/a/an for an object.",
+  example:"I'm Lin. This is my pencil.",
+  checklist:["Introduces the speaker","Names a new object","Forms two meaningful basic English sentences"]
+ };
  return {task:"Create a NEW English example to demonstrate this concept: "+t.principle+". Learner has already seen: "+t.pairs[1].source,
   goal:"Check that the student's NEW example applies the lesson concept meaningfully. Do not demand copying the original sentence. Require English for this production task.",
   meaningFocus:g.transfer||t.contrast,example:g.model||t.pairs[0].equivalent,
@@ -145,6 +152,48 @@ async function checkFreeResponse(kind){
  }catch(error){message="Could not check your answer: "+String(error?.message||error);}
  finally{checkingWord=false;if(current===id&&["detective","deep","summary","ai"].includes(steps[state(id).page][0]))render(l);}
 }
+
+const a001Checks=[
+ [
+  {question:"At a new school, someone asks your name. What can you say?",answers:["This is a desk.","I'm Lin.","My book is blue."],correct:1,why:"I'm plus a name introduces the speaker.",fix:"Review the example I'm ... on the first lesson screen."},
+  {question:"You show a pencil to your teacher. Which sentence identifies it?",answers:["This is my pencil.","My name is pencil.","I'm pencil."],correct:0,why:"This is my ... introduces an object, not a person.",fix:"Point to a real object and practise This is my ... ."}
+ ],
+ [
+  {question:"A librarian asks 'What's your name?' Which answer fits?",answers:["This is my bag.","My name is Mai.","Hello, I have a bag."],correct:1,why:"My name is ... tells the listener your name.",fix:"Practise a short exchange introducing your name."},
+  {question:"Someone asks 'What's this?' while pointing to your water bottle. What fits?",answers:["I'm a water bottle.","My name water.","This is my water bottle."],correct:2,why:"This is my ... identifies the object.",fix:"Return to the lesson's This is my ... pattern, then change the object."}
+ ]
+];
+function a001Checkpoint(r){
+ const c=r.checkpoint||(r.checkpoint={variant:0,answers:[null,null],checked:false,passed:false,attempts:0});
+ const qs=a001Checks[c.variant||0],a=Array.isArray(c.answers)?c.answers:[null,null];
+ let h=header("Independent practice: a new school situation","Answer two new meaning questions. This checks understanding in these examples, not an A1/A2 level or your pronunciation.");
+ qs.forEach((q,i)=>{
+  h+='<div class="gf-task-criteria"><p><strong>'+(i+1)+'. '+esc(q.question)+'</strong></p><div class="gf-choices">';
+  q.answers.forEach((opt,j)=>{
+   const cls=c.checked?(j===q.correct?"correct":a[i]===j?"wrong":""):"";
+   h+='<button type="button" data-gf-action="pilot-answer" data-gf-question="'+i+'" data-gf-option="'+j+'" class="'+cls+'" '+(c.checked?"disabled":"")+' aria-pressed="'+(a[i]===j)+'><b>'+String.fromCharCode(65+j)+'</b>'+esc(opt)+'</button>';
+  });
+  h+='</div>';
+  if(c.checked)h+='<p class="gf-feedback"><b>'+(a[i]===q.correct?"Correct.":"Review needed.")+'</b> '+esc(q.why)+(a[i]===q.correct?"":' '+esc(q.fix))+'</p>';
+  h+='</div>';
+ });
+ if(!c.checked)h+=b("pilot-check","Check","primary",a.some(v=>v===null));
+ else if(!c.passed)h+=b("pilot-retry","Review and try a different situation","outline");
+ else h+='<p class="gf-feedback">2/2 meaning questions correct. This is recognition practice, not a language proficiency certificate.</p>';
+ h+=header("Write your own introduction","A new student asks who you are and what item you are carrying. Write two short sentences. Change the name and object from the model.")+
+ field("transfer",r.transfer,"I'm ... . This is my ... .")+
+ freeCheckPanel(r,"transfer","Check looks at your TWO sentences and the new situation. Audio pronunciation is not assessed here.");
+ const reply=String(r.transfer||"").trim();
+ const record=r.wordFeedback?.__transfer__;
+ const verified=record?.answer?.trim()===reply&&record?.report?.task_status==="met";
+ const ready=!!c.passed&&r.meaning===missions["a0-01"].correct&&String(r.draft||"").trim().length>=8&&reply.length>=15;
+ h+='<div class="gf-final"><b>'+(ready?"Practice attempted — not automatically mastered":"Finish the evidence tasks")+'</b><p>'+
+ (ready?"You answered the contextual choices and wrote an independent response. "+(verified?"Your current response also met the automated rubric.":"The open response is not yet verified; review and correct it when possible.")+" Spoken ability is not certified.":
+ "Answer both questions correctly, complete the earlier meaning task, and write the lesson response plus two independent sentences. Clicking through pages alone is not enough.")+'</p></div>';
+ if(ready)h+=b("finish","Save practice & return","primary");
+ return h;
+}
+
 function content(lesson,r){
  const m=missions[lesson.id],t=thoughts[lesson.id],type=steps[r.page][0];if(!m||!t)return "<p>Lesson content unavailable. Refresh this page.</p>";
  if(type==="scene"){
@@ -226,6 +275,7 @@ function content(lesson,r){
  field("explanation",r.explanation,"Which word names, describes or connects something? Why?")+
  freeCheckPanel(r,"explanation","Checks your reasoning, not how long your answer is. Vietnamese is accepted for explanations.")+
  reveal("See another explanation",lesson.explain);
+ if(type==="summary"&&lesson.id==="a0-01")return a001Checkpoint(r);
  if(type==="summary"){
   const pair=t.pairs[0],options=(lesson.id.length%2)?[pair.equivalent,pair.wrong]:[pair.wrong,pair.equivalent];
   const ready=r.meaning===m.correct&&options[r.para]===pair.equivalent&&r.draft.trim().length>=8&&r.transfer.trim().length>=8;
@@ -353,6 +403,26 @@ root.addEventListener("click",ev=>{
  if(node.dataset.gfPhase!==undefined){const i=Number(node.dataset.gfPhase);const first=steps.findIndex(x=>x[1]===i);if(first>=0)move(first);return}
  const act=node.dataset.gfAction;if(!act)return;
  const r=state(current),l=lessonById[current],m=missions[current],t=thoughts[current],type=steps[r.page][0];
+ if(act==="pilot-answer"&&current==="a0-01"&&type==="summary"){
+  const c=r.checkpoint||(r.checkpoint={variant:0,answers:[null,null],checked:false,passed:false,attempts:0});
+  if(c.checked)return;
+  const i=Number(node.dataset.gfQuestion),j=Number(node.dataset.gfOption),q=a001Checks[c.variant||0]?.[i];
+  if(!q||!Number.isInteger(j)||j<0||j>=q.answers.length)return;
+  c.answers[i]=j;save();render(l);return;
+ }
+ if(act==="pilot-check"&&current==="a0-01"&&type==="summary"){
+  const c=r.checkpoint;
+  if(!c||c.checked||!Array.isArray(c.answers)||c.answers.length!==2||c.answers.some(x=>!Number.isInteger(x)))return;
+  c.checked=true;c.attempts=(c.attempts||0)+1;c.passed=a001Checks[c.variant||0].every((q,i)=>q.correct===c.answers[i]);
+  if(c.passed)r.completed.checkpoint=true;
+  save();render(l);return;
+ }
+ if(act==="pilot-retry"&&current==="a0-01"&&type==="summary"){
+  const c=r.checkpoint;
+  if(!c||!c.checked||c.passed)return;
+  c.variant=((c.variant||0)+1)%a001Checks.length;c.checked=false;c.answers=[null,null];
+  save();render(l);return;
+ }
  if(act==="next"){move(r.page+1);return}if(act==="previous"){move(r.page-1);return}
  if(act==="exit"){window.GKYVoice?.stopConversation?.();window.GKFoundationCoach?.leave();window.GKFoundationOpenHome?.();return}
  if(act==="preview-female"||act==="preview-male"){window.GKYVoice?.previewCharacter?.(act==="preview-female"?"F":"M");return;}
@@ -381,7 +451,15 @@ root.addEventListener("click",ev=>{
  if(act==="check-rewrite"){void checkRephrase();return}
  if(act==="toggle-word"){window.GKFoundationThinking?.toggleWord?.(current,l.words[r.word][0]);r.completed.vocab=true;save();render(l);return}
  if(act==="use-revision"){if(!r.revision.trim()){message="Write a revision before submitting again.";render(l);return}r.draft=r.revision;legacyDraft(current,r.draft);r.completed.retry=true;save();move(10);return}
- if(act==="finish"){const p=t.pairs[0],opts=(l.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];if(r.meaning!==m.correct||opts[r.para]!==p.equivalent||r.draft.trim().length<8||r.transfer.trim().length<8)return;r.finished=true;r.completed.summary=true;save();window.GKFoundationOpenHome?.();return}
+ if(act==="finish"){
+ if(current==="a0-01"){
+  if(!r.checkpoint?.passed||r.meaning!==m.correct||String(r.draft||"").trim().length<8||String(r.transfer||"").trim().length<15)return;
+ }else{
+  const p=t.pairs[0],opts=(l.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];
+  if(r.meaning!==m.correct||opts[r.para]!==p.equivalent||r.draft.trim().length<8||r.transfer.trim().length<8)return;
+ }
+ r.finished=true;r.completed.summary=true;save();window.GKFoundationOpenHome?.();return;
+}
 });
 root.addEventListener("input",ev=>{
  if(!current||!ev.target?.dataset)return;const r=state(current),key=ev.target.dataset.gfField;
