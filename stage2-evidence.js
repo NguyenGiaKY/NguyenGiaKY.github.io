@@ -66,7 +66,15 @@ root.addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b||!root.contains(b))return;
  const id=b.dataset.s2Id;if(!id||!pack[id])return;const r=rec(id);
  if(b.dataset.s2Opt!==undefined&&!r.check){r.chosen=Number(b.dataset.s2Opt);save();window.GKCoreSkills?.render();return}
- if(b.dataset.s2Action==="check"&&!r.check&&Number.isInteger(r.chosen)){r.check={correct:r.chosen===pack[id].correct,at:Date.now(),first:true};save();notice="Explanation available. The same item is now practice, not unseen assessment.";window.GKCoreSkills?.render();return}
+ if(b.dataset.s2Action==="check"&&!r.check&&Number.isInteger(r.chosen)){
+  r.check={correct:r.chosen===pack[id].correct,at:Date.now(),first:true};
+  if(!r.check.correct&&typeof window.recordLearningError==="function"){
+   const q=pack[id];window.recordLearningError({skill:window.GKCoreSkills?.getUnit?.(id)?.area||"language",
+   task:"Stage 2 / "+id,question:q.question,userAnswer:q.options[r.chosen],correctAnswer:q.options[q.correct],
+   why:q.why,rule:q.context||"",errorType:"reasoning",evidence:"New-context prerequisite item"});
+  }
+  save();notice="Explanation available. The same item is now practice, not unseen assessment.";window.GKCoreSkills?.render();return
+ }
  if(b.dataset.s2Action==="feedback"){void checkProduction(id);return}
 });
 root.addEventListener("input",e=>{
