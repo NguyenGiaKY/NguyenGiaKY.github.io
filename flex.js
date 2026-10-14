@@ -584,8 +584,11 @@ function injectListeningWarmup(t){
 
 const stage3Extras=window.GKStage3EvidenceData?.extras||[];
 for(const skill of ["listening","reading","writing","speaking"]){
- const list=stage3Extras.filter(t=>t.skill===skill);
- if(list.length)modules[skill].push({id:skill[0].toUpperCase()+"7",title:"High-risk Academic task types",goal:"Practice unique IELTS question-types using real evidence.",tasks:list.map(t=>[t.id,t.title,t.desc,t.day,t.index])});
+ const groups={};
+ for(const item of stage3Extras.filter(t=>t.skill===skill)){
+  const group=item.module||skill[0].toUpperCase()+"7";(groups[group]||(groups[group]=[])).push(item);
+ }
+ for(const [id,list] of Object.entries(groups))modules[skill].push({id,title:id==="W8"?"Academic Task 1 chart formats":"High-risk Academic task types",goal:"Use original IELTS-format examples with evidence and independent output.",tasks:list.map(t=>[t.id,t.title,t.desc,t.day,t.index])});
 }
 const allTasks=()=>Object.entries(modules).flatMap(([skill,ms])=>ms.flatMap(m=>m.tasks.map(t=>({skill,module:m.id,moduleTitle:m.title,id:t[0],title:t[1],desc:t[2],day:t[3],index:t[4]}))));
 const taskById=id=>allTasks().find(t=>t.id===id);
