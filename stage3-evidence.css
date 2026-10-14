@@ -50,3 +50,25 @@
 .s3-spoken button{margin:7px 9px 7px 0;background:#e7effa;color:#163f7c;border:1px solid #93afd2;padding:9px 13px;border-radius:10px;cursor:pointer}
 .s3-spoken button:hover{background:#d8e8fb}
 .s3-spoken button:disabled{opacity:.55}
+
+/* Real Task 1 study visuals: accessible values plus meaningful charts. */
+.s3-visual{margin:19px 0;border:1px solid #cbd9e9;border-radius:12px;background:#fff;padding:16px;overflow:auto}
+.s3-visual figcaption{font-size:16px;font-weight:750;color:#203d66;margin-bottom:12px}
+.s3-visual figcaption small{display:block;font-size:11px;font-weight:400;color:#62738e;margin-top:4px}
+.s3-svg-plot{width:min(100%,660px);height:auto;display:block}
+.s3-svg-pie{display:block;max-width:310px;width:100%;height:auto}
+.s3-data-table{border-collapse:collapse;width:100%;font-size:12px;margin-top:12px}
+.s3-data-table caption{font-size:11px;color:#65748a;margin-bottom:4px}
+.s3-data-table th,.s3-data-table td{text-align:left;padding:9px 10px;border:1px solid #d6e2f0}
+.s3-data-table th{background:#eff5fd;font-weight:700}
+.s3-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:11px}
+.s3-legend>span{display:flex;align-items:center;gap:5px}
+.s3-legend i{width:10px;height:10px;border-radius:3px}
+.s3-flow{display:flex;flex-wrap:wrap;list-style:none;gap:9px;padding:0}
+.s3-flow li{padding:13px;background:#eaf2fe;border:1px solid #abc4e6;border-radius:9px;flex:1;min-width:115px;font-size:12px}
+.s3-flow li:not(:last-child)::after{content:" →";font-weight:900}
+.s3-map-group{margin:17px 0}
+.s3-map-grid{display:grid;grid-template-columns:repeat(3,minmax(90px,1fr));gap:4px;padding:8px;background:#e5edf7}
+.s3-map-grid>div{border:1px solid #b1c4de;min-height:55px;padding:8px;font-size:12px;display:flex;align-items:center;justify-content:center;text-align:center;background:#fff}
+.s3-map-grid>div:nth-child(3n){background:#e6f5eb;border-color:#97c5a9}
+@media(max-width:530px){.s3-visual{padding:10px}.s3-map-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.s3-map-grid>div{font-size:9px;padding:4px}}
