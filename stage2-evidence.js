@@ -32,7 +32,10 @@ function renderEvidence(id){
    const f=r.feedback.report;
    h+='<div class="cs-explain"><b>Automated feedback — not IELTS band</b><p>'+esc(f.summary_vi||"")+'</p>'+
    (f.priority_fix_vi?'<p><b>Fix:</b> '+esc(f.priority_fix_vi)+'</p>':"")+
-   (f.task_checks||[]).map(x=>'<p>'+esc(x.criterion)+': '+esc(x.status)+' — '+esc(x.fix_vi||"")+'</p>').join("")+'</div>';
+   (f.task_checks||[]).map(x=>'<p>'+esc(x.criterion)+': '+esc(x.status)+' — '+esc(x.fix_vi||"")+'</p>').join("")+
+ (f.mistakes||[]).map(x=>'<p><b>Original:</b> '+esc(x.original)+' <b>Correction:</b> '+esc(x.correction)+' <span>'+esc(x.reason_vi)+'</span></p>').join("")+
+ (f.corrected_answer?'<details><summary>Suggested correction preserving your meaning</summary><p>'+esc(f.corrected_answer)+'</p></details>':"")+
+ (f.revision_question?'<p><b>Try next:</b> '+esc(f.revision_question)+'</p>':"")+'</div>';
   }
  }
  h+='<label for="s2Revision">Revision: what exactly did you change?</label><textarea id="s2Revision" data-s2-revision="'+id+'" rows="3" maxlength="1000">'+esc(r.revision)+'</textarea>'+
@@ -54,7 +57,9 @@ async function checkProduction(id){
   const url=location.hostname.endsWith(".vercel.app")?location.origin+"/api/foundation-grade":"https://nguyen-gia-ky-github-io-rvay.vercel.app/api/foundation-grade";
   const resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
   const val=await resp.json().catch(()=>({}));if(!resp.ok)throw Error(val.error||"Check unavailable");if(val.source!=="openai-foundation")throw Error("Unexpected response");
-  r.feedback={answer,at:Date.now(),report:{task_status:val.task_status,summary_vi:String(val.summary_vi||"").slice(0,800),priority_fix_vi:String(val.priority_fix_vi||"").slice(0,500),task_checks:(val.task_checks||[]).slice(0,3).map(x=>({criterion:String(x.criterion||"").slice(0,120),status:x.status,fix_vi:String(x.fix_vi||"").slice(0,270)}))}};save();notice="Review the correction, revise, then transfer again.";
+  r.feedback={answer,at:Date.now(),report:{task_status:val.task_status,summary_vi:String(val.summary_vi||"").slice(0,800),priority_fix_vi:String(val.priority_fix_vi||"").slice(0,500),task_checks:(val.task_checks||[]).slice(0,3).map(x=>({criterion:String(x.criterion||"").slice(0,120),status:x.status,fix_vi:String(x.fix_vi||"").slice(0,270)})),
+ mistakes:(val.mistakes||[]).slice(0,4).map(x=>({original:String(x.original||"").slice(0,230),correction:String(x.correction||"").slice(0,230),reason_vi:String(x.reason_vi||"").slice(0,260)})),
+ corrected_answer:String(val.corrected_answer||"").slice(0,2400),revision_question:String(val.revision_question||"").slice(0,420)}};save();notice="Review the correction, revise, then transfer again.";
  }catch(e){notice="Check unavailable: "+String(e?.message||"network issue")}finally{pending="";window.GKCoreSkills?.render()}
 }
 root.addEventListener("click",e=>{
