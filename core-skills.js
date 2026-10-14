@@ -15,11 +15,13 @@ function answered(id){const r=get(id);return Object.keys(r.answers||{}).filter(k
 function total(id){return index[id].questions.length}
 function percent(n,d){return d>0?Math.max(0,Math.min(100,n/d*100)):0}
 function pct(n,d){const x=percent(n,d);return x===0?"0%":x<1?x.toFixed(2)+"%":Number.isInteger(x)?x+"%":x.toFixed(1)+"%"}
-function completed(id){const r=get(id),days=[...new Set((r.history||[]).filter(x=>x.correct===total(id)&&x.answered===total(id)).map(x=>x.day))];return days.length>=2&&r.reflection}
+function completed(id){const r=get(id),days=[...new Set((r.history||[]).filter(x=>x.correct===total(id)&&x.answered===total(id)).map(x=>x.day))];
+const evidence=window.GKStage2Evidence?.getRecord?.(id);
+return days.length>=2&&r.reflection&&evidence?.check?.correct===true&&evidence?.feedback?.report?.task_status==="met"&&!!String(evidence?.revision||"").trim()}
 function snapshot(){const tasks=pack.units.map(u=>{const r=get(u.id),n=answered(u.id),history=(r.history||[]),recent=history[history.length-1],fullDays=[...new Set(history.filter(x=>x.answered===total(u.id)&&x.correct===total(u.id)).map(x=>x.day))];return{id:u.id,area:u.area,answered:n,total:total(u.id),coverage:percent(n,total(u.id)),correct:recent?.correct??null,accuracy:recent&&recent.answered?percent(recent.correct,recent.answered):null,practiceDays:fullDays.length,reflection:!!r.reflection,mastered:completed(u.id)};});
 return{total:tasks.length,answered:tasks.reduce((n,x)=>n+x.answered,0),questions:tasks.reduce((n,x)=>n+x.total,0),mastered:tasks.filter(x=>x.mastered).length,started:tasks.filter(x=>x.answered>0||get(x.id).draft.trim()).length,tasks};}
 function btn(action,label,cls){return '<button type="button" class="cs-btn '+(cls||"")+'" data-cs-action="'+escape(action)+'">'+label+'</button>';}
-function status(id){const t=snapshot().tasks.find(t=>t.id===id);return t.mastered?'<span class="cs-status mastered">✓ Ôn đạt nhiều ngày</span>':t.answered===t.total?'<span class="cs-status learning">Đã trả lời '+t.answered+'/'+t.total+'</span>':t.answered?'<span class="cs-status learning">'+t.answered+'/'+t.total+' câu</span>':'<span class="cs-status">Chưa học</span>';}
+function status(id){const t=snapshot().tasks.find(t=>t.id===id);return t.mastered?'<span class="cs-status mastered">✓ Quiz và bài mới đã kiểm tra</span>':t.answered===t.total?'<span class="cs-status learning">Đã trả lời '+t.answered+'/'+t.total+'</span>':t.answered?'<span class="cs-status learning">'+t.answered+'/'+t.total+' câu</span>':'<span class="cs-status">Chưa học</span>';}
 function render(){root.innerHTML=ui.id?lesson():home();}
 function home(){
 const s=snapshot(),list=pack.units.filter(u=>ui.area==="all"||u.area===ui.area),pr=pct(s.answered,s.questions);
@@ -27,8 +29,8 @@ let h='<div class="cs-layout"><div class="cs-hero"><div><span class="cs-kicker">
 '<p>Học cách nghe hiểu, đọc tìm bằng chứng, xây câu, phát triển ý và phản xạ nói trước khi luyện 81 IELTS Tasks. Không học mẹo trả lời khi chưa hiểu vì sao.</p>'+
 '<div class="cs-hero-actions">'+btn("continue","Học bài tiếp theo →","primary")+btn("journey","Xem lộ trình 3 giai đoạn","outline")+'</div></div>'+
 '<div class="cs-hero-progress"><strong>'+pr+'</strong><span>Tiến độ câu hỏi</span><div class="cs-track"><i style="width:'+percent(s.answered,s.questions)+'%"></i></div><small>'+s.answered+'/'+s.questions+' câu đã trả lời · '+s.mastered+'/'+s.total+' bài ôn đạt</small></div></div>'+
-'<div class="cs-method"><b>Cách học 5 bước</b><p>Hiểu chiến thuật → quan sát ví dụ và bẫy → trả lời câu hỏi → tự vận dụng → ôn lại. Thanh tiến độ là số câu đã trả lời, KHÔNG phải band hay điểm chính xác.</p></div>'+
-'<div class="cs-group-head"><h3>5 nhóm kỹ năng</h3><p>30 bài thiết kế để học trước 81 Tasks, nhưng người học có thể mở bất kỳ bài nào.</p></div>'+
+'<div class="cs-method"><b>Cách học 5 bước</b><p>Hiểu chiến thuật → quan sát ví dụ và bẫy → trả lời câu hỏi → tự vận dụng → ôn lại. Thanh tiến độ là số câu đã trả lời, KHÔNG phải band hay điểm chính xác.</p></div>'+(window.GKStage2Evidence?.homePanel()||"")+
+'<div class="cs-group-head"><h3>5 nhóm kỹ năng</h3><p>30 kỹ năng nền: nay có kiểm tra tình huống mới, bài tự vận dụng và phản hồi riêng; không cấp band IELTS.</p></div>'+
 '<div class="cs-group-grid"><button class="cs-group '+(ui.area==="all"?"active":"")+'" data-cs-area="all" aria-pressed="'+(ui.area==="all")+'"><strong>Tất cả</strong><span>'+s.total+' bài</span></button>';
 pack.areas.forEach(a=>{const tasks=s.tasks.filter(x=>x.area===a.id),n=tasks.reduce((x,t)=>x+t.answered,0),d=tasks.reduce((x,t)=>x+t.total,0);h+='<button class="cs-group '+(ui.area===a.id?"active":"")+'" data-cs-area="'+a.id+'" aria-pressed="'+(ui.area===a.id)+'"><strong>'+escape(a.icon+" "+a.label)+'</strong><span>'+n+'/'+d+' câu · '+pct(n,d)+'</span></button>';});h+='</div>';
 h+='<div class="cs-group-head"><h3>Bài học</h3><p>Tiến độ được tính theo số câu thực tế đã trả lời, không theo số lần bấm hoặc thời gian mở trang.</p></div><div class="cs-lessons">';
@@ -67,9 +69,10 @@ if(ui.showSample){h+='<div class="cs-sample"><strong>Ví dụ tham khảo</stron
 '<label class="cs-check"><input id="csReflection" type="checkbox" '+(r.reflection?"checked":"")+'/> Tao đã tự làm, đối chiếu và sửa lỗi mà mình nhận ra.</label>';}
 const attempts=(r.history||[]).filter(x=>x.answered===t&&x.correct===t);
 h+='<div class="cs-skill-links"><strong>Áp dụng vào dạng bài và 81 IELTS Tasks</strong><div class="cs-related-buttons"><button type="button" data-cs-types="'+escape(u.id)+'">Xem các dạng IELTS cần kỹ năng này ↗</button>'+u.related.map(id=>'<button type="button" data-cs-ielts="'+escape(id)+'">'+escape(id)+' ↗</button>').join("")+'</div><small>Chỉ mở task tương ứng; không tự đánh dấu đã học.</small></div>'+
-'<p class="cs-subdued">Đạt 2/'+t+' ở ít nhất hai ngày khác nhau cùng phần tự kiểm tra sẽ được ghi nhận là đã luyện qua hai ngày (không phải band IELTS).</p>'+
+'<p class="cs-subdued">Kết quả đúng 2/'+t+' ở ít nhất hai ngày khác nhau cùng phần tự kiểm tra sẽ được ghi nhận là đã luyện qua hai ngày (không phải band IELTS).</p>'+
 '<div class="cs-actions">'+btn("home","Danh sách bài →","outline")+btn("next","Bài tiếp theo →","primary")+'</div>';
 }
+if(ui.tab==="transfer")h+=(window.GKStage2Evidence?.renderEvidence(u.id)||"");
 h+='</div></div>';return h;
 }
 function open(id){if(!index[id])return;ui.id=id;ui.tab="learn";ui.showSample=false;ui.feedback=false;render();root.scrollIntoView({behavior:"smooth",block:"start"});}
