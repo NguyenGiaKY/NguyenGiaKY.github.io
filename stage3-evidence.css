@@ -72,3 +72,7 @@
 .s3-map-grid>div{border:1px solid #b1c4de;min-height:55px;padding:8px;font-size:12px;display:flex;align-items:center;justify-content:center;text-align:center;background:#fff}
 .s3-map-grid>div:nth-child(3n){background:#e6f5eb;border-color:#97c5a9}
 @media(max-width:530px){.s3-visual{padding:10px}.s3-map-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.s3-map-grid>div{font-size:9px;padding:4px}}
+
+.s3-acceptance ul{list-style:none;padding:0;margin:8px 0 12px}
+.s3-acceptance li{padding:8px 4px;border-bottom:1px solid #e4ebf3;display:flex;align-items:start;gap:8px;font-size:13px}
+.s3-yes{font-weight:800;color:#137847}.s3-no{font-weight:800;color:#6c778d}
