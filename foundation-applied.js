@@ -136,7 +136,7 @@ function writingPanel(u,r,key){
  const task=u[key],value=String(r[key==="writing"?"draft":"transfer"]||"");
  const label=key==="writing"?"Your answer":"Your NEW situation answer";
  return '<div class="fa-work"><h3>'+esc(task.prompt)+'</h3><p class="fa-tip">Write your own English. The example is optional, not the answer key.</p><div class="fa-criteria">'+task.criteria.map((x,i)=>'<p>'+(i+1)+'. '+esc(x)+'</p>').join("")+'</div>'+
- '<label for="fa-'+key+'">'+label+'</label><textarea id="fa-'+key+'" data-fa-field="'+key+'" rows="6" placeholder="Write your answer in English…">'+esc(value)+'</textarea>'+
+ '<label for="fa-'+key+'">'+label+'</label><textarea id="fa-'+key+'" data-fa-field="'+key+'" maxlength="4000" rows="6" placeholder="Write your answer in English…">'+esc(value)+'</textarea>'+
  b("check-"+key,"Check",true,busy||value.trim().length<10)+
  reportHtml(r,key,value)+
  (task.example?'<details><summary>Compare with one possible answer</summary><p lang="en">'+esc(task.example)+'</p><small>Do not simply copy this sentence.</small></details>':"")+'</div>';
@@ -147,7 +147,7 @@ function speakPanel(u,r){
  '<p class="fa-tip">Record for up to 40 seconds. Your audio stays on this device unless you press Check. Checking sends it to the grading service; no audio recording is saved with your learning progress.</p>'+
  '<div class="fa-buttons">'+(recorder?.state==="recording"?b("stop","Stop recording",true):b("record","● Record",true))+'</div>'+
  (clipUrl?'<audio controls src="'+esc(clipUrl)+'"></audio>'+b("check-speaking","Check",true,busy):"")+
- '<label for="fa-speaking-notes">What did you want to say? (optional notes)</label><textarea id="fa-speaking-notes" data-fa-field="speakingNotes" rows="3" placeholder="Notes for yourself, not a speaking score">'+esc(r.speakingNotes||"")+'</textarea>'+
+ '<label for="fa-speaking-notes">What did you want to say? (optional notes)</label><textarea id="fa-speaking-notes" data-fa-field="speakingNotes" maxlength="1200" rows="3" placeholder="Notes for yourself, not a speaking score">'+esc(r.speakingNotes||"")+'</textarea>'+
  (report?'<div class="fa-ai-report"><small>Spoken response: automated practice feedback, not IELTS/CEFR</small><p>'+esc(report.summary_vi||"")+'</p>'+(report.pronunciation_vi?'<p><b>Pronunciation observations:</b> '+esc(report.pronunciation_vi)+'</p>':"")+(report.priority_fix_vi?'<p><b>Improve:</b> '+esc(report.priority_fix_vi)+'</p>':"")+'</div>':
  '<p class="fa-tip">If your browser does not support recording, practise out loud with a partner or record locally using your device. No speaking score is claimed without audio evidence.</p>')+'</div>';
 }
@@ -328,9 +328,9 @@ root.addEventListener("click",event=>{
 root.addEventListener("input",event=>{
  if(!current)return;
  const key=event.target.dataset?.faField,r=row(current);
- if(key==="writing")r.draft=event.target.value;
- if(key==="transfer")r.transfer=event.target.value;
- if(key==="speakingNotes")r.speakingNotes=event.target.value;
+ if(key==="writing")r.draft=event.target.value.slice(0,4000);
+ if(key==="transfer")r.transfer=event.target.value.slice(0,4000);
+ if(key==="speakingNotes")r.speakingNotes=event.target.value.slice(0,1200);
  if(["writing","transfer","speakingNotes"].includes(key)){const now=new Date().toISOString();if(!r.firstPractised)r.firstPractised=now;r.lastPractised=now;save()}
 });
 window.GKFoundationApplied={open,render,list,homePanel,getRecord:row,units,steps,makeWavBase64};
