@@ -582,6 +582,11 @@ function injectListeningWarmup(t){
  render();
 }
 
+const stage3Extras=window.GKStage3EvidenceData?.extras||[];
+for(const skill of ["listening","reading","writing","speaking"]){
+ const list=stage3Extras.filter(t=>t.skill===skill);
+ if(list.length)modules[skill].push({id:skill[0].toUpperCase()+"7",title:"High-risk Academic task types",goal:"Practice unique IELTS question-types using real evidence.",tasks:list.map(t=>[t.id,t.title,t.desc,t.day,t.index])});
+}
 const allTasks=()=>Object.entries(modules).flatMap(([skill,ms])=>ms.flatMap(m=>m.tasks.map(t=>({skill,module:m.id,moduleTitle:m.title,id:t[0],title:t[1],desc:t[2],day:t[3],index:t[4]}))));
 const taskById=id=>allTasks().find(t=>t.id===id);
 const doneCountSkill=skill=>allTasks().filter(t=>t.skill===skill&&fs.done[t.id]).length;
@@ -669,13 +674,13 @@ function taskProgressSummary(t){
  const full=scored.filter(h=>valid(h)&&Number(h.answered)===Number(h.total)&&Number(h.score)/Number(h.total)>=.85);
  const distinctDays=new Set(full.filter(h=>Number.isFinite(Number(h.at))).map(h=>new Date(h.at).toISOString().slice(0,10)));
  let status='not-started',label='Chưa học';
- if(distinctDays.size>=2){status='mastered';label='Đạt 2 lần khác ngày';}
+ if(distinctDays.size>=2){status='reviewed';label='Ôn câu cũ ≥2 ngày · chưa xác minh bài mới';}
  else if(coverage!==null){status='learning';label=coverage>=100?'Đã trả lời đủ câu':'Đang làm '+answered+'/'+total+' câu';if(latest&&accuracy<65&&latest.answered!==undefined&&Number(latest.answered)===Number(latest.total)){status='review';label='Cần ôn';}}
  else if(scored.length){status='learning';label='Đã chấm · thiếu dữ liệu số câu';}
  else if(p.completed||fs.done[t.id]){status='complete';label='Đã đánh dấu · chưa chấm';}
  else if(p.attempts||p.totalSeconds){status='learning';label='Đã bắt đầu · thiếu số câu';}
  const nextReview=status==='review'?new Date((p.lastStudied||Date.now())+24*3600*1000):null;
- return{p,latest,best,latestPct:accuracy,bestPct:best?Number(best.score)/Number(best.total)*100:null,mastery:distinctDays.size>=2?100:null,coverage,answered,total,accuracy,status,label,errors:latest?.errors??null,nextReview};
+ return{p,latest,best,latestPct:accuracy,bestPct:best?Number(best.score)/Number(best.total)*100:null,mastery:null,coverage,answered,total,accuracy,status,label,errors:latest?.errors??null,nextReview};
 }
 
 function taskScoreLabel(h){
@@ -847,9 +852,9 @@ function renderProgressHub(){
  el.innerHTML=
   '<div class="progressHubHero"><div><span class="phase">TASK PROGRESS</span><h2>Progress Hub</h2><p>Mỗi task tự lưu số lần làm, điểm, thời gian và lịch sử. Tiến độ số câu và tỷ lệ trả lời đúng là hai chỉ số riêng. Bấm “hoàn thành” hoặc mở bài không tự tạo phần trăm. Task thiếu dữ liệu số câu hiện dấu —.</p></div>'+
    '<div class="progressOverall"><span>Tiến độ có chứng cứ</span><strong>'+progressFmt(avg)+'</strong></div></div>'+
-  '<div class="progressSummaryGrid"><div><span>Đã bắt đầu</span><b>'+started+'/'+tasks.length+'</b></div><div><span>Mastered</span><b>'+mastered+'</b></div><div><span>Cần ôn</span><b>'+review+'</b></div><div><span>Chưa học</span><b>'+(tasks.length-started)+'</b></div></div>'+
+  '<div class="progressSummaryGrid"><div><span>Đã bắt đầu</span><b>'+started+'/'+tasks.length+'</b></div><div><span>Verified</span><b>'+mastered+'</b></div><div><span>Cần ôn</span><b>'+review+'</b></div><div><span>Chưa học</span><b>'+(tasks.length-started)+'</b></div></div>'+
   '<div class="progressSkillGrid">'+skillCards+'</div>'+
-  '<div class="progressHubTools"><b>Tất cả task</b><div><button class="btn primary" data-progress-filter="all">Tất cả</button><button class="btn" data-progress-filter="review">Cần ôn</button><button class="btn" data-progress-filter="mastered">Mastered</button></div></div>'+
+  '<div class="progressHubTools"><b>Tất cả task</b><div><button class="btn primary" data-progress-filter="all">Tất cả</button><button class="btn" data-progress-filter="review">Cần ôn</button><button class="btn" data-progress-filter="mastered">Verified</button></div></div>'+
   '<div id="progressTaskList" class="progressTaskList">'+tasks.map(progressTaskRow).join('')+'</div>';
 
  bindTaskButtons(el);
@@ -877,7 +882,7 @@ function taskCard(t,queue=false){
    '</div>'+
    '<div class="flexTaskActions">'+
     '<button class="btn primary" data-open="'+t.id+'">'+(ps.status==='not-started'?'Mở bài':'Tiếp tục')+'</button>'+
-    '<button class="btn" data-progress="'+t.id+'">Tiến độ</button>'+
+    '<button class="btn" data-progress="'+t.id+'">Tiến độ</button>'+ '<button class="btn" data-evidence="'+t.id+'">Practice & Evidence</button>'+
     '<button class="btn '+(fs.done[t.id]?'green':'')+'" data-done="'+t.id+'">'+(fs.done[t.id]?'✓ Đã đánh dấu':'Đánh dấu đã học · không cộng %')+'</button>'+
    '</div></div>';
 }
@@ -886,6 +891,7 @@ function bindTaskButtons(root=document){
  root.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openFlexTask(taskById(b.dataset.open)));
  root.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>toggleDone(b.dataset.done));
  root.querySelectorAll('[data-progress]').forEach(b=>b.onclick=()=>showTaskProgress(b.dataset.progress));
+ root.querySelectorAll('[data-evidence]').forEach(b=>b.onclick=()=>{const task=taskById(b.dataset.evidence);window.GKStage3Evidence?.open(task)});
 }
 function toggleDone(id){
  fs.done[id]=!fs.done[id];
@@ -953,12 +959,12 @@ function openCheckpoint(t){
 
 function renderFlexHome(){
  const card=document.getElementById('todayCard');if(!card)return;
- let [phase,desc]=phaseInfo(),q=chooseQueue(fs.queueSize,false);
+ let [phase,desc]=phaseInfo(),q=chooseQueue(fs.queueSize,false),evidencePanel=window.GKStage3Evidence?.homePanel()||"";
  const qBtn=n=>'<button class="btn qsizeBtn" data-qsize="'+n+'" aria-pressed="'+(fs.queueSize===n?'true':'false')+'">'+(n===2?'Nhẹ':n===4?'Vừa':'Nhiều')+' • '+n+' task</button>';
 
  card.innerHTML='<div class="flexHeroLine"><div><span class="phase">'+phase+'</span><h2>Study Queue linh hoạt</h2><p class="muted">'+desc+'</p></div></div>'+
  '<div class="noPressure"><b>Không có “trễ lịch”.</b> Task chưa xong hôm nay sẽ ở lại queue cho lần học tiếp theo. Bạn có thể học ít hôm nay và bù vào ngày khác mà không làm hỏng lộ trình.</div>'+
- '<div class="queueControls"><span>Chọn lượng học phù hợp hôm nay:</span>'+qBtn(2)+qBtn(4)+qBtn(6)+'<button class="btn" id="newQueue">Đổi gợi ý</button></div>'+
+ evidencePanel+'<div class="queueControls"><span>Chọn lượng học phù hợp hôm nay:</span>'+qBtn(2)+qBtn(4)+qBtn(6)+'<button class="btn" id="newQueue">Đổi gợi ý</button></div>'+
  '<div class="flexQueue">'+q.map(t=>taskCard(t,true)).join('')+'</div>'+
  '<div class="skillSnapshot">'+['listening','reading','writing','speaking'].map(s=>{
    let v=latestScore(s),m=skillMeta[s];
@@ -1069,7 +1075,7 @@ window.renderRoadmap=function(){};
 window.flexRenderHome=renderFlexHome;
 window.renderProgressHub=renderProgressHub;
 window.GKOpenIELTSTask=function(id){const t=taskById(id);if(!t)return false;document.querySelector('.nav[data-view="'+(t.skill==='support'?'support':t.skill)+'"]')?.click();openFlexTask(t);return true;};
-window.GKIELTSProgress=function(){const tasks=allTasks();const rows=tasks.map(t=>({id:t.id,skill:t.skill,...taskProgressSummary(t)}));return{total:tasks.length,coverage:tasks.length?rows.reduce((a,x)=>a+(x.coverage||0),0)/tasks.length:0,mastered:rows.filter(x=>x.status==='mastered').length,known:rows.filter(x=>x.answered!==null).length,answered:rows.filter(x=>x.answered!==null).reduce((a,x)=>a+x.answered,0),rows};};
+window.GKIELTSProgress=function(){const tasks=allTasks().filter(t=>t.skill!=='support');const rows=tasks.map(t=>({id:t.id,skill:t.skill,...taskProgressSummary(t)}));return{total:tasks.length,support:allTasks().filter(t=>t.skill==='support').length,coverage:tasks.length?rows.reduce((a,x)=>a+(x.coverage||0),0)/tasks.length:0,mastered:rows.filter(x=>x.status==='mastered').length,known:rows.filter(x=>x.answered!==null).length,answered:rows.filter(x=>x.answered!==null).reduce((a,x)=>a+x.answered,0),rows};};
 window.showTaskProgress=showTaskProgress;
 
 renderFlexHome();
