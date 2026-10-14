@@ -72,7 +72,7 @@ h+='<div class="cs-skill-links"><strong>Áp dụng vào dạng bài và IELTS Ac
 '<p class="cs-subdued">Kết quả đúng 2/'+t+' ở ít nhất hai ngày khác nhau cùng phần tự kiểm tra sẽ được ghi nhận là đã luyện qua hai ngày (không phải band IELTS).</p>'+
 '<div class="cs-actions">'+btn("home","Danh sách bài →","outline")+btn("next","Bài tiếp theo →","primary")+'</div>';
 }
-if(ui.tab==="transfer")h+=(window.GKStage2Evidence?.renderEvidence(u.id)||"");
+if(ui.tab==="transfer"){h+=(window.GKStage2Evidence?.renderEvidence(u.id)||"");if(u.area==="speaking")h+=(window.GKSpokenEvidence?.panel(u.id,"Core")||"");}
 h+='</div></div>';return h;
 }
 function open(id){if(!index[id])return;ui.id=id;ui.tab="learn";ui.showSample=false;ui.feedback=false;render();root.scrollIntoView({behavior:"smooth",block:"start"});}
