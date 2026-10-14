@@ -90,14 +90,30 @@ Mỗi kỹ năng phải có **đề chưa nhìn trước**, thêm tiêu chí chu
 
 Báo cáo theo kỹ năng: **đã thử, được kiểm tra, vận dụng đạt, cần ôn, chưa đủ bằng chứng**. Không quy đổi các tín hiệu đó thành điểm CEFR chính thức hay IELTS band.
 
-## Tình trạng triển khai sau bản mở rộng
+## Tình trạng triển khai kỹ thuật (15/10/2026)
 
-- 24 bài Foundation trước đây được giữ nguyên để không mất dữ liệu.
-- A0-01 được thiết kế lại như bài nhập môn thử nghiệm, có checkpoint tình huống mới; **chưa thử với người học thật**.
-- 12 bài A1–A2 thực hành liên kỹ năng **đã được viết và tích hợp vào website**, 6 A1 + 6 A2: 72 cụm từ, 12 hội thoại đa lượt, 12 bài đọc dài 89–107 từ, 72 câu hỏi nghe/đọc/diễn đạt, nhiệm vụ viết/nói/chuyển ngữ cảnh. Kết quả dùng để hướng dẫn luyện tập, **không đại diện toàn bộ chuẩn CEFR**.
-- Công cụ Check viết/nói gọi endpoint đang có, cần Google sign-in, chịu giới hạn và có thể không hoạt động nếu cấu hình máy chủ thiếu. Không quảng cáo tính năng đó là miễn phí/luôn chạy.
-- Đường đi học và lưu đáp án đã kiểm thử trên dữ liệu mô phỏng. **Chưa xác nhận hiệu quả sư phạm, chất lượng phát âm qua micro, chất lượng TTS trên mọi máy hoặc định mức CEFR bằng người học thực**.
-- Foundation còn thiếu các miền giao tiếp/bản ghi âm/đề độc lập nêu trên. Việc bổ sung phải đi theo điều kiện kiểm định, không theo con số bài đẹp.
+**Bản chương trình tự học được mở rộng đáng kể, nhưng KHÔNG chứng nhận người học đã đạt A1–A2.** Phân biệt *hệ thống có nội dung* và *người học đã vận dụng thành công*.
+
+- **24 bài nền tảng A0 → A2 → IELTS Bridge**: giữ nguyên dữ liệu cũ, A0-01 đã thí điểm sửa nội dung và checkpoint; 23 bài còn lại cần tiếp tục cải tiến khi có kiểm thử thực tế.
+- **37 bài Grammar Reasoning** (19 A1, 18 A2): mỗi bài có ngữ cảnh, giải thích tại sao chọn cấu trúc, câu đúng–sai đối chiếu, một checkpoint nhận biết, nhiệm vụ tự sản sinh ngôn ngữ và nút Check phản hồi khi có dịch vụ. Một đáp án đúng không được gọi là mastered.
+- **31 bài giao tiếp tích hợp** (15 A1, 16 A2): 31 hội thoại, 31 văn bản thông tin, 186 câu hỏi Listening/Reading/Language (6/bài), 186 cụm từ kèm ngữ cảnh, 31 bài Writing, 31 bài Speaking và 31 nhiệm vụ Transfer có thay đổi điều kiện. Đoạn đọc khoảng 75–110 từ, phù hợp bài luyện ngắn, không tự cho là toàn bộ khả năng đọc hiểu A2.
+- **2 bài checkpoint đầu ra độc lập** (A1 và A2), mỗi bài có 2 hội thoại chưa gặp, 2 văn bản chưa gặp, 4 câu hỏi cấu trúc, tổng 12 điểm objective; có viết/nói riêng, lưu điểm lần đầu và phân biệt lượt làm lại. Điểm objective không gồm Writing/Speaking và không đại diện cho CEFR certification.
+- **31 bài ôn cách quãng** có câu hỏi riêng: mở sau kiểm tra ba phần objective của bài; lên lịch sau 1, 3, 7, 14 và 30 ngày tùy kết quả. Câu hỏi được ôn lặp lại, vì vậy đây là **spaced practice**, không phải nhiều bài thi độc lập.
+- **Nguồn audio giọng người thật**: link ngoài tới British Council A1/A2 Listening và Speaking (không sao chép, không nhúng file bên thứ ba). Hội thoại tự tạo trên site vẫn dùng TTS của trình duyệt và có thể khác chất lượng tùy thiết bị.
+- **Cloud**: dữ liệu applied, grammar và checkpoint nằm trong danh sách hỗ trợ đồng bộ; vẫn cần cấu hình/đăng nhập Firebase hoạt động để đồng bộ thực tế. Kiểm tra Writing và Speaking qua endpoint AI được gọi khi bấm **Check**, yêu cầu người dùng có thể xác thực; lỗi dịch vụ không làm mất bản nháp.
+- **Số 114 trên Learning Journey**: 24 bài nền tảng + 12 giải mã câu + 10 quan hệ từ + 31 liên kỹ năng + 37 grammar reasoning. Đây là số **hoạt động đã có tương tác**, không phải 114 năng lực đã làm chủ.
+- **Kiểm thử**: đã mô phỏng JavaScript về khởi tạo, tiến trình học, mở các khu học, đánh giá câu hỏi, lưu localStorage, nhận mock feedback, thông tin review, đổi bài, retake và bảo toàn lần thi đầu. **Chưa có dữ liệu người học thật và chưa thử đầy đủ tất cả trình duyệt, microphone, Cloud Auth hay mô hình chấm thực tế**.
+
+### Những việc vẫn cần bằng chứng để công bố kết quả đầu ra
+
+1. Học viên thực tế thử mọi nhiệm vụ và phản hồi để sửa chỗ khó hiểu, lỗi câu hỏi và những giải thích quá ngắn.
+2. Có nguồn nghe người thật đa dạng ngữ điệu/ngữ tốc và đo khả năng hiểu không nhìn transcript.
+3. Có đánh giá nói hai chiều theo follow-up thực sự (một prompt ghi âm không đảm bảo người học nghe và đối thoại tự nhiên).
+4. Dùng bài đọc dài hơn, khác định dạng và đủ dạng nhiệm vụ; kiểm tra nội dung mới sau thời gian trì hoãn.
+5. Chấm nói/viết bằng tiêu chí rõ ràng, so sánh độ nhất quán giữa chấm tự động và đánh giá giáo viên.
+6. Làm thử trên Mac/điện thoại, kiểm tra TTS nhiều người nói, Microphone, API endpoint, Google Auth, Cloud Sync và hành vi ngoại tuyến.
+
+**Không hứa “xong Foundation = chắc chắn A2”, nhưng website phải cho người học thấy cần luyện gì tiếp trước khi có thể tự tin dùng năng lực A2.**
 
 ## Nguồn tham chiếu
 
