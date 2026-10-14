@@ -1437,5 +1437,6 @@ window.GKQuestionTypesData={
 
 (function(){const types=window.GKQuestionTypesData?.types||[];
 const map={l05:["L7a"],l07:["L7b"],l09:["L7c"],r02:["R7a"],r05:["R7b"],r11:["R7c"],w05:["W7c"],w06:["W7a"],w07:["W7b"],w15:["W7d"],s02:["S7a"],s03:["S7b"]};
+Object.assign(map,{w01:["W8a"],w02:["W8b"],w03:["W8c"],w04:["W8d"]});
 types.forEach(t=>{if(map[t.id])t.tasks=[...new Set([...t.tasks,...map[t.id]])]});
 })();
