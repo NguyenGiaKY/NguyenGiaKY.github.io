@@ -12,8 +12,8 @@ function foundation(){
  const bDone=Object.values(b).filter(x=>(x.attempts||[]).length>0&&(x.builds||[]).length>0).length;
  const cDone=Object.values(c).filter(x=>(x.checks||[]).length>0).length;
  const appliedDone=Object.values(applied).filter(x=>x&&((x.checked&&Object.values(x.checked).some(Boolean))||String(x.draft||"").trim()||String(x.transfer||"").trim()||String(x.speakingNotes||"").trim()||(x.reports&&Object.keys(x.reports).length))).length;
- const done=Math.min(24,aDone)+Math.min(12,bDone)+Math.min(10,cDone)+Math.min(12,appliedDone);
- return{done,total:58,pct:done/58*100,parts:[{name:"Bài nền tảng",done:aDone,total:24},{name:"Giải mã câu",done:bDone,total:12},{name:"Quan hệ 4 loại từ",done:cDone,total:10},{name:"A1–A2 liên kỹ năng",done:appliedDone,total:12}]};
+ const done=Math.min(24,aDone)+Math.min(12,bDone)+Math.min(10,cDone)+Math.min(31,appliedDone);
+ return{done,total:77,pct:done/77*100,parts:[{name:"Bài nền tảng",done:aDone,total:24},{name:"Giải mã câu",done:bDone,total:12},{name:"Quan hệ 4 loại từ",done:cDone,total:10},{name:"A1–A2 liên kỹ năng",done:appliedDone,total:31}]};
 }
 function core(){
  const s=window.GKCoreSkills?.snapshot?.();
@@ -37,7 +37,7 @@ root.innerHTML='<div class="lj-wrap"><div class="lj-hero"><div><span class="lj-k
 '<div class="lj-hero-side"><strong>3</strong><span>giai đoạn kết nối</span><small>Học đúng kỹ năng còn thiếu, không chạy theo số % ảo.</small></div></div>'+
 '<div class="lj-alert"><strong>Phân biệt 3 con số</strong><p><b>Coverage:</b> số câu/bài thực sự đã làm. <b>Accuracy:</b> câu đúng / số câu được chấm. <b>Readiness:</b> còn cần kiểm chứng bằng bài mới, nói/viết và bài thi thử. 100% coverage không có nghĩa là band 8.0.</p></div>'+
 '<div class="lj-stage-list">'+
-block(1,"English Foundation","Từ loại, quan hệ của từ, to be, xây câu, từ vựng và phát âm.",f.pct,f.done+'/'+f.total+' hoạt động có bằng chứng luyện tập (24 bài nền tảng + 12 bài tư duy câu + 10 quan hệ + 12 bài A1–A2 liên kỹ năng). Đây chỉ là tiến độ đã thử làm; không chứng minh khả năng ngôn ngữ hay A2.',"foundation","Học Foundation",f.parts)+
+block(1,"English Foundation","Từ loại, quan hệ của từ, to be, xây câu, từ vựng và phát âm.",f.pct,f.done+'/'+f.total+' hoạt động có bằng chứng luyện tập (24 bài nền tảng + 12 bài tư duy câu + 10 quan hệ + 31 bài A1–A2 liên kỹ năng). Đây chỉ là tiến độ đã thử làm; không chứng minh khả năng ngôn ngữ hay A2.',"foundation","Học Foundation",f.parts)+
 block(2,"Core Skills Lab","30 bài kỹ năng nghe, đọc, viết, nói và tư duy ngôn ngữ trước IELTS.",c.pct,c.done+'/'+c.total+' câu hỏi đã trả lời; '+c.mastered+'/'+c.lessons+' bài đã ôn đủ điều kiện. Bài nói/viết cần phản hồi riêng.',"core","Học Core Skills")+
 block(3,"IELTS Training · Question Types + 81 Tasks","Học chiến thuật theo dạng đề và kết nối trở lại Core Skills khi thiếu nền tảng.",i.pct,i.done+'/'+i.total+' tasks có dữ liệu số câu; '+i.answered+' câu đã trả lời; '+i.mastered+' tasks ôn đạt nhiều ngày. Chỉ tiến độ thực tế của 81 tasks được tính ở thanh này.',"question-types","Xem IELTS Question Types")+
 '<div class="lj-stage-secondary"><button type="button" data-lj-open="today">Mở trực tiếp 81 IELTS Tasks →</button></div>' +
