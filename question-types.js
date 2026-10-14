@@ -32,9 +32,9 @@ function open(id){if(!byId[id])return;ui.id=id;ui.choice=null;ui.graded=false;ui
 function hub(){
  const list=pack.types.filter(x=>ui.skill==="all"||x.skill===ui.skill).filter(x=>ui.group==="all"||x.group===ui.group).filter(x=>!ui.coreFilter||x.core.includes(ui.coreFilter)).filter(x=>!ui.taskFilter||x.tasks.includes(ui.taskFilter));
  const counts=pack.groups.map(g=>({skill:g.id,count:pack.types.filter(t=>t.skill===g.id).length}));
- let html='<div class="qt-wrap"><div class="qt-hero"><span>STAGE 3 · QUESTION TYPES → CORE SKILLS → 81 TASKS</span><h2>IELTS Question Types Hub</h2>'+
+ let html='<div class="qt-wrap"><div class="qt-hero"><span>STAGE 3 · QUESTION TYPES → CORE SKILLS → IELTS TASKS</span><h2>IELTS Question Types Hub</h2>'+
  '<p>Đây là <strong>bản đồ cách làm từng dạng bài</strong>, không phải Stage 4. Chọn dạng → xem Core Skills cần dùng → hiểu chiến thuật → luyện thử → ghi lỗi → mở đúng IELTS Task.</p></div>'+
- '<div class="qt-insight"><strong>Tiến độ không được tính ảo</strong><p>Một câu ví dụ chỉ cho biết kết quả của <b>một câu ví dụ</b>, không đại diện năng lực cả dạng. Chỉ số kỹ năng lấy trực tiếp từ Core Skills; điểm IELTS chỉ lấy từ task/test được chấm. Không tăng thanh 81 Tasks khi đọc hướng dẫn ở đây.</p></div>'+
+ '<div class="qt-insight"><strong>Tiến độ không được tính ảo</strong><p>Một câu ví dụ chỉ cho biết kết quả của <b>một câu ví dụ</b>, không đại diện năng lực cả dạng. Chỉ số kỹ năng lấy trực tiếp từ Core Skills; điểm IELTS chỉ lấy từ task/test được chấm. Không tăng thanh IELTS Tasks khi đọc hướng dẫn ở đây.</p></div>'+
  '<div id="qtNotice" role="status" hidden></div><div class="qt-filters" role="group" aria-label="Lọc kỹ năng"><button type="button" data-qt-skill="all" aria-pressed="'+(ui.skill==="all")+'" class="'+(ui.skill==="all"?"selected":"")+'">Tất cả <small>'+pack.types.length+'</small></button>';
  for(const g of pack.groups){html+='<button type="button" data-qt-skill="'+g.id+'" aria-pressed="'+(ui.skill===g.id)+'" class="'+(ui.skill===g.id?"selected":"")+'">'+g.title+' <small>'+g.count+'</small></button>';}
  html+='</div><div class="qt-search"><label for="qtSearch">Tìm dạng bài</label><input id="qtSearch" type="search" placeholder="Ví dụ: TFNG, map, essay, matching..." value="'+esc(ui.query)+'" aria-label="Tìm dạng bài IELTS"></div>';
@@ -60,7 +60,7 @@ function detail(){
  else html+=productionPractice(t,r);
  html+='</section><section class="qt-panel"><div class="qt-step"><span>3</span><div><h3>Error Analysis → Skill Repair</h3><p>Ghi nguyên nhân sai, rồi quay về kỹ năng nền cần cải thiện.</p></div></div>'+errorPanel(t,r)+'</section></div>'+
  '<aside class="qt-sidebar"><section class="qt-side-card"><h3>Required Core Skills</h3><p>Nhấn vào một kỹ năng để học hoặc ôn trong Stage 2. Số câu ghi từ kết quả thực tế ở Core Skills.</p><div class="qt-skills">'+coreProgress(t)+'</div></section>'+
- '<section class="qt-side-card"><h3>Áp dụng vào 81 IELTS Tasks</h3><p>Đây là các tasks <b>gần nhất về kỹ năng</b> trong chương trình hiện tại; không khẳng định mọi dạng đều đã có bài riêng.</p><div class="qt-task-links">'+t.tasks.map(id=>'<button type="button" data-qt-task="'+esc(id)+'">'+esc(id)+' <span>Open Task ↗</span></button>').join("")+'</div></section>'+
+ '<section class="qt-side-card"><h3>Áp dụng vào IELTS Academic Tasks</h3><p>Đây là các tasks <b>gần nhất về kỹ năng</b> trong chương trình hiện tại; không khẳng định mọi dạng đều đã có bài riêng.</p><div class="qt-task-links">'+t.tasks.map(id=>'<button type="button" data-qt-task="'+esc(id)+'">'+esc(id)+' <span>Open Task ↗</span></button>').join("")+'</div></section>'+
  '<section class="qt-side-card"><h3>Ghi nhận thực tế</h3><div class="qt-stat-line"><span>Lượt thử ví dụ</span><strong>'+r.attempts.length+'</strong></div>'+
  (p.kind==="choice"&&r.attempts.length?'<div class="qt-stat-line"><span>Đúng / lượt thử đã chấm</span><strong>'+r.attempts.filter(x=>x.correct).length+'/'+r.attempts.length+'</strong></div>':'')+
  '<div class="qt-stat-line"><span>Lỗi đã ghi</span><strong>'+r.errors.length+'</strong></div><small>Một câu ví dụ đúng không chứng minh đã thành thạo dạng IELTS này.</small></section></aside></div></div>';
@@ -86,7 +86,7 @@ function productionPractice(t,r){
  const p=t.practice;
  let html='<div class="qt-passage"><strong>Yêu cầu luyện tập</strong><p>'+esc(p.prompt)+'</p></div><p class="qt-info">'+(t.skill==="speaking"?'Hãy nói thành tiếng trước; có thể viết ghi chú phản tư bên dưới. Website chưa đánh giá chất lượng phát âm.':'Đây là bài luyện phân tích đề, lập dàn ý và diễn đạt; không có biểu đồ dữ liệu hoàn chỉnh nên không thể chấm Task 1 như đề thật.')+'</p>'+
  '<label for="qtDraft" class="qt-draft-label">Bài nháp / kế hoạch / tự đánh giá</label><textarea id="qtDraft" rows="6" placeholder="Viết ý chính, giải thích, hoặc lỗi cần sửa...">'+esc(r.draft)+'</textarea>'+
- '<p class="qt-info">Lưu tự động trên trình duyệt. Việc nhập bài không tự cho điểm hoặc tăng tiến độ 81 Tasks.</p>'+
+ '<p class="qt-info">Lưu tự động trên trình duyệt. Việc nhập bài không tự cho điểm hoặc tăng tiến độ IELTS Tasks.</p>'+
  '<div class="qt-checklist"><strong>Checklist tự kiểm tra (không phải chấm band)</strong>'+p.checks.map((x,i)=>'<label><input type="checkbox" data-qt-check="'+i+'" '+(r.checks[i]?"checked":"")+' /> '+esc(x)+'</label>').join("")+'</div>'+
  '<div class="qt-actions">'+button("model",ui.model?"Ẩn gợi ý":"Xem hướng phát triển mẫu","outline")+'</div>';
  if(ui.model)html+='<div class="qt-feedback"><strong>Gợi ý định hướng</strong><p>'+esc(p.model)+'</p></div>';
