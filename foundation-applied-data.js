@@ -86,7 +86,7 @@ window.GKFoundationAppliedData = {
           "why": "Mia says 'This is my friend Sam.'"
         }
       ],
-      "reading": "Mia sends a message: 'Hi Ben, I'm the student you met outside Room Four. Sam and I are working on the science poster after lunch. Would you like to join us? We will be in the library at one o'clock.'",
+      "reading": "Mia sends a message to Ben: 'Hi Ben, I'm the student you met outside Room Four this morning. Sam and I are working on a science poster after lunch. Would you like to join us? We will be in the library at one o'clock. Please bring a pencil, but don't worry if you don't have coloured paper. Sam has some extra sheets. We hope to finish the poster before our science lesson tomorrow. You can reply to this message or find me in the library. See you soon, Mia.'",
       "readingQuestions": [
         {
           "prompt": "Where will they work?",
@@ -241,7 +241,7 @@ window.GKFoundationAppliedData = {
           "why": "He visits them on Sundays."
         }
       ],
-      "reading": "To: Mum. 'I'm at my aunt's house with Alex. His bike is outside, and my backpack is in the kitchen. We are making lunch now. I will bring your book home at five. Love, Leo.'",
+      "reading": "Leo texts his mum from his aunt's house: 'Hi Mum, I'm with Alex at Aunt Nina's house. His bike is outside by the front gate, and my backpack is in the kitchen. We are making lunch now, so I'll be home later than usual. I found your book on the shelf in the living room and I will bring it home at five. Alex is going to visit us on Sunday, so we can show him the new garden. Please tell Dad I'm safe. See you soon, Leo.'",
       "readingQuestions": [
         {
           "prompt": "Where is Leo's backpack?",
@@ -396,7 +396,7 @@ window.GKFoundationAppliedData = {
           "why": "Half past four is 4:30."
         }
       ],
-      "reading": "Library notice: 'Study Club meets on Tuesdays at 3:30 pm in Room Six. Students may bring a snack, but please do not bring hot food. The club closes at 5:00 pm. On Thursdays, the library opens late for independent study.'",
+      "reading": "Notice on the library door: 'Study Club meets on Tuesdays at 3:30 pm in Room Six. Everyone in Years 9 to 12 can join. Students may bring a small snack and a bottle of water, but please do not bring hot food into the room. The club finishes at 5:00 pm. On Thursdays, the library opens late for independent study. There is no Study Club teacher on Thursdays, but students can still use the desks and books. If you need help with homework, come on Tuesday and ask Ms Lee. Please leave the tables clean.'",
       "readingQuestions": [
         {
           "prompt": "Where does Study Club meet?",
@@ -551,7 +551,7 @@ window.GKFoundationAppliedData = {
           "why": "The shopkeeper says there are two left."
         }
       ],
-      "reading": "Picnic shopping list: 'We need four bananas, two bottles of water, a little cheese and some bread. Please buy apples only if the shop has fresh ones. Keep the receipt so our teacher can check the total.'",
+      "reading": "Picnic shopping note from the class teacher: 'Hello everyone. We need four bananas, two bottles of water, a little cheese and some bread for our picnic. Please buy apples only if the shop has fresh ones. We don't need more juice because I already have two cartons. If the shop does not have bread, you can buy a few plain rolls instead. Remember that one student cannot eat dairy, so keep a dairy-free option for them. Keep the receipt so I can check the total cost. Bring the food to school before nine tomorrow morning.'",
       "readingQuestions": [
         {
           "prompt": "What must the shopper keep?",
@@ -706,7 +706,7 @@ window.GKFoundationAppliedData = {
           "why": "The final line says next to the museum."
         }
       ],
-      "reading": "Visitor notice: 'The community centre is behind the supermarket. From the railway station, walk along Queen Street until you see the big clock. The entrance is on the left, opposite the pharmacy. The centre opens at nine in the morning.'",
+      "reading": "Visitor notice at the railway station: 'The community centre is behind the supermarket on Queen Street. From the railway station, walk along Queen Street until you see the big clock outside the supermarket. Keep going for one more minute. The entrance to the centre is on your left, opposite the pharmacy. The centre opens at nine in the morning and closes at five. The small cafe next to the centre opens at ten. Please use the main entrance, not the staff door beside the supermarket. If you are lost, ask at the railway station information desk.'",
       "readingQuestions": [
         {
           "prompt": "What is opposite the pharmacy?",
@@ -861,7 +861,7 @@ window.GKFoundationAppliedData = {
           "why": "Her future plan is the art fair on Saturday."
         }
       ],
-      "reading": "Message from Nora: 'Hi Finn. The art fair starts at ten on Saturday. My family went last year and enjoyed the student paintings. Let's meet at the school gate at nine thirty. Bring a jacket because it may be windy.'",
+      "reading": "Nora writes to Finn: 'Hi Finn. The art fair starts at ten on Saturday. My family went last year and enjoyed the student paintings, especially the colourful pictures of the river. This year I want to see the photography room. Let's meet at the school gate at nine thirty, because we need time to walk there. Bring a jacket because it may be windy, and bring a little water. We can buy lunch at the fair if we get hungry. If your sister wants to come, she is welcome too. Please message me by Friday evening. See you soon, Nora.'",
       "readingQuestions": [
         {
           "prompt": "When should Finn meet Nora?",
@@ -1016,7 +1016,7 @@ window.GKFoundationAppliedData = {
           "why": "Nine fifteen on Friday is free and accepted."
         }
       ],
-      "reading": "Email: 'Dear Ms Green, I am writing about our meeting on Wednesday at 2 pm. Unfortunately, I will be helping at a school event until 3 pm. Would it be possible to meet on Thursday after lunch instead? I apologise for the change. Kind regards, Maya.'",
+      "reading": "Subject: Request to change Wednesday meeting. 'Dear Ms Green, I am writing about our meeting on Wednesday at 2 pm. Unfortunately, I will be helping to organise a school event until 3 pm, so I cannot arrive on time. I apologise for the short notice. Would it be possible to meet on Thursday after lunch instead? I am available between 1 pm and 3 pm that day. If Thursday is inconvenient, I could also meet before school on Friday. Please let me know which option works best for you. Thank you for your understanding. Kind regards, Maya.'",
       "readingQuestions": [
         {
           "prompt": "What is Maya asking?",
@@ -1168,7 +1168,7 @@ window.GKFoundationAppliedData = {
           "why": "Train twenty minutes, bus forty-five."
         }
       ],
-      "reading": "Trip options: 'City Museum: student entry $6; open 9 am–4 pm; guided visit takes 90 minutes. Art Gallery: entry free; open 10 am–5 pm; visit usually takes 60 minutes. Both places are near the station, but the gallery is easier to reach on foot.'",
+      "reading": "School trip information: 'City Museum: student entry costs $6. It opens at 9 am and closes at 4 pm. A guided visit usually takes 90 minutes and covers the local history collection. Art Gallery: entry is free. It opens at 10 am and closes at 5 pm. A typical visit takes about 60 minutes and includes a student art display. Both places are near the railway station, but the gallery is easier to reach on foot. The museum is useful for history classes, although the gallery may be more affordable for a large group. The teachers have not made the final decision yet.'",
       "readingQuestions": [
         {
           "prompt": "Which venue has free entry?",
@@ -1323,7 +1323,7 @@ window.GKFoundationAppliedData = {
           "why": "The teacher explicitly says not to share passwords."
         }
       ],
-      "reading": "School notice: 'If you cannot upload work, contact your teacher before the deadline. Include your class and assignment title. You may send a copy by email if the online system is unavailable. Do not send account passwords or private login codes.'",
+      "reading": "School technology notice: 'If you cannot upload your assignment, contact your teacher before the deadline. In your message, include your class, assignment title and a short description of what went wrong. You should first check whether your document is saved on your device or in a backup folder. If the online system is unavailable, you may send a copy of your work by email. Ask your teacher to confirm that the file has arrived. Do not send account passwords, private login codes or other students' personal details. These steps help us support you without putting your accounts at risk.'",
       "readingQuestions": [
         {
           "prompt": "What details should a message include?",
@@ -1480,7 +1480,7 @@ window.GKFoundationAppliedData = {
           "why": "She says 'No, I haven't.'"
         }
       ],
-      "reading": "Postcard: 'I have travelled to several places in New Zealand, but I have never been to Queenstown. Two years ago I stayed in Dunedin for a week. I enjoyed the beaches and visited my cousin there. Next summer I hope to see Queenstown for the first time.'",
+      "reading": "Postcard from Iris: 'I have travelled to several places in New Zealand, but I have never been to Queenstown. Two years ago I stayed in Dunedin for a week with my aunt. We visited my cousin, walked along the beach and took photos of the old buildings. It rained on our first day, so we went to a museum instead. I enjoyed learning about the city's history. Since then I have become more interested in visiting new places. Next summer I hope to see Queenstown for the first time. I'm saving money for the trip and planning the route with my family.'",
       "readingQuestions": [
         {
           "prompt": "Which place has the writer NOT visited?",
@@ -1635,7 +1635,7 @@ window.GKFoundationAppliedData = {
           "why": "They finished the final song after ten minutes."
         }
       ],
-      "reading": "School report: 'During the sports day, students were running on the field when heavy rain began. Staff moved everyone into the hall. Some people thought the whole event had been cancelled. In fact, the outdoor races stopped, but the indoor awards ceremony continued after lunch.'",
+      "reading": "School event report: 'During sports day, students were running on the field when heavy rain began. The teachers immediately asked everyone to move into the hall. At first, some people thought the whole event had been cancelled because the outdoor races could not continue safely. In fact, only the outdoor programme stopped. While the rain continued, staff prepared the hall for the indoor awards ceremony. After lunch, students and families watched the awards as planned. The principal thanked everyone for responding calmly to the change. The final relay race will take place on another day, when the weather is better.'",
       "readingQuestions": [
         {
           "prompt": "What did the staff do?",
@@ -1791,7 +1791,7 @@ window.GKFoundationAppliedData = {
           "why": "Some students travel home by bus."
         }
       ],
-      "reading": "Student Council Notice: 'We are reviewing the library hours for next term. At present, it closes at 5 pm. One option is to stay open until 6 pm twice a week. Students who want to comment should send a short email by Friday. Please include one benefit or disadvantage of the change.'",
+      "reading": "Student Council Notice: 'We are reviewing the library opening hours for next term. At present, the library closes at 5 pm each school day. One option is to stay open until 6 pm twice a week. We know this could help students who finish sport or music practice late. However, other students must catch buses that leave before 5 pm, so a later opening time might not help everyone. Students who want to comment should send a short email to the council by Friday. Please include your opinion and at least one benefit or disadvantage of the change. We will discuss the suggestions at our next meeting.'",
       "readingQuestions": [
         {
           "prompt": "How often might the later closing apply?",
