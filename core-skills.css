@@ -100,3 +100,13 @@
 #coreSkillsRoot .cs-related-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
 #coreSkillsRoot .cs-related-buttons button{background:#fff;border:1px solid #c7d9f1;color:#3157ac;border-radius:9px;font-weight:850;font-size:13px;padding:8px 13px;min-height:38px}
 #coreSkillsRoot .cs-related-buttons button:hover{background:#edf4ff;border-color:#6e91d7}
+
+/* Stage 2 independent application and revision */
+.cs-evidence{border-top:2px solid #dfe7f3;margin-top:25px;padding:23px 2px;display:flex;flex-direction:column;gap:12px}
+.cs-evidence h3{font-size:19px;margin:0}
+.cs-evidence .cs-question{margin:0 0 12px}
+.cs-evidence .cs-assignment{margin-top:12px}
+.cs-evidence label{font-weight:650;display:block}
+.cs-evidence textarea{width:100%;box-sizing:border-box;border:1px solid #c8d4e4;border-radius:10px;min-height:110px;padding:12px;font:inherit;line-height:1.6}
+.cs-evidence .cs-explain{border:1px solid #d4e0ee;background:#f5f9ff;border-radius:12px;padding:13px;line-height:1.6}
+.cs-evidence button:disabled{opacity:.5;cursor:not-allowed}
