@@ -1,6 +1,6 @@
 /* IELTS question-type strategies with practice and linked Core Skills. */
 window.GKQuestionTypesData={
-  "version": 1,
+  "version": 2,
   "groups": [
     {
       "id": "listening",
@@ -1434,3 +1434,8 @@ window.GKQuestionTypesData={
   ],
   "scope": "Question Type Hub is a guide within Stage 3, not a new mandatory stage or band scoring engine."
 };
+
+(function(){const types=window.GKQuestionTypesData?.types||[];
+const map={l05:["L7a"],l07:["L7b"],l09:["L7c"],r02:["R7a"],r05:["R7b"],r11:["R7c"],w05:["W7c"],w06:["W7a"],w07:["W7b"],w15:["W7d"],s02:["S7a"],s03:["S7b"]};
+types.forEach(t=>{if(map[t.id])t.tasks=[...new Set([...t.tasks,...map[t.id]])]});
+})();
