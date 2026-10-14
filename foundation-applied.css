@@ -122,3 +122,15 @@
 .fa-grammar-main>.fa-btn{margin:12px 0}
 .fa-grammar-main .fa-transfer{font-size:16px;font-weight:650}
 .fa-grammar-main label{display:block}
+
+/* Learning route for Foundation */
+.fa-route{border:1px solid #d5e1ef;border-radius:17px;background:#fcfdff;padding:22px;margin:18px 0 24px}
+.fa-route h3{margin:0 0 9px;font-size:20px;line-height:1.35;color:#182d55}
+.fa-route>p{font-size:13px;color:#536681;line-height:1.6;margin:0 0 17px}
+.fa-route-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fa-route-grid>div{background:white;border:1px solid #e0e7f2;border-radius:13px;padding:14px;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.fa-route-grid b{font-size:14px;color:#24458d}
+.fa-route-grid p{font-size:12px;line-height:1.55;color:#50617a;flex:1;margin:0}
+.fa-route-grid .f-btn{font-size:12px;padding:8px 11px}
+.fa-route>small{display:block;font-size:11px;color:#667895;line-height:1.6;margin-top:15px}
+@media(max-width:700px){.fa-route{padding:16px}.fa-route-grid{grid-template-columns:1fr}}
