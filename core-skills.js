@@ -1,4 +1,4 @@
-/* Core Skills Lab — practice before the 81 IELTS tasks, independent question-count progress. */
+/* Core Skills Lab — practice before the IELTS Academic tasks, independent question-count progress. */
 (function(){
 "use strict";
 const root=document.getElementById("coreSkillsRoot"),pack=window.GKCoreSkillsData;
@@ -26,7 +26,7 @@ function render(){root.innerHTML=ui.id?lesson():home();}
 function home(){
 const s=snapshot(),list=pack.units.filter(u=>ui.area==="all"||u.area===ui.area),pr=pct(s.answered,s.questions);
 let h='<div class="cs-layout"><div class="cs-hero"><div><span class="cs-kicker">STAGE 2 • PRE-IELTS</span><h2>Core Skills Lab</h2>'+
-'<p>Học cách nghe hiểu, đọc tìm bằng chứng, xây câu, phát triển ý và phản xạ nói trước khi luyện 81 IELTS Tasks. Không học mẹo trả lời khi chưa hiểu vì sao.</p>'+
+'<p>Học cách nghe hiểu, đọc tìm bằng chứng, xây câu, phát triển ý và phản xạ nói trước khi luyện IELTS Academic Tasks. Không học mẹo trả lời khi chưa hiểu vì sao.</p>'+
 '<div class="cs-hero-actions">'+btn("continue","Học bài tiếp theo →","primary")+btn("journey","Xem lộ trình 3 giai đoạn","outline")+'</div></div>'+
 '<div class="cs-hero-progress"><strong>'+pr+'</strong><span>Tiến độ câu hỏi</span><div class="cs-track"><i style="width:'+percent(s.answered,s.questions)+'%"></i></div><small>'+s.answered+'/'+s.questions+' câu đã trả lời · '+s.mastered+'/'+s.total+' bài ôn đạt</small></div></div>'+
 '<div class="cs-method"><b>Cách học 5 bước</b><p>Hiểu chiến thuật → quan sát ví dụ và bẫy → trả lời câu hỏi → tự vận dụng → ôn lại. Thanh tiến độ là số câu đã trả lời, KHÔNG phải band hay điểm chính xác.</p></div>'+(window.GKStage2Evidence?.homePanel()||"")+
@@ -35,7 +35,7 @@ let h='<div class="cs-layout"><div class="cs-hero"><div><span class="cs-kicker">
 pack.areas.forEach(a=>{const tasks=s.tasks.filter(x=>x.area===a.id),n=tasks.reduce((x,t)=>x+t.answered,0),d=tasks.reduce((x,t)=>x+t.total,0);h+='<button class="cs-group '+(ui.area===a.id?"active":"")+'" data-cs-area="'+a.id+'" aria-pressed="'+(ui.area===a.id)+'"><strong>'+escape(a.icon+" "+a.label)+'</strong><span>'+n+'/'+d+' câu · '+pct(n,d)+'</span></button>';});h+='</div>';
 h+='<div class="cs-group-head"><h3>Bài học</h3><p>Tiến độ được tính theo số câu thực tế đã trả lời, không theo số lần bấm hoặc thời gian mở trang.</p></div><div class="cs-lessons">';
 list.forEach((u,i)=>{const n=answered(u.id),t=total(u.id);h+='<button type="button" class="cs-lesson" data-cs-open="'+u.id+'"><span class="cs-number">'+escape(u.id)+'</span><span class="cs-lesson-main"><small>'+escape(pack.areas.find(a=>a.id===u.area)?.label||u.area)+'</small><strong>'+escape(u.title)+'</strong><em>'+escape(u.principle)+'</em></span><span class="cs-lesson-end">'+status(u.id)+'<span>'+pct(n,t)+'</span><span class="cs-tiny-track"><i style="width:'+percent(n,t)+'%"></i></span></span></button>';});
-h+='</div><div class="cs-bridge"><div><h3>Chuyển sang Stage 3</h3><p>Các IELTS tasks vẫn mở, nhưng nên học vững kỹ năng tương ứng. Nếu gặp lỗi, quay lại Core Skills để luyện đúng điểm yếu thay vì làm lại toàn bộ đề.</p></div>'+btn("ielts","81 IELTS Tasks →","outline")+'</div></div>';
+h+='</div><div class="cs-bridge"><div><h3>Chuyển sang Stage 3</h3><p>Các IELTS tasks vẫn mở, nhưng nên học vững kỹ năng tương ứng. Nếu gặp lỗi, quay lại Core Skills để luyện đúng điểm yếu thay vì làm lại toàn bộ đề.</p></div>'+btn("ielts","IELTS Academic Tasks →","outline")+'</div></div>';
 return h;
 }
 function lesson(){
@@ -68,7 +68,7 @@ h+='<div class="cs-step-head"><span>04</span><div><h3>Tự chuyển kỹ năng s
 if(ui.showSample){h+='<div class="cs-sample"><strong>Ví dụ tham khảo</strong><p>'+escape(u.sample)+'</p><small>Không cần giống hệt; phải biết giải thích vì sao cách dùng đó phù hợp.</small></div>'+
 '<label class="cs-check"><input id="csReflection" type="checkbox" '+(r.reflection?"checked":"")+'/> Tao đã tự làm, đối chiếu và sửa lỗi mà mình nhận ra.</label>';}
 const attempts=(r.history||[]).filter(x=>x.answered===t&&x.correct===t);
-h+='<div class="cs-skill-links"><strong>Áp dụng vào dạng bài và 81 IELTS Tasks</strong><div class="cs-related-buttons"><button type="button" data-cs-types="'+escape(u.id)+'">Xem các dạng IELTS cần kỹ năng này ↗</button>'+u.related.map(id=>'<button type="button" data-cs-ielts="'+escape(id)+'">'+escape(id)+' ↗</button>').join("")+'</div><small>Chỉ mở task tương ứng; không tự đánh dấu đã học.</small></div>'+
+h+='<div class="cs-skill-links"><strong>Áp dụng vào dạng bài và IELTS Academic Tasks</strong><div class="cs-related-buttons"><button type="button" data-cs-types="'+escape(u.id)+'">Xem các dạng IELTS cần kỹ năng này ↗</button>'+u.related.map(id=>'<button type="button" data-cs-ielts="'+escape(id)+'">'+escape(id)+' ↗</button>').join("")+'</div><small>Chỉ mở task tương ứng; không tự đánh dấu đã học.</small></div>'+
 '<p class="cs-subdued">Kết quả đúng 2/'+t+' ở ít nhất hai ngày khác nhau cùng phần tự kiểm tra sẽ được ghi nhận là đã luyện qua hai ngày (không phải band IELTS).</p>'+
 '<div class="cs-actions">'+btn("home","Danh sách bài →","outline")+btn("next","Bài tiếp theo →","primary")+'</div>';
 }
