@@ -22,7 +22,8 @@ function core(){
 }
 function ielts(){
  const s=window.GKIELTSProgress?.();
- return s?{done:s.known,total:s.total,answered:s.answered,pct:s.coverage,mastered:s.mastered,support:s.support||0}: {done:0,total:88,answered:0,pct:0,mastered:0,support:9};
+ const micro=window.GKStage3Evidence?.summary?.().micro||0;
+ return s?{done:s.known,total:s.total,answered:s.answered,pct:s.coverage,mastered:s.mastered,support:s.support||0,micro}: {done:0,total:88,answered:0,pct:0,mastered:0,support:9,micro};
 }
 function nav(view){const target=document.querySelector('.nav[data-view="'+view+'"]');if(target)target.click();}
 function block(num,title,desc,progress,explain,action,button,parts){
@@ -40,7 +41,7 @@ root.innerHTML='<div class="lj-wrap"><div class="lj-hero"><div><span class="lj-k
 '<div class="lj-stage-list">'+
 block(1,"English Foundation","Từ loại, quan hệ của từ, to be, xây câu, từ vựng và phát âm.",f.pct,f.done+'/'+f.total+' hoạt động có bằng chứng luyện tập (24 bài nền tảng + 12 bài tư duy câu + 10 quan hệ + 31 bài A1–A2 liên kỹ năng + 37 bài lý giải ngữ pháp). Đây chỉ là tiến độ đã thử làm; không chứng minh khả năng ngôn ngữ hay A2.',"foundation","Học Foundation",f.parts)+
 block(2,"Core Skills Lab","30 bài kỹ năng nghe, đọc, viết, nói và tư duy ngôn ngữ trước IELTS.",c.pct,c.done+'/'+c.total+' câu hỏi đã trả lời; '+c.mastered+'/'+c.lessons+' bài đã ôn đủ điều kiện. Bài Listening/Speaking chỉ đạt mục tiêu kỹ năng khi có bằng chứng nghe/nói thật, không phải ghi chú chữ.',"core","Học Core Skills")+
-block(3,"IELTS Training · Question Types + Academic Tasks","Học chiến thuật theo dạng đề và kết nối trở lại Core Skills khi thiếu nền tảng.",i.pct,i.done+'/'+i.total+' tasks có dữ liệu số câu; '+i.answered+' câu đã trả lời; '+i.mastered+' tasks đã có bằng chứng chấm. Chỉ tiến độ thực tế của các IELTS Academic tasks được tính ở thanh này; 9 task hỗ trợ không được cộng.',"question-types","Xem IELTS Question Types")+
+block(3,"IELTS Training · Question Types + Academic Tasks","Học chiến thuật theo dạng đề và kết nối trở lại Core Skills khi thiếu nền tảng.",i.pct,i.done+'/'+i.total+' task có dữ liệu số câu từ bài cũ; '+i.answered+' câu đã trả lời từ bài cũ; '+i.micro+'/'+i.total+' microclinics đã Check (chưa phải full test); '+i.mastered+' task được kiểm định đầu ra độc lập. Chỉ tiến độ thực tế của các IELTS Academic tasks được tính ở thanh này; 9 task hỗ trợ không được cộng.',"question-types","Xem IELTS Question Types")+
 '<div class="lj-stage-secondary"><button type="button" data-lj-open="today">Mở IELTS Academic Tasks →</button></div>' +
 '</div><div class="lj-guidance"><h3>Khi nào chuyển giai đoạn?</h3><p>Không cần hoàn thành 100% mới được học thử giai đoạn sau. Khi hiểu cấu trúc câu và làm được các bài đọc/nghe A1–A2, bắt đầu Core Skills. Khi biết tìm bằng chứng, nghe ý chính và diễn đạt ý rõ ràng, bắt đầu các IELTS tasks phù hợp. Nếu sai nhiều, quay về đúng kỹ năng cần sửa.</p><div class="lj-shortcuts"><button data-lj-open="progress" type="button">Xem Progress Hub</button><button data-lj-open="mock" type="button">Luyện Mock Tests</button></div></div></div>';
 }
