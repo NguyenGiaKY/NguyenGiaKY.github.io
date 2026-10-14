@@ -110,7 +110,18 @@ function onOption(id,i,j){
 function submit(id){
  const c=cases[id],r=get(id);if(r.checked||count(id)!==c.questions.length)return;
  r.checked=true;
- const report={at:Date.now(),score:score(id),total:c.questions.length,first:r.attempts.length===0,objectiveMicroclinic:true};
+ const first=r.attempts.length===0;
+ if(first&&typeof window.recordLearningError==="function"){
+  for(let i=0;i<c.questions.length;i++){
+   const q=c.questions[i],answer=r.answers[i];
+   if(correct(q,answer))continue;
+   const label=a=>Array.isArray(a)?a.map(j=>q.options[j]).join("; "):q.options[a]||"(no valid answer)";
+   window.recordLearningError({skill:c.mode,task:"Stage 3 microclinic / "+id,question:q.prompt,
+    userAnswer:label(answer),correctAnswer:label(q.correct),why:q.why,
+    rule:"Use the source evidence and exclude alternatives that are not supported.",errorType:c.mode==="listening"?"distractor":c.mode==="reading"?"evidence":"task"});
+  }
+ }
+ const report={at:Date.now(),score:score(id),total:c.questions.length,first,objectiveMicroclinic:true};
  r.attempts.push(report);r.attempts=r.attempts.slice(-25);
  if(r.firstScore===null)r.firstScore=report.score;
  save();info="Check complete; explanations unlocked.";refresh();
