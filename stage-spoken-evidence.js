@@ -101,6 +101,15 @@ async function check(id,level){
   const resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
   const val=await resp.json().catch(()=>({}));if(!resp.ok)throw Error(val.error||"Assessment unavailable");
   if(val.source!=="openai-foundation"||val.mode!=="speaking")throw Error("Unexpected audio feedback");
+  if(typeof window.recordLearningError==="function"&&Array.isArray(val.mistakes)){
+   for(const m of val.mistakes.slice(0,4)){
+    if(!m?.original||!m?.correction)continue;
+    window.recordLearningError({skill:"speaking",task:level+" speaking / "+id,question:payload.task.slice(0,250),
+     userAnswer:String(m.original).slice(0,300),correctAnswer:String(m.correction).slice(0,300),
+     why:String(m.reason_vi||"").slice(0,380),rule:String(m.rule_vi||"").slice(0,300),
+     errorType:String(m.type||"spoken_language"),evidence:String(val.transcript||"").slice(0,350)});
+   }
+  }
   r.attempts.push({at:Date.now(),round,task:payload.task.slice(0,250),score:Number.isFinite(val.score)?val.score:null,
    status:String(val.task_status||""),summary:String(val.summary_vi||"").slice(0,650),transcript:String(val.transcript||"").slice(0,2000),
    pronunciation:String(val.pronunciation_vi||"").slice(0,550),priority:String(val.priority_fix_vi||"").slice(0,600),
