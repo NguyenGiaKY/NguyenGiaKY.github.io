@@ -17,7 +17,7 @@ function percent(n,d){return d>0?Math.max(0,Math.min(100,n/d*100)):0}
 function pct(n,d){const x=percent(n,d);return x===0?"0%":x<1?x.toFixed(2)+"%":Number.isInteger(x)?x+"%":x.toFixed(1)+"%"}
 function completed(id){const r=get(id),days=[...new Set((r.history||[]).filter(x=>x.correct===total(id)&&x.answered===total(id)).map(x=>x.day))];
 const evidence=window.GKStage2Evidence?.getRecord?.(id);
-return days.length>=2&&r.reflection&&evidence?.check?.correct===true&&evidence?.feedback?.report?.task_status==="met"&&!!String(evidence?.revision||"").trim()}
+return !["listening","speaking"].includes(index[id]?.area)&&days.length>=2&&r.reflection&&evidence?.check?.correct===true&&evidence?.feedback?.report?.task_status==="met"&&!!String(evidence?.revision||"").trim()}
 function snapshot(){const tasks=pack.units.map(u=>{const r=get(u.id),n=answered(u.id),history=(r.history||[]),recent=history[history.length-1],fullDays=[...new Set(history.filter(x=>x.answered===total(u.id)&&x.correct===total(u.id)).map(x=>x.day))];return{id:u.id,area:u.area,answered:n,total:total(u.id),coverage:percent(n,total(u.id)),correct:recent?.correct??null,accuracy:recent&&recent.answered?percent(recent.correct,recent.answered):null,practiceDays:fullDays.length,reflection:!!r.reflection,mastered:completed(u.id)};});
 return{total:tasks.length,answered:tasks.reduce((n,x)=>n+x.answered,0),questions:tasks.reduce((n,x)=>n+x.total,0),mastered:tasks.filter(x=>x.mastered).length,started:tasks.filter(x=>x.answered>0||get(x.id).draft.trim()).length,tasks};}
 function btn(action,label,cls){return '<button type="button" class="cs-btn '+(cls||"")+'" data-cs-action="'+escape(action)+'">'+label+'</button>';}
@@ -62,11 +62,11 @@ h+='<div class="cs-actions"><span class="cs-subdued">Đã trả lời '+n+'/'+t+
 }
 if(ui.tab==="transfer"){
 h+='<div class="cs-step-head"><span>04</span><div><h3>Tự chuyển kỹ năng sang tình huống mới</h3><p>Không chỉ chọn A/B/C; tự viết/nói giải thích và đối chiếu với bài mẫu.</p></div></div>'+
-'<div class="cs-assignment"><strong>Yêu cầu</strong><p>'+escape(u.transfer)+'</p></div><label for="csDraft" class="cs-draft-label">Bài làm của mày</label>'+
+'<div class="cs-assignment"><strong>Yêu cầu</strong><p>'+escape(u.transfer)+'</p></div><label for="csDraft" class="cs-draft-label">Bài làm của bạn</label>'+
 '<textarea id="csDraft" rows="5" placeholder="Viết câu trả lời hoặc ghi chú luyện nói...">'+escape(r.draft||"")+'</textarea><small class="cs-subdued">Tự lưu trên trình duyệt. Website chưa tự chấm độ chính xác của bài nói/viết.</small>'+
 '<div class="cs-actions">'+btn("sample",ui.showSample?"Ẩn ví dụ mẫu":"So sánh với mẫu","outline")+'</div>';
 if(ui.showSample){h+='<div class="cs-sample"><strong>Ví dụ tham khảo</strong><p>'+escape(u.sample)+'</p><small>Không cần giống hệt; phải biết giải thích vì sao cách dùng đó phù hợp.</small></div>'+
-'<label class="cs-check"><input id="csReflection" type="checkbox" '+(r.reflection?"checked":"")+'/> Tao đã tự làm, đối chiếu và sửa lỗi mà mình nhận ra.</label>';}
+'<label class="cs-check"><input id="csReflection" type="checkbox" '+(r.reflection?"checked":"")+'/> Tôi đã tự làm, đối chiếu với mẫu và ghi lại lỗi cần sửa.</label>';}
 const attempts=(r.history||[]).filter(x=>x.answered===t&&x.correct===t);
 h+='<div class="cs-skill-links"><strong>Áp dụng vào dạng bài và IELTS Academic Tasks</strong><div class="cs-related-buttons"><button type="button" data-cs-types="'+escape(u.id)+'">Xem các dạng IELTS cần kỹ năng này ↗</button>'+u.related.map(id=>'<button type="button" data-cs-ielts="'+escape(id)+'">'+escape(id)+' ↗</button>').join("")+'</div><small>Chỉ mở task tương ứng; không tự đánh dấu đã học.</small></div>'+
 '<p class="cs-subdued">Kết quả đúng 2/'+t+' ở ít nhất hai ngày khác nhau cùng phần tự kiểm tra sẽ được ghi nhận là đã luyện qua hai ngày (không phải band IELTS).</p>'+
