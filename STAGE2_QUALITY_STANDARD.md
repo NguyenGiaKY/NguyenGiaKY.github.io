@@ -39,7 +39,8 @@ Stage 2 converts a learner's A0–A2 language knowledge into effective task beha
 - Existing 30 Core Skills units (6 per area), 60 original multiple-choice questions.
 - New 30 distinct contextual questions and 30 independent practice/transfer prompts in Stage 2 Evidence.
 - Optional authenticated **Check** for typed practice, saved correction and revision note. AI feedback is practice, not an IELTS band.
-- Former quiz-only repeated-day mastery is tightened. For Listening and Speaking, typed feedback is explicitly NOT proof of listening or spoken delivery.
+- Speaking units now have real microphone capture, replay, a short audio-based Check and a second spoken follow-up based on feedback. Audio is not stored persistently, but transcript/diagnostic notes are saved for later review.
+- Former quiz-only repeated-day mastery is tightened. Listening and Speaking cannot be marked mastered from typed work or familiar multiple-choice questions; actual natural listening and sustained two-way spoken performance still require separate external verification.
 - Prior records under `gk_core_skills_v1` are preserved. New evidence under `gk_stage2_evidence_v1`.
 
 ## Per-lesson new-context assessment mapping
@@ -86,3 +87,9 @@ Stage 2 converts a learner's A0–A2 language knowledge into effective task beha
 
 ## Next actual acceptance test
 For each unit, ask a learner to explain a misconception, attempt a new task without help, correct their error, and perform an unfamiliar delayed variant after 3+ days. Collect listening audio evidence and spontaneous speaking follow-up. Quality gate passes only when those outputs have been verified; unit count alone is insufficient.
+
+## Current technical verification (15 October 2026)
+- All 30 Core Skills units have an original second-context recognition question and a production prompt; 60 original questions plus 30 new short checks.
+- The Check pipeline now sends `Core` instead of an invalid level and can return specific mistakes, correction, task checks and a follow-up prompt. End-to-end live authentication remains untested.
+- Stage 2 Speaking audio flow was simulated with a microphone recorder and valid audio Check payload, including a second follow-up. No full natural two-way conversation has been validated with an examiner.
+- **Remaining criteria:** new authentic Listening recordings, multiple delayed unseen variants per skill, calibrated skill-specific rubrics beyond a single objective item, real learners' Speaking/Listening evidence, mobile browser microphone and Google sign-in verification, and teacher review of automated feedback.
