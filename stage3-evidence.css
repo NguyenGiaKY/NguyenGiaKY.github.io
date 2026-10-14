@@ -1,0 +1,33 @@
+
+/* IELTS independent practice evidence: intentionally separate from exam score UI. */
+.s3-home{background:var(--panel,#f8fbff);border:1px solid #cad8ed;border-radius:15px;padding:19px 20px;margin:15px 0 20px}
+.s3-home h3{margin:0 0 8px;font-size:18px;color:#233e67}
+.s3-home p{margin:7px 0 0;line-height:1.65;color:#4a5e79;font-size:13px}
+.s3-overlay{position:fixed;z-index:99999;inset:0;display:flex;justify-content:center;align-items:flex-start;padding:3vh 14px;overflow:auto}
+.s3-backdrop{position:fixed;inset:0;background:rgba(12,23,43,.74)}
+.s3-dialog{position:relative;background:#fff;color:#20324e;width:min(860px,100%);max-height:94vh;overflow:auto;display:flex;flex-direction:column;border-radius:17px;box-shadow:0 18px 70px rgba(0,0,0,.28);font-size:14px}
+.s3-header{padding:22px 24px 17px;display:flex;align-items:start;justify-content:space-between;gap:13px;background:#edf3fd;border-bottom:1px solid #dae5f4}
+.s3-header h2{margin:6px 0;font-size:23px;line-height:1.28;color:#142e59}
+.s3-header p{margin:5px 0;color:#4b5e7c;line-height:1.55}
+.s3-header small{font-weight:750;letter-spacing:.06em;color:#4263a2}
+.s3-header button{border:1px solid #bbcce8;background:#fff;border-radius:10px;min-width:40px;min-height:40px;cursor:pointer}
+.s3-content{padding:22px 24px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+.s3-panel{border:1px solid #dee7f1;padding:18px;border-radius:13px;background:#fff}
+.s3-panel h3{margin:0 0 10px;font-size:18px;color:#233d67}
+.s3-panel p,.s3-panel li{line-height:1.65}
+.s3-panel ol{padding-left:22px;margin:10px 0 13px}
+.s3-panel li{margin:8px 0}
+.s3-panel label{font-weight:700;display:block;margin:14px 0 7px;color:#1c3356}
+.s3-panel input,.s3-panel textarea{width:100%;box-sizing:border-box;border:1px solid #b9c9de;background:#fff;border-radius:9px;color:#1c3356;padding:11px 12px;font:inherit;line-height:1.55}
+.s3-panel input:focus,.s3-panel textarea:focus{outline:2px solid #4d7ac1;outline-offset:2px}
+.s3-panel a{color:#215eae;text-decoration:underline}
+.s3-primary{margin-top:13px;border:1px solid #2f559b;background:#274c95;color:#fff;font-weight:700;border-radius:10px;padding:11px 16px;cursor:pointer}
+.s3-primary:disabled{opacity:.5;cursor:not-allowed}
+.s3-tip{font-size:12px;color:#4c6488;background:#f2f6fb;padding:10px 12px;border-radius:9px}
+.s3-result{background:#f0f6fc;padding:13px 15px;border-radius:10px;margin:13px 0}
+.s3-message{background:#eaf4ff;border:1px solid #b7d5ec;padding:12px;border-radius:10px;color:#173b65}
+.s3-footer{border-top:1px solid #dae5f4;padding:12px 24px;background:#f8fafd;display:flex;gap:10px;justify-content:space-between;align-items:center}
+.s3-footer span{font-size:12px;color:#4b5f80}
+.s3-footer button{background:#fff;border:1px solid #b4c3d8;padding:10px 15px;border-radius:10px;font-weight:650;cursor:pointer}
+.flexTaskActions [data-evidence]{border-color:#849dcb;background:#eef4ff;color:#174883}
+@media(max-width:700px){.s3-overlay{padding:0}.s3-dialog{max-height:100vh;min-height:100vh;border-radius:0}.s3-header,.s3-content,.s3-footer{padding-left:15px;padding-right:15px}.s3-header h2{font-size:20px}.s3-panel{padding:14px}}
