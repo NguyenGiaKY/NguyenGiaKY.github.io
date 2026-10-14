@@ -48,7 +48,7 @@ async function checkProduction(id){
  pending=id;notice="Checking…";window.GKCoreSkills?.render();
  try{
   const token=await window.GKCloudSync.getIdToken();if(!token)throw Error("Sign in to use Check");
-  const payload={mode:"writing",level:"Pre-IELTS",goal:"Explain and transfer the identified language skill in a new situation",scenario:d.context,task:d.challenge,checklist:d.criteria,
+  const payload={mode:"writing",level:"Core",goal:"Explain and transfer the identified language skill in a new situation",scenario:d.context,task:d.challenge,checklist:d.criteria,
   meaningFocus:"Follow the task exactly; independent English, adequate evidence, accurate meaning. Written evidence is NOT speech performance.",
   answer,revisionOf:r.feedback?.answer||""};
   const url=location.hostname.endsWith(".vercel.app")?location.origin+"/api/foundation-grade":"https://nguyen-gia-ky-github-io-rvay.vercel.app/api/foundation-grade";
@@ -69,4 +69,5 @@ root.addEventListener("input",e=>{
  if(revision&&pack[revision]){rec(revision).revision=e.target.value.slice(0,1000);save()}
 });
 window.GKStage2Evidence={homePanel,renderEvidence,getRecord:rec,label};
+window.GKCoreSkills?.render();
 })();
