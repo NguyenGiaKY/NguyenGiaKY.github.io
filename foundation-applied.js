@@ -7,7 +7,7 @@ const KEY="gk_foundation_applied_v1",unitMap=Object.fromEntries(units.map(u=>[u.
 const steps=[["understand","Understand"],["listening","Listen"],["reading","Read"],["language","Think & use"],["writing","Write & fix"],["speaking","Speak & respond"],["transfer","Transfer"]];
 let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 const records=saved.records&&typeof saved.records==="object"?saved.records:{};
-let current="",busy=false,status="",recorder=null,stream=null,chunks=[],clip=null,clipUrl="",recordStarted=0,cutoff=null;
+let current="",busy=false,status="",recorder=null,stream=null,chunks=[],clip=null,clipUrl="",recordStarted=0,cutoff=null,reviewMode=false,reviewChoice=null,reviewChecked=false;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const b=(action,label,primary=false,disabled=false)=>'<button type="button" class="fa-btn '+(primary?"fa-primary":"")+'" data-fa-action="'+action+'" '+(disabled?"disabled":"")+'>'+label+'</button>';
 function row(id){
@@ -17,13 +17,20 @@ function row(id){
 function save(){try{localStorage.setItem(KEY,JSON.stringify({records,lastUnitId:current||saved.lastUnitId||""}))}catch(e){status="Không lưu được tiến độ trên thiết bị này."}}
 function count(r){const t=["listening","reading","language"].reduce((sum,key)=>sum+(r.checked[key]?.correct||0),0);return{correct:t,total:6,checked:["listening","reading","language"].filter(k=>r.checked[k]).length,write:r.reports.writing?.task_status==="met",transfer:r.reports.transfer?.task_status==="met",speak:r.reports.speaking?.task_status==="met"}}
 function studied(r){return!!(r.checked.listening||r.checked.reading||r.checked.language||r.draft||r.speakingNotes||r.transfer||r.reports.writing)}
-function due(r){if(!r.lastPractised)return false;const next=Date.parse(r.lastPractised)+3*86400000;return Date.now()>=next}
+function reviewDueAt(r){
+ if(!r.checked?.listening||!r.checked?.reading||!r.checked?.language)return null;
+ if(r.review?.nextAt)return Date.parse(r.review.nextAt);
+ const latest=Math.max(...["listening","reading","language"].map(x=>Date.parse(r.checked[x]?.at||"")||0));
+ return latest?latest+86400000:null;
+}
+function due(r){const at=reviewDueAt(r);return at!=null&&Number.isFinite(at)&&Date.now()>=at}
+function nextReviewLabel(r){const at=reviewDueAt(r);return at?new Date(at).toLocaleDateString("en-NZ"):"Finish listening, reading and language checks to unlock review"}
 function homePanel(){
- const a1=units.filter(u=>u.level==="A1"),a2=units.filter(u=>u.level==="A2"),worked=units.filter(u=>studied(row(u.id))).length;
+ const a1=units.filter(u=>u.level==="A1"),a2=units.filter(u=>u.level==="A2"),worked=units.filter(u=>studied(row(u.id))).length,waiting=units.filter(u=>due(row(u.id))).length;
  return '<section class="fa-home" aria-label="A1 and A2 real-world practice"><div class="fa-home-heading"><div><small>FOUNDATION · A1 / A2 REAL-LIFE PRACTICE</small><h3>Học qua tình huống, chứng minh bằng cách sử dụng</h3><p>'+units.length+' bài liên kỹ năng: nghe → đọc → chọn cách diễn đạt → viết → nói → áp dụng trong tình huống mới. Tất cả kết quả là bằng chứng luyện tập, không phải điểm CEFR.</p></div><div class="fa-count">'+worked+'/'+units.length+'<small>đã bắt đầu</small></div></div>'+
  '<div class="fa-home-actions">'+
  '<button type="button" data-f-action="applied" class="f-btn primary">Mở bài thực hành A1–A2 →</button>'+
- '<span class="fa-home-meta">'+a1.length+' bài A1 · '+a2.length+' bài A2 · Không xóa bài Foundation cũ</span></div></section>';
+ '<span class="fa-home-meta">'+a1.length+' bài A1 · '+a2.length+' bài A2 · '+waiting+' bài đến hạn ôn · Không xóa bài Foundation cũ</span></div></section>';
 }
 function stopAll(){
  try{window.GKYVoice?.stopConversation?.();window.speechSynthesis?.cancel()}catch(e){}
@@ -34,15 +41,15 @@ function stopAll(){
  clipUrl="";clip=null;recorder=null;chunks=[];
 }
 function open(id){
- if(!unitMap[id])return;window.GKFoundationExit?.leave();stopAll();current=id;status="";render();
+ if(!unitMap[id])return;window.GKFoundationExit?.leave();stopAll();reviewMode=false;current=id;status="";render();
 }
 function list(){
- stopAll();current="";status="";
+ stopAll();reviewMode=false;current="";status="";
  const sections=["A1","A2"].map(level=>{
   const filtered=units.filter(u=>u.level===level);
   return '<section class="fa-level"><h2>'+level+' · Communication practice</h2><div class="fa-cards">'+filtered.map(u=>{
    const r=row(u.id),c=count(r),started=studied(r);
-   return '<button type="button" class="fa-unit" data-fa-id="'+u.id+'"><small>'+u.level+' · '+(started?c.checked+' / 3 question sets checked':'Not started')+(due(r)?" · Review due":"")+'</small><strong>'+esc(u.title)+'</strong><span>'+esc(u.goal)+'</span><em>'+ (started?"Continue →":"Begin →")+'</em></button>';
+   return '<div class="fa-unit-row"><button type="button" class="fa-unit" data-fa-id="'+u.id+'"><small>'+u.level+' · '+(started?c.checked+' / 3 question sets checked':'Not started')+(due(r)?" · Review due":"")+'</small><strong>'+esc(u.title)+'</strong><span>'+esc(u.goal)+'</span><em>'+ (started?"Continue →":"Begin →")+'</em></button>'+(due(r)?'<button type="button" class="fa-btn fa-review-btn" data-fa-review="'+u.id+'">↻ Review due</button>':"")+'</div>';
   }).join("")+'</div></section>';
  }).join("");
  root.innerHTML='<div class="fa-shell"><div class="fa-top">'+b("exit","← Foundation home")+'<h1>Real-world English · A1 and A2</h1><p>Đây là phần thực hành mở rộng, không phải chứng nhận trình độ. Mỗi bài kiểm tra nghe, đọc, cấu trúc, viết và nói qua một bối cảnh khác nhau.</p></div>'+(window.GKFoundationExit?.homePanel()||"")+sections+'</div>';
@@ -53,6 +60,43 @@ function setPage(n){
  const r=row(current);r.page=Math.min(steps.length-1,Math.max(0,n));save();status="";render();
  try{root.scrollIntoView({block:"start",behavior:"smooth"})}catch(e){}
 }
+
+/* Retrieval is recorded separately from lesson completion and CEFR level.
+ * First recall uses a new item. Later repeats are review, not independent tests.
+ */
+function openReview(id){
+ if(!unitMap[id]||!window.GKFoundationReviewData?.items?.[id])return;
+ stopAll();current=id;reviewMode=true;reviewChoice=null;reviewChecked=false;status="";render();
+ root.scrollIntoView?.({block:"start",behavior:"smooth"});
+}
+function reviewRender(){
+ const u=unitMap[current],r=row(current),q=window.GKFoundationReviewData?.items?.[current]?.[0];
+ if(!u||!q){reviewMode=false;return list()}
+ const item=r.review||{},n=Number(item.stage)||0;
+ let h='<div class="fa-shell"><div class="fa-top"><div class="fa-nav">'+b("review-back","← All lessons")+'<span>'+esc(u.level)+' · Delayed recall</span></div><h1>Review: '+esc(u.title)+'</h1><p>Nhớ lại và chọn cách diễn đạt phù hợp. Không nhìn bài mẫu trước. Đây chỉ là kiểm tra ghi nhớ một nội dung, KHÔNG chứng minh đạt A1/A2.</p></div>';
+ h+='<section class="fa-main"><p class="fa-tip">Lượt ôn đã hoàn thành: '+n+' · Hạn ôn hiện tại: '+esc(nextReviewLabel(r))+'</p>'+
+ '<fieldset class="fa-question"><legend>'+esc(q.prompt)+'</legend>'+
+ q.options.map((o,i)=>'<button type="button" class="fa-option '+(reviewChecked?(i===q.correct?"correct":i===reviewChoice?"wrong":""):"")+'" data-fa-review-option="'+i+'" aria-pressed="'+(i===reviewChoice)+'" '+(reviewChecked?"disabled":"")+'><b>'+String.fromCharCode(65+i)+'</b> '+esc(o)+'</button>').join("")+'</fieldset>';
+ if(!reviewChecked)h+=b("review-check","Check",true,reviewChoice===null);
+ else h+='<div class="fa-feedback"><strong>'+(reviewChoice===q.correct?"Correct.":"Review the meaning.")+'</strong> '+esc(q.why)+'</div>'+
+ '<p class="fa-tip">Lặp lại câu này trong những ngày tới là ôn tập câu đã biết, không phải một bài kiểm tra đầu ra mới. Hãy làm bài Transfer để sử dụng kiến thức bằng câu của bạn.</p>'+
+ b("review-transfer","Use it in a new situation →",true);
+ h+=status?'<p class="fa-status" role="status">'+esc(status)+'</p>':"";
+ h+='</section><footer class="fa-nav fa-footer">'+b("review-back","← All lessons")+'</footer></div>';
+ root.innerHTML=h;
+}
+function markReview(){
+ if(!reviewMode||reviewChecked||reviewChoice===null)return;
+ const r=row(current),q=window.GKFoundationReviewData?.items?.[current]?.[0],wasDue=due(r),right=reviewChoice===q.correct;
+ const now=Date.now(),old=r.review||{stage:0,history:[]},stage=wasDue&&right?Math.min(4,(Number(old.stage)||0)+1):wasDue?0:(Number(old.stage)||0);
+ const delays=[1,3,7,14,30];
+ const nextAt=wasDue?new Date(now+delays[stage]*86400000).toISOString():old.nextAt||new Date(reviewDueAt(r)||now+86400000).toISOString();
+ r.review={stage,history:[...(Array.isArray(old.history)?old.history:[]),{at:new Date(now).toISOString(),correct:right,due:wasDue,questionId:current+"-review-1"}].slice(-30),nextAt};
+ reviewChecked=true;save();
+ status=wasDue?(right?"Đã ghi nhận một lần ôn đúng. Lần tới: "+nextReviewLabel(r):"Cần ôn lại sớm hơn. Lần tới: "+nextReviewLabel(r)):"Bạn đã thực hành thêm; lịch ôn không thay đổi vì chưa đến hạn.";
+ render();
+}
+
 function choices(u,r,key,arr){
  const previous=r.checked[key],sel=r.selections[key]||[null,null],checked=!!previous;
  let out='<div class="fa-questions">';
@@ -102,6 +146,7 @@ function speakPanel(u,r){
 }
 function render(){
  if(window.GKFoundationExit?.isActive())return window.GKFoundationExit.render();
+ if(reviewMode)return reviewRender();
  const u=unitMap[current];if(!u)return list();
  const r=row(current);r.page=Math.max(0,Math.min(steps.length-1,Number(r.page)||0));
  const currentStep=steps[r.page],type=currentStep[0],c=count(r);
@@ -242,6 +287,15 @@ function play(){
 root.addEventListener("click",event=>{
  const button=event.target.closest("button");if(!button||!root.contains(button))return;
  const id=button.dataset.faId;if(id){open(id);return}
+ if(button.dataset.faReview){openReview(button.dataset.faReview);return}
+ if(reviewMode){
+  if(button.dataset.faReviewOption!==undefined&&!reviewChecked){reviewChoice=Number(button.dataset.faReviewOption);render();return}
+  const a=button.dataset.faAction;
+  if(a==="review-check"){markReview();return}
+  if(a==="review-back"){list();return}
+  if(a==="review-transfer"){reviewMode=false;row(current).page=6;save();render();return}
+  return;
+ }
  if(!current&&button.dataset.faAction!=="exit")return;
  const a=button.dataset.faAction,u=unitMap[current],r=current?row(current):null;
  if(button.dataset.faQ){changeAnswer(button.dataset.faQ,Number(button.dataset.faN),Number(button.dataset.faOption));return}
