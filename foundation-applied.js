@@ -52,7 +52,14 @@ function list(){
    return '<div class="fa-unit-row"><button type="button" class="fa-unit" data-fa-id="'+u.id+'"><small>'+u.level+' · '+(started?c.checked+' / 3 question sets checked':'Not started')+(due(r)?" · Review due":"")+'</small><strong>'+esc(u.title)+'</strong><span>'+esc(u.goal)+'</span><em>'+ (started?"Continue →":"Begin →")+'</em></button>'+(due(r)?'<button type="button" class="fa-btn fa-review-btn" data-fa-review="'+u.id+'">↻ Review due</button>':"")+'</div>';
   }).join("")+'</div></section>';
  }).join("");
- root.innerHTML='<div class="fa-shell"><div class="fa-top">'+b("exit","← Foundation home")+'<h1>Real-world English · A1 and A2</h1><p>Đây là phần thực hành mở rộng, không phải chứng nhận trình độ. Mỗi bài kiểm tra nghe, đọc, cấu trúc, viết và nói qua một bối cảnh khác nhau.</p></div>'+(window.GKFoundationExit?.homePanel()||"")+sections+'</div>';
+ root.innerHTML='<div class="fa-shell"><div class="fa-top">'+b("exit","← Foundation home")+'<h1>Real-world English · A1 and A2</h1><p>Đây là phần thực hành mở rộng, không phải chứng nhận trình độ. Mỗi bài kiểm tra nghe, đọc, cấu trúc, viết và nói qua một bối cảnh khác nhau.</p></div>'+(window.GKFoundationExit?.homePanel()||"")+
+ '<section class="fa-resource-panel"><h3>Ghi âm người thật · luyện bổ sung</h3><p>Hội thoại trong website sử dụng giọng tổng hợp. Để luyện hiểu giọng người thật, hãy làm bài nghe và video phát âm từ British Council ở bên ngoài website. Các hoạt động đó không tự động được tính là kết quả CEFR.</p><div class="fa-resource-links">'+
+ '<a href="https://learnenglish.britishcouncil.org/free-resources/listening/a1" target="_blank" rel="noopener noreferrer">A1 · Real listening ↗</a>'+
+ '<a href="https://learnenglish.britishcouncil.org/free-resources/listening/a2" target="_blank" rel="noopener noreferrer">A2 · Real listening ↗</a>'+
+ '<a href="https://learnenglish.britishcouncil.org/free-resources/speaking/a1" target="_blank" rel="noopener noreferrer">A1 · Speaking videos ↗</a>'+
+ '<a href="https://learnenglish.britishcouncil.org/free-resources/speaking/a2" target="_blank" rel="noopener noreferrer">A2 · Speaking videos ↗</a>'+
+ '<a href="https://learnenglish.britishcouncil.org/free-resources/reading/a1" target="_blank" rel="noopener noreferrer">A1 · Reading texts ↗</a>'+
+ '</div></section>'+sections+'</div>';
 }
 function setPage(n){
  if(!current)return;
