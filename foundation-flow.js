@@ -41,6 +41,8 @@ function state(id){
   r.page=same>=0?same:Math.max(0,a001Steps.reduce((best,s,i)=>steps.findIndex(x=>x[0]===s[0])<=old?i:best,0));
   r.flowPlanVersion=2;
  }
+ // Keep prior practice; do not let a legacy finish bypass this revised checkpoint.
+ if(id==="a0-01"&&r.finished&&!r.checkpoint?.passed){r.legacyFinished=true;r.finished=false;}
 
  const level=lessonById[id]?.level;
  if(level&&wordReports[level]){
@@ -196,7 +198,8 @@ function a001Checkpoint(r){
  h+=header("Write your own introduction","A new student asks who you are and what item you are carrying. Write two short sentences. Change the name and object from the model.")+
  field("transfer",r.transfer,"I'm ... . This is my ... .")+
  freeCheckPanel(r,"transfer","Check looks at your TWO sentences and the new situation. Audio pronunciation is not assessed here.");
- const reply=String(r.transfer||"").trim();
+ if(r.legacyFinished&&!c.passed)h+='<p class="gf-feedback">Earlier answers are preserved. The revised lesson still requires its independent checkpoint before being marked finished.</p>';
+  const reply=String(r.transfer||"").trim();
  const record=r.wordFeedback?.__transfer__;
  const verified=record?.answer?.trim()===reply&&record?.report?.task_status==="met";
  const ready=!!c.passed&&r.meaning===missions["a0-01"].correct&&String(r.draft||"").trim().length>=8&&reply.length>=15;
