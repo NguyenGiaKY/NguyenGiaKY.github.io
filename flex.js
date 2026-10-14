@@ -911,7 +911,8 @@ function openFlexTask(t){
  startTaskSession(t.id);
  window.__readingTaskInfo=t.skill==='reading'
    ?{id:t.id,title:t.title,moduleTitle:t.moduleTitle}:null;
- if(t.day==='checkpoint'){openCheckpoint(t);return;}
+ if(stage3Extras.some(x=>x.id===t.id)&&window.GKStage3Evidence?.open){window.GKStage3Evidence.open(t);return;}
+  if(t.day==='checkpoint'){openCheckpoint(t);return;}
  if(t.skill==='listening'&&typeof window.openListeningStudioTask==='function'&&window.openListeningStudioTask(t)){
    return;
  }
