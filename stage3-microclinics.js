@@ -15,6 +15,62 @@ function count(id){
 }
 function correct(q,a){return Array.isArray(q.correct)?Array.isArray(a)&&q.correct.length===a.length&&q.correct.every(j=>a.includes(j)):a===q.correct}
 function score(id){const r=get(id);return cases[id].questions.reduce((sum,q,i)=>sum+(correct(q,r.answers[i])?1:0),0)}
+
+/* Original, accessible IELTS-style visual stimuli; source data stay in tables. */
+function visualMarkup(v){
+ if(!v)return"";
+ let h='<figure class="s3-visual"><figcaption>'+esc(v.title||"Data visual")+' <small>Original fictional practice data</small></figcaption>';
+ if(v.kind==="flow"){
+  h+='<ol class="s3-flow">'+(v.steps||[]).map(s=>'<li>'+esc(s)+'</li>').join("")+'</ol>';
+ }else if(v.kind==="maps"){
+  for(const [label,layout] of [["Before",v.before],["After",v.after]]){
+   h+='<div class="s3-map-group"><b>'+label+'</b><div class="s3-map-grid" aria-label="'+label+' site layout">';
+   for(const line of layout||[])for(const cell of line)h+='<div>'+esc(cell)+'</div>';
+   h+='</div></div>';
+  }
+ }else if(Array.isArray(v.headers)&&Array.isArray(v.rows)){
+  const data=v.rows,headers=v.headers;
+  if(["bar","line"].includes(v.kind)&&data.length>1){
+   const nums=data.flatMap(r=>r.slice(1).filter(Number.isFinite)),max=Math.max(1,...nums)*1.1;
+   const colours=["#255f9b","#c47732","#5d7f52"],left=65,right=590,top=18,bottom=204;
+   const x=i=>left+(data.length===1?0:i*(right-left)/(data.length-1));
+   const y=z=>bottom-(Number(z)||0)/max*(bottom-top);
+   h+='<svg class="s3-svg-plot" role="img" aria-label="'+esc(v.title||"Graph")+'" viewBox="0 0 640 245">';
+   h+='<line x1="'+left+'" y1="'+top+'" x2="'+left+'" y2="'+bottom+'" stroke="#748ba6"/><line x1="'+left+'" y1="'+bottom+'" x2="'+right+'" y2="'+bottom+'" stroke="#748ba6"/>';
+   for(let k=0;k<=4;k++){const level=max*k/4,pos=y(level);h+='<line x1="'+left+'" y1="'+pos+'" x2="'+right+'" y2="'+pos+'" stroke="#e1e9f2"/><text x="'+(left-8)+'" y="'+(pos+4)+'" text-anchor="end" font-size="10" fill="#405575">'+Math.round(level)+'</text>'}
+   if(v.kind==="line"){
+    for(let j=1;j<headers.length;j++){
+     h+='<polyline fill="none" stroke="'+colours[(j-1)%3]+'" stroke-width="3" points="'+data.map((r,i)=>x(i)+","+y(r[j])).join(" ")+'"/>';
+     for(let i=0;i<data.length;i++)h+='<circle cx="'+x(i)+'" cy="'+y(data[i][j])+'" r="4" fill="'+colours[(j-1)%3]+'"/>';
+    }
+   }else{
+    const gap=(right-left)/data.length,w=Math.min(22,gap/(headers.length+1));
+    for(let i=0;i<data.length;i++)for(let j=1;j<headers.length;j++){
+     const px=left+i*gap+gap/2-(headers.length-1)*w/2+(j-1)*w,py=y(data[i][j]);
+     h+='<rect x="'+px+'" y="'+py+'" width="'+w+'" height="'+Math.max(0,bottom-py)+'" fill="'+colours[(j-1)%3]+'"/>';
+    }
+   }
+   for(let i=0;i<data.length;i++){
+    const xPos=v.kind==="bar"?left+(i+.5)*(right-left)/data.length:x(i);
+    h+='<text x="'+xPos+'" y="225" text-anchor="middle" font-size="11" fill="#405575">'+esc(data[i][0])+'</text>';
+   }
+   h+='</svg><div class="s3-legend">'+headers.slice(1).map((str,i)=>'<span><i style="background:'+colours[i%3]+'"></i>'+esc(str)+'</span>').join("")+'</div>';
+  }else if(v.kind==="pie"){
+   const total=data.reduce((n,r)=>n+Number(r[1]||0),0)||1,colours=["#245b95","#c36f32","#53866e","#a85984","#9aa44d","#7777b9"];
+   let offset=0;h+='<svg class="s3-svg-pie" role="img" aria-label="'+esc(v.title||"Pie chart")+'" viewBox="0 0 250 230"><circle cx="120" cy="110" r="75" fill="#eef3f8"/>';
+   for(let i=0;i<data.length;i++){const frac=Math.max(0,Number(data[i][1]||0))/total,part=frac*100;
+    h+='<circle cx="120" cy="110" r="75" transform="rotate(-90 120 110)" fill="none" stroke="'+colours[i%colours.length]+'" stroke-width="150" stroke-dasharray="'+part+' '+(100-part)+'" stroke-dashoffset="'+(-offset)+'" pathLength="100"/>';
+    offset+=part;
+   }
+   h+='</svg><div class="s3-legend">'+data.map((r,i)=>'<span><i style="background:'+colours[i%colours.length]+'"></i>'+esc(r[0])+' ('+esc(r[1])+'%)</span>').join("")+'</div>';
+  }
+  h+='<table class="s3-data-table"><caption>Exact source values</caption><thead><tr>'+headers.map(x=>'<th scope="col">'+esc(x)+'</th>').join("")+'</tr></thead><tbody>'+
+    data.map(r=>'<tr>'+r.map((x,i)=>i===0?'<th scope="row">'+esc(x)+'</th>':'<td>'+esc(x)+'</td>').join("")+'</tr>').join("")+'</tbody></table>';
+  if(v.kind==="mixed")h+='<p class="s3-tip">These data use different units. Do not compare 65% with 2,400 students on a single numerical scale.</p>';
+ }
+ return h+'</figure>';
+}
+
 function render(id){
  const c=cases[id];if(!c)return"";
  const r=get(id),checked=r.checked;
@@ -22,7 +78,7 @@ function render(id){
  if(c.dialog){
   h+='<p><button type="button" class="s3-primary" data-micro-action="play" data-micro-id="'+id+'">▶ Listen (synthetic practice voice)</button></p>';
   h+=checked?'<details><summary>Transcript · unlocked after Check</summary>'+c.dialog.map(t=>'<p><b>'+esc(t.speaker)+':</b> '+esc(t.text)+'</p>').join("")+'</details>':'<p class="s3-tip">Transcript is hidden until Check. This is a synthetic recording, not natural IELTS audio.</p>';
- }else h+='<div class="s3-stimulus" lang="en">'+esc(c.text||"")+'</div>';
+ }else h+='<div class="s3-stimulus" lang="en">'+esc(c.text||"")+'</div>'+visualMarkup(c.visual);
  for(let i=0;i<c.questions.length;i++){
   const q=c.questions[i],answer=r.answers[i],multi=Array.isArray(q.correct);
   h+='<fieldset class="s3-mq"><legend>'+(i+1)+'. '+esc(q.prompt)+(multi?" (Choose TWO)":"")+'</legend>';
