@@ -1,11 +1,12 @@
 /* Carefully authored thinking, lexical and word-family contrasts for 24 Foundation lessons. */
-window.GKFoundationThinkingData = {
+window.GKFoundationThinkingData =
+{
   "version": 1,
   "cases": {
     "a0-01": {
       "id": "a0-01",
-      "principle": "A word has a sound, a meaning, and a job in a sentence.",
-      "contrast": "Don't assume the spelling tells you exactly how to pronounce the word.",
+      "principle": "I'm ... / My name is ... introduce the speaker; This is ... identifies an object.",
+      "contrast": "Changing the person or object changes the message. Pronunciation practice is separate from checking meaning.",
       "pairs": [
         {
           "source": "My name is Anna.",
@@ -14,10 +15,10 @@ window.GKFoundationThinkingData = {
           "why": "I'm Anna introduces the same speaker; Her name changes whose name it is."
         },
         {
-          "source": "I have two cats.",
-          "equivalent": "I own two cats.",
-          "wrong": "I have a cat.",
-          "why": "Two is an important detail; changing it to one changes the message."
+          "source": "This is my book.",
+          "equivalent": "Here is my book.",
+          "wrong": "This is my cat.",
+          "why": "Book and cat refer to different objects. The changed sentence points to a different thing."
         }
       ],
       "roles": [
