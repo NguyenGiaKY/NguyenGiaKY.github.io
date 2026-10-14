@@ -8,7 +8,7 @@ const KEY="gk_stage3_evidence_v1";
 let stored={};try{stored=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 const records=stored.records||{},esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let current="",info=null,busy=false,message="",overlay=null;
-const row=id=>records[id]||(records[id]={source:"",evidence:"",answer:"",repair:"",feedback:null,checks:[],attempts:[],reviewAt:null,reviewHistory:[]});
+const row=id=>records[id]||(records[id]={source:"",evidence:"",answer:"",repair:"",feedback:null,checks:[],attempts:[],reviewAt:null,reviewHistory:[],reviewDraft:{source:"",response:"",evidence:""}});
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({records}))}catch(e){message="Không thể lưu dữ liệu trên thiết bị."}};
 const allowed=id=>!!catalog.challenges[id];
 const rubrics=skill=>catalog.rubrics[skill]||catalog.rubrics.support;
@@ -89,7 +89,12 @@ function render(){
  const attempts=r.attempts||[];
  h+='<section class="s3-panel"><h3>Review · Evidence over time</h3><p>'+attempts.length+' hồ sơ đã ghi; ngày ôn kế tiếp: '+esc(timeLabel(r.reviewAt))+'.</p>'+
  '<p>Check chỉ xác nhận có thông tin trong từng phần. Để kết luận học đúng, hãy đối chiếu nguồn chính thức hoặc được giáo viên đánh giá, rồi thử một đề khác sau vài ngày.</p>'+
- (r.reviewAt&&Date.now()>=r.reviewAt?'<button type="button" data-s3-action="review" class="s3-primary">Mark review attempted</button>':"")+
+ (r.reviewAt&&Date.now()>=r.reviewAt?
+ '<div class="s3-delayed"><h4>New, unseen task required for delayed review</h4><p>Chọn đề hoặc ghi âm/đoạn đọc KHÁC với lần trước. Viết một câu trả lời mới và trích bằng chứng cụ thể. Không thể ghi đã ôn bằng một cú nhấn nếu không có bài làm.</p>'+
+ '<label for="s3NewSource">Different source or question identifier</label><input id="s3NewSource" data-s3-review="source" maxlength="230" value="'+esc(r.reviewDraft?.source||"")+'" placeholder="Name a DIFFERENT official sample or new task">'+
+ '<label for="s3NewResponse">Your new answer and reasoning</label><textarea id="s3NewResponse" data-s3-review="response" maxlength="2400" rows="3">'+esc(r.reviewDraft?.response||"")+'</textarea>'+
+ '<label for="s3NewEvidence">Independent passage/audio/feedback evidence</label><textarea id="s3NewEvidence" data-s3-review="evidence" maxlength="2200" rows="3">'+esc(r.reviewDraft?.evidence||"")+'</textarea>'+
+ '<button type="button" data-s3-action="review" class="s3-primary">Check new review record</button></div>':"")+
  '<p class="s3-tip">Bài lặp lại không được tính là đề unseen mới. Các checkpoint /40 hoặc speaking/writing chỉ có giá trị luyện tập theo nguồn thực tế và rubric tương ứng.</p></section>'+
  (message?'<p class="s3-message" role="status">'+esc(message)+'</p>':"")+
  '</div><footer class="s3-footer"><span>'+esc(status(id))+'</span><button type="button" data-s3-action="close">Save & close</button></footer></div>';
@@ -110,7 +115,7 @@ async function writing(){
  try{
   const token=await window.GKCloudSync.getIdToken();if(!token)throw Error("Sign in to use Check");
   const payload={mode:"writing",level:"IELTS",goal:catalog.challenges[id],scenario:"Skill: "+t.skill+"; Task: "+t.title+"; Source supplied by learner: "+r.source,
-  task:catalog.challenges[id],checklist:rubrics(t.skill),meaningFocus:"Judge ONLY the submitted written excerpt. Do not invent facts about an unseen chart or unprovided source. This cannot establish an IELTS band.",
+  task:window.GKStage3PracticeData?.cases?.[id]?.text||catalog.challenges[id],checklist:rubrics(t.skill),meaningFocus:"Judge ONLY the submitted written excerpt. Do not invent facts about an unseen chart or unprovided source. This cannot establish an IELTS band.",
   answer,revisionOf:r.feedback?.answer||""};
   const url=location.hostname.endsWith(".vercel.app")?location.origin+"/api/foundation-grade":"https://nguyen-gia-ky-github-io-rvay.vercel.app/api/foundation-grade";
   const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
@@ -121,9 +126,19 @@ async function writing(){
 }
 function review(){
  const r=row(current);if(!r.reviewAt||Date.now()<r.reviewAt)return;
- r.reviewHistory=r.reviewHistory||[];r.reviewHistory.push({at:Date.now(),accuracyVerified:false});r.reviewHistory=r.reviewHistory.slice(-15);
+ const d=r.reviewDraft||{},source=String(d.source||"").trim(),answer=String(d.response||"").trim(),evidence=String(d.evidence||"").trim();
+ const prior=[String(r.source||"").trim().toLowerCase(),...(r.reviewHistory||[]).map(x=>String(x.source||"").trim().toLowerCase())].filter(Boolean);
+ if(source.length<8||prior.includes(source.toLowerCase())||answer.length<30||evidence.length<25){
+  message="Cần nguồn đề MỚI khác lần trước (≥8 ký tự), lời giải mới (≥30 ký tự) và bằng chứng độc lập (≥25 ký tự). Không thể xác nhận đã ôn chỉ bằng nút bấm.";
+  render();return;
+ }
+ const at=Date.now();r.reviewHistory=r.reviewHistory||[];
+ r.reviewHistory.push({at,source:source.slice(0,230),answer:answer.slice(0,1200),evidence:evidence.slice(0,1300),accuracyVerified:false,unseenClaimUnverified:true});
+ r.reviewHistory=r.reviewHistory.slice(-15);r.reviewDraft={source:"",response:"",evidence:""};
  const n=r.reviewHistory.length,delay=[1,3,7,14][Math.min(n,3)];
- r.reviewAt=Date.now()+delay*86400000;save();message="Đã ghi thời điểm ôn. Việc kiểm tra chính xác vẫn cần bằng chứng từ đề hoặc giáo viên.";render();
+ r.reviewAt=at+delay*86400000;save();
+ message="Đã ghi lần thử bài MỚI, chưa xác minh đúng/sai. Bằng chứng cần được so với đề chính thức hoặc giáo viên.";
+ render();
 }
 function handleClick(e){
  if(!overlay||!current)return;const node=e.target.closest?.("[data-s3-action]");
@@ -136,7 +151,14 @@ function handleClick(e){
 }
 document.addEventListener("click",handleClick);
 document.addEventListener("input",e=>{
- if(!overlay||!current)return;const field=e.target.dataset?.s3Field;
+ if(!overlay||!current)return;
+ const rev=e.target.dataset?.s3Review;
+ if(["source","response","evidence"].includes(rev)){
+  const r=row(current);r.reviewDraft=r.reviewDraft||{source:"",response:"",evidence:""};
+  const limit={source:230,response:2400,evidence:2200}[rev];
+  r.reviewDraft[rev]=String(e.target.value||"").slice(0,limit);save();return;
+ }
+ const field=e.target.dataset?.s3Field;
  if(!["source","evidence","answer","repair"].includes(field))return;
  const max={source:220,evidence:2800,answer:4000,repair:2400}[field];
  row(current)[field]=e.target.value.slice(0,max);save();
