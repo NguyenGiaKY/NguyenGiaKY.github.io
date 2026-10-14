@@ -47,7 +47,7 @@ function hub(){
  const hidden=ui.query&&!query.includes(ui.query.toLocaleLowerCase());
  html+='<button type="button" data-qt-open="'+esc(t.id)+'" class="qt-type" data-qt-searchtext="'+esc(query)+'"'+(hidden?' hidden':'')+'><span class="qt-type-label"><small>'+esc(t.group)+'</small><strong>'+esc(t.title)+'</strong><em>'+esc(t.aim)+'</em></span><span class="qt-type-aux">'+stateTag(t)+'<small>'+t.core.length+' Core Skills · '+t.tasks.length+' IELTS Tasks gần nhất</small><b>→</b></span></button>';
  }
- html+='</div><div class="qt-footer-note">Academic Writing Task 1 gồm biểu đồ, sơ đồ và bản đồ; General Training Task 1 là thư. Writing Task 2 và Speaking được chia theo nhiệm vụ đề thi. Số nhóm ở đây là cách tổ chức học tập, không phải số dạng chính thức bắt buộc.</div></div>';
+ html+='</div><div class="qt-footer-note">Đối với IELTS Academic, Writing Task 1 gồm biểu đồ, sơ đồ và bản đồ. General Training Task 1 là thư, được giữ chỉ để tham khảo ngoài lộ trình Academic. Writing Task 2 và Speaking được chia theo nhiệm vụ đề thi. Số nhóm ở đây là cách tổ chức học tập, không phải số dạng chính thức bắt buộc.</div></div>';
  return html;
 }
 function detail(){
