@@ -96,7 +96,7 @@ export default async function handler(req,res){
   b.revisionOf=String(b.revisionOf||"").slice(0,2600);
   b.scenario=String(b.scenario||"").slice(0,700);
   b.meaningFocus=String(b.meaningFocus||"").slice(0,650);
-  if(!["writing","speaking"].includes(mode)||!["A0","A1","A2","Bridge"].includes(b.level)||!String(b.task||"").trim())return reply(res,400,{error:"Invalid lesson"});
+  if(!["writing","speaking"].includes(mode)||!["A0","A1","A2","Bridge","Core","IELTS"].includes(b.level)||!String(b.task||"").trim())return reply(res,400,{error:"Invalid lesson"});
   if(mode==="writing"&&String(b.answer||"").trim().length<5)return reply(res,400,{error:"Write a short answer first"});
   const audio=String(b.audioBase64||"");
   if(mode==="speaking"&&(b.format!=="wav"||audio.length<10000||audio.length>6500000||!/^[A-Za-z0-9+/=]+$/.test(audio)))return reply(res,400,{error:"Record a clear answer under 45 seconds"});
