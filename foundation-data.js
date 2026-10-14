@@ -1,5 +1,6 @@
 /* English Foundation curriculum — first-party authored practice, no AI or external APIs. */
-window.GKFoundationData = {
+window.GKFoundationData =
+{
   "version": 1,
   "description": "English Foundation A0–A2 + IELTS bridge; self-study, no paid API.",
   "levels": [
@@ -32,15 +33,16 @@ window.GKFoundationData = {
     {
       "id": "a0-01",
       "level": "A0",
-      "skill": "Pronunciation",
-      "title": "Làm quen âm và chữ tiếng Anh",
+      "skill": "Communication & pronunciation",
+      "title": "Chào hỏi, giới thiệu tên và một đồ vật",
       "minutes": 15,
-      "goal": "Nhận biết từ, âm cuối và cách nghe–nhắc lại.",
-      "explain": "Tiếng Anh có cách viết và cách đọc không luôn giống nhau. Người mới nên nghe từ trong câu, bắt chước, rồi mới ghi nhớ cách viết. Đặc biệt chú ý âm cuối /s/, /t/, /d/ vì chúng thay đổi nghĩa hoặc ngữ pháp.",
+      "goal": "Có thể chào, nói tên mình, giới thiệu một đồ vật trong tình huống mới; nghe và nhắc lại cụm ngắn.",
+      "explain": "Bài đầu tiên dạy hai cụm giao tiếp: I'm ... / My name is ... để giới thiệu bản thân; This is ... để chỉ một đồ vật. Người học phải hiểu tên ai, vật nào và tự đổi thông tin khi gặp người mới. Phát âm được luyện qua nghe–nhắc lại, nhưng công cụ đọc máy không tự chấm độ chính xác âm cuối.",
       "rules": [
-        "Nghe từng từ → nhắc lại → nghe cả câu → tự nói.",
-        "Không đọc mọi từ theo cách đánh vần tiếng Việt.",
-        "Phân biệt ship / sheep và cat / cats bằng cách nghe thật kỹ."
+        "Khi gặp người mới: Hello. I'm [tên]. hoặc My name is [tên].",
+        "Khi giới thiệu đồ vật: This is a book. hoặc This is my book.",
+        "Nghe một câu hoàn chỉnh, nhắc lại, rồi tự thay tên và vật để tạo câu của mình.",
+        "Trong cats có âm cuối /s/ nhưng chỉ nghe hoặc bấm đã nói không chứng minh bạn phát âm đúng."
       ],
       "examples": [
         [
@@ -74,41 +76,41 @@ window.GKFoundationData = {
           "mèo"
         ]
       ],
-      "audio": "Hello. My name is Anna. This is a book. I have two cats.",
+      "audio": "Hello. I'm Anna. This is my book. I have two cats.",
       "quiz": [
         [
-          "Từ nào nghĩa là 'sách'?",
-          "book",
-          "name",
-          "cat",
-          "Book = sách."
+          "Câu nào giới thiệu tên người nói?",
+          "I'm Lin.",
+          "This is a pen.",
+          "I have a cat.",
+          "I'm ... dùng để tự giới thiệu người nói."
         ],
         [
-          "Cụm nào dùng để giới thiệu tên?",
-          "My name is ...",
-          "I am book",
-          "Two cats",
-          "My name is ... = Tên tôi là ..."
+          "Khi chỉ quyển sách của mình, câu nào phù hợp?",
+          "This is my book.",
+          "I'm book.",
+          "My name book.",
+          "This is my ... dùng để giới thiệu đồ vật."
         ],
         [
-          "Trong 'cats', phần nào cần chú ý khi nghe?",
-          "Âm cuối /s/",
-          "Không có âm cuối",
-          "Chỉ âm đầu",
-          "Danh từ số nhiều thường có âm cuối cần phát âm."
+          "Người nói 'My name is Hoa.' đang cho biết điều gì?",
+          "Tên của người nói",
+          "Tên một đồ vật",
+          "Số lượng đồ vật",
+          "My name nói đến tên của người nói."
         ],
         [
-          "Phương pháp đúng khi luyện phát âm là gì?",
-          "Nghe rồi nhắc lại",
-          "Chỉ học cách viết",
-          "Chỉ dịch tiếng Việt",
-          "Nghe và nói giúp kết nối âm với chữ."
+          "Khi luyện nói, bước nào giúp tạo câu mới?",
+          "Thay tên hoặc đồ vật rồi nói lại",
+          "Chỉ đọc thuộc nguyên câu mẫu",
+          "Chỉ nhìn chữ không nói",
+          "Tự thay thông tin cho thấy bạn hiểu cách dùng cụm câu."
         ]
       ],
       "produce": [
-        "Viết 2 câu giới thiệu tên và một vật xung quanh.",
-        "My name is ... / This is a ...",
-        "My name is Minh. This is a book."
+        "Bạn gặp học sinh mới: giới thiệu tên và một đồ vật thực sự bạn mang theo.",
+        "Hello, I'm ... . This is my ... .",
+        "Hello, I'm Mai. This is my notebook."
       ]
     },
     {
