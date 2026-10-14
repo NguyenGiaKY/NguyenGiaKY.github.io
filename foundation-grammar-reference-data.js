@@ -388,9 +388,9 @@ window.GKFoundationGrammarData = {
       "title": "For/since and already/yet",
       "scenario": "You explain how long something has been true and whether a task is finished.",
       "why": "For introduces a duration (for three months); since gives the start point (since April). Already typically states completion; yet is common in questions/negatives about expected completion.",
-      "good": "I've lived here for two years, since 2024.",
-      "bad": "I've lived here since two years, for 2024.",
-      "contrast": "Duration and starting point are different meanings.",
+      "good": "I've lived here for two years, since I moved here.",
+      "bad": "I've lived here since two years, for I moved here.",
+      "contrast": "A duration uses for; an event marking the starting point uses since.",
       "question": "Which expression describes duration?",
       "options": [
         "since five weeks",
@@ -670,21 +670,40 @@ window.GKFoundationGrammarData = {
     {
       "id": "gr-36",
       "level": "A2",
-      "title": "Although vs however and polite indirect questions",
-      "scenario": "You write a short, polite message expressing a concern.",
-      "why": "Although usually joins a subordinate contrasting clause to a main one; however can link sentences or clauses with punctuation. 'Could you tell me when the meeting starts?' uses statement word order inside the indirect question.",
-      "good": "Although it is busy, I can come. Could you tell me when it starts?",
-      "bad": "Although it is busy. Can tell me when does it start?",
-      "contrast": "Indirect questions use statement order (when it starts), not question order (when does it start).",
-      "question": "Which is a polite indirect question?",
+      "title": "Although vs however",
+      "scenario": "You explain a problem and a contrasting point in an email.",
+      "why": "Although introduces a subordinate clause that connects to a main clause: Although it was late, we continued. However can connect two full statements, usually with a full stop or semicolon before it and a comma after it. Meaning and punctuation both matter.",
+      "good": "Although it was late, we continued. It was late. However, we continued.",
+      "bad": "Although it was late. We continued. However we continued.",
+      "contrast": "Although usually needs a main clause to complete the thought; however works as a linking adverb, not as the same kind of conjunction.",
+      "question": "Which sentence correctly uses although?",
       "options": [
-        "Could you tell me when does it begin?",
-        "Could you tell me when it begins?",
-        "Could you telling me when begins?"
+        "Although the bus was delayed, we arrived on time.",
+        "Although the bus was delayed. We arrived on time.",
+        "Although was delayed, we on time."
+      ],
+      "correct": 0,
+      "reason": "An although-clause joins a complete contrasting main clause.",
+      "transfer": "Describe one difficulty and one unexpected positive outcome using although, then restate the meaning using however."
+    },
+    {
+      "id": "gr-37",
+      "level": "A2",
+      "title": "Polite indirect questions",
+      "scenario": "You ask a teacher for information without sounding demanding.",
+      "why": "A direct WH question may invert auxiliary and subject: 'When does the lesson start?' An indirect question after 'Could you tell me' keeps statement word order: 'Could you tell me when the lesson starts?' Do not insert does again inside the indirect part.",
+      "good": "Could you tell me when the lesson starts?",
+      "bad": "Could you tell me when does the lesson start?",
+      "contrast": "The opening is a question, but the clause 'when the lesson starts' uses subject–verb order.",
+      "question": "Which indirect question is grammatical and polite?",
+      "options": [
+        "Could you tell me where is the room?",
+        "Could you tell me where the room is?",
+        "Could you telling me where the room?"
       ],
       "correct": 1,
-      "reason": "Embedded questions use subject-verb order after the question phrase.",
-      "transfer": "Write a polite email sentence with a contrast and a question asking for a specific detail."
+      "reason": "Embedded questions use 'where + subject + verb', not the direct question inversion.",
+      "transfer": "Write two polite requests for practical information: one about time and one about location. Use embedded questions."
     }
   ]
 };
