@@ -13,6 +13,8 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({records}))}catch(e)
 const allowed=id=>!!catalog.challenges[id];
 const rubrics=skill=>catalog.rubrics[skill]||catalog.rubrics.support;
 const official="https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test";
+const countWords=s=>String(s||"").trim().split(/\s+/).filter(Boolean).length;
+const minWritingWords=id=>/^W8/.test(id)||/^W3/.test(id)||/^W7[abc]$/.test(id)?150:/^W4/.test(id)||id==="W6a"||id==="W7d"?250:0;
 function timeLabel(t){if(!t)return"Not scheduled";return new Date(t).toLocaleDateString("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric"})}
 function status(id){
  const a=records[id];if(!a)return"Chưa lưu bằng chứng";
@@ -59,7 +61,7 @@ function checkStatus(r){
 }
 function render(){
  if(!current)return;const id=current,t=info,r=row(id),kind=t.skill,challenge=catalog.challenges[id],source=sourceLink(kind),missing=checkStatus(r);
- const hasScore=!!(window.GKIELTSProgress?.()?.rows||[]).find(x=>x.id===id&&x.latest?.score!==undefined);
+ const words=countWords(r.answer),minWords=kind==="writing"?minWritingWords(id):0;
  const guidance=kind==="listening"?"Bạn cần nghe bản ghi thật TRƯỚC khi đọc transcript. Ghi đoạn thời gian và đối chiếu sau khi thử. Giọng TTS trên trang không thay audio thi.":
  kind==="reading"?"Dùng đoạn đọc mới. Chỉ ra bằng chứng trong văn bản; không chọn câu vì trùng keyword hoặc suy diễn.":
  kind==="speaking"?"Bắt buộc luyện bằng giọng nói thực, nhận câu hỏi follow-up và nghe lại. Ghi chú chữ không chấm được phát âm, độ trôi chảy hay phản xạ.":
@@ -75,7 +77,8 @@ function render(){
  '<section class="s3-panel"><h3>04 · Perform → Explain → Fix</h3>'+
  '<label for="s3Source">Source / test ID (recording, passage, cue card, chart)</label><input id="s3Source" data-s3-field="source" maxlength="220" value="'+esc(r.source)+'" placeholder="e.g. IELTS Academic sample, Listening Part 2, question 14">'+
  '<label for="s3Evidence">Specific evidence (e.g., timestamp, passage phrase, data point, feedback)</label><textarea id="s3Evidence" data-s3-field="evidence" rows="3" maxlength="2800" placeholder="Point to the actual relevant evidence…">'+esc(r.evidence)+'</textarea>'+
- '<label for="s3Answer">Your own answer / reasoning or short excerpt from your own draft</label><textarea id="s3Answer" data-s3-field="answer" rows="5" maxlength="4000" placeholder="Your own original response…">'+esc(r.answer)+'</textarea>'+
+ '<label for="s3Answer">'+(kind==="writing"?"Your original draft or full Writing response":"Your own answer, reasoning or short original excerpt")+'</label><textarea id="s3Answer" data-s3-field="answer" rows="'+(kind==="writing"?"9":"5")+'" maxlength="4000" placeholder="Your own original response…">'+esc(r.answer)+'</textarea>'+
+ (kind==="writing"?'<p id="s3WordCount" class="s3-tip">'+words+' words. '+(minWords?"For a FULL Academic Writing response this task needs at least "+minWords+" words; a shorter entry is only partial practice.":"This editing drill is not a full essay.")+'</p>':"")+
  '<label for="s3Repair">Correction and next independent practice</label><textarea id="s3Repair" data-s3-field="repair" rows="4" maxlength="2400" placeholder="What was wrong or uncertain? What will you do differently in a NEW task?">'+esc(r.repair)+'</textarea>'+
  '<button type="button" data-s3-action="check" class="s3-primary">Check</button>'+
  (missing.length?'<p class="s3-tip">Chưa đủ dữ liệu: '+missing.map(esc).join("; ")+'.</p>':
@@ -114,8 +117,12 @@ async function writing(){
  busy=true;message="Checking…";render();
  try{
   const token=await window.GKCloudSync.getIdToken();if(!token)throw Error("Sign in to use Check");
+  const caseData=window.GKStage3PracticeData?.cases?.[id],visual=caseData?.visual;
+  const evidenceData=visual?JSON.stringify({title:visual.title,headers:visual.headers,rows:visual.rows,steps:visual.steps,before:visual.before,after:visual.after}):"";
   const payload={mode:"writing",level:"IELTS",goal:catalog.challenges[id],scenario:"Skill: "+t.skill+"; Task: "+t.title+"; Source supplied by learner: "+r.source,
-  task:window.GKStage3PracticeData?.cases?.[id]?.text||catalog.challenges[id],checklist:rubrics(t.skill),meaningFocus:"Judge ONLY the submitted written excerpt. Do not invent facts about an unseen chart or unprovided source. This cannot establish an IELTS band.",
+  task:(caseData?.text||catalog.challenges[id])+(evidenceData?"\nEXACT PRACTICE GRAPH/TABLE/DIAGRAM DATA: "+evidenceData:""),checklist:rubrics(t.skill),
+  meaningFocus:"Evaluate the supplied task and precise values ONLY, not a guessed visual. Answer length "+countWords(answer)+" words. "+
+  (minWritingWords(id)?"Full practice minimum "+minWritingWords(id)+" words; shorter answers are ONLY partial training. ":"")+"Do not give official IELTS bands. Critique concrete data accuracy and task coverage.",
   answer,revisionOf:r.feedback?.answer||""};
   const url=location.hostname.endsWith(".vercel.app")?location.origin+"/api/foundation-grade":"https://nguyen-gia-ky-github-io-rvay.vercel.app/api/foundation-grade";
   const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
@@ -162,7 +169,13 @@ document.addEventListener("input",e=>{
  if(!["source","evidence","answer","repair"].includes(field))return;
  const max={source:220,evidence:2800,answer:4000,repair:2400}[field];
  row(current)[field]=e.target.value.slice(0,max);save();
- if(field==="answer"){const btn=overlay.querySelector('[data-s3-action="writing"]');if(btn)btn.disabled=row(current).answer.trim().length<25||busy;}
+ if(field==="answer"){
+  const btn=overlay.querySelector('[data-s3-action="writing"]');if(btn)btn.disabled=row(current).answer.trim().length<25||busy;
+  const wc=overlay.querySelector("#s3WordCount");if(wc){
+    const min=minWritingWords(current),n=countWords(row(current).answer);
+    wc.textContent=n+" words. "+(min?"Full Academic task requires at least "+min+"; fewer words means partial practice.":"This is skill-focused practice, not a complete full task.");
+  }
+ }
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&current)close()});
 window.GKStage3Evidence={open,close,refresh:render,status,summary,homePanel,getRecord:row,extras:catalog.extras};
