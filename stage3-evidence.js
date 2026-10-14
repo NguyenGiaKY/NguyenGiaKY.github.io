@@ -138,6 +138,7 @@ document.addEventListener("input",e=>{
  if(!["source","evidence","answer","repair"].includes(field))return;
  const max={source:220,evidence:2800,answer:4000,repair:2400}[field];
  row(current)[field]=e.target.value.slice(0,max);save();
+ if(field==="answer"){const btn=overlay.querySelector('[data-s3-action="writing"]');if(btn)btn.disabled=row(current).answer.trim().length<25||busy;}
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&current)close()});
 window.GKStage3Evidence={open,close,status,summary,homePanel,getRecord:row,extras:catalog.extras};
