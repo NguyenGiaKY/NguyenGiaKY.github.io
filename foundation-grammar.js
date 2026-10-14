@@ -51,7 +51,7 @@ function render(){
  '<p class="fa-tip">Bài này chỉ có một câu kiểm tra nhận biết. Muốn kiểm chứng khả năng dùng phải tự viết/nói, làm đề mới và ôn sau một thời gian.</p>'+btn("retry","Practise this question again"):
  btn("quiz","Check",true,choice===null));
  if(page===2)body='<h3>Use it independently</h3><p class="fa-transfer">'+esc(t.transfer)+'</p><p class="fa-tip">Tự tạo nội dung có ý nghĩa; đừng chép nguyên câu mẫu. Bạn có thể so sánh với giải thích ở màn đầu.</p>'+
- '<label for="fg-draft"><b>Your answer in English</b></label><textarea class="fa-grammar-draft" id="fg-draft" data-fg-field="draft" rows="6" placeholder="Write an original English answer…">'+esc(r.draft||"")+'</textarea>'+
+ '<label for="fg-draft"><b>Your answer in English</b></label><textarea class="fa-grammar-draft" id="fg-draft" data-fg-field="draft" maxlength="4000" rows="6" placeholder="Write an original English answer…">'+esc(r.draft||"")+'</textarea>'+
  btn("writing","Check",true,loading||String(r.draft||"").trim().length<10)+feedback(r)+
  '<p class="fa-tip">Không cần hoàn tất chấm AI để lưu câu của bạn; phản hồi được gửi khi bấm Check. Nếu Check không hoạt động, bạn vẫn có thể xem quy tắc và luyện với giáo viên.</p>';
  root.innerHTML='<div class="fa-shell"><header class="fa-top"><div class="fa-nav">'+btn("list","← All grammar topics")+'<span>'+esc(t.level)+' · '+esc(t.title)+'</span></div><h1>'+(page===0?"Understand":page===1?"Think & Check":"Transfer & Fix")+'</h1><p>'+esc(t.title)+'</p><div class="fa-bar"><span style="width:'+Math.round((page+1)/3*100)+'%"></span></div><small>Activity '+(page+1)+' / 3 · Navigation is not mastery</small></header><main class="fa-main fa-grammar-main">'+body+(message?'<p class="fa-status" role="status">'+esc(message)+'</p>':"")+'</main><footer class="fa-nav fa-footer">'+btn("prev","← Previous",false,page===0)+(page===2?btn("list","Save & return",true):btn("next","Next →",true))+'</footer></div>';
@@ -100,6 +100,6 @@ root.addEventListener("click",e=>{
  if(a==="writing"){void writingCheck();return}
  if(a==="hear"){hear();return}
 });
-root.addEventListener("input",e=>{if(!current||e.target.dataset?.fgField!=="draft")return;row(current).draft=e.target.value;save()});
+root.addEventListener("input",e=>{if(!current||e.target.dataset?.fgField!=="draft")return;row(current).draft=e.target.value.slice(0,4000);save()});
 window.GKFoundationGrammar={render,open,list,homePanel,topics,record:row};
 })();
