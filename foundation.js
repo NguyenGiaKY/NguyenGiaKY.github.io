@@ -19,7 +19,7 @@ function passDates(id){const distinct=new Set((entry(id).attempts||[]).filter(x=
 function levelStatus(id){const e=entry(id),p=passDates(id);return p.length>=2&&e.selfChecked?"mastered":p.length&&e.selfChecked?"review":"new";}
 function dueDate(id){const p=passDates(id);return p.length?daysAfter(p[p.length-1],[1,3,7,14][Math.min(p.length-1,3)]):null;}
 function isDue(id){const d=dueDate(id);return d&&d<=today();}
-function tag(id){const l=levelStatus(id);return l==="mastered"?'<span class="f-tag good">✓ Đã ôn quiz ≥2 ngày</span>':l==="review"?'<span class="f-tag ongoing">↻ Đang ôn</span>':'<span class="f-tag">Chưa học</span>';}
+function tag(id){const l=levelStatus(id),finished=window.GKFoundationFlow?.getState(id)?.finished;return l==="mastered"?'<span class="f-tag good">✓ Đã ôn quiz ≥2 ngày</span>':l==="review"?'<span class="f-tag ongoing">↻ Đang ôn</span>':finished?'<span class="f-tag ongoing">Đã thực hành · cần kiểm tra thêm</span>':'<span class="f-tag">Chưa học</span>';}
 function button(action,label,style){return '<button type="button" data-f-action="'+esc(action)+'" class="f-btn '+(style||"")+'">'+label+'</button>';}
 function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const k=Math.floor(Math.random()*(i+1));[b[i],b[k]]=[b[k],b[i]];}return b;}
 function generate(l){return shuffled(l.quiz.map(q=>({prompt:q[0],correct:q[1],options:shuffled(q.slice(1,4)),reason:q[4]})));}
@@ -30,7 +30,7 @@ function home(){
 const started=data.lessons.filter(l=>(entry(l.id).attempts||[]).length||state.drafts[l.id]||window.GKFoundationFlow?.getState(l.id)?.page>0).length;
 const mastered=data.lessons.filter(l=>levelStatus(l.id)==="mastered").length;
 const due=data.lessons.filter(l=>isDue(l.id));
-const next=data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0];
+const next=data.lessons.find(l=>!window.GKFoundationFlow?.getState(l.id)?.finished&&levelStatus(l.id)!=="mastered")||data.lessons[0];
 const pct=Math.round(started/data.lessons.length*100);
 const filtered=data.lessons.filter(l=>ui.filter==="all"||ui.filter===l.level);
 let h='<div class="f-wrap"><div class="f-cover"><div><div class="f-kicker">ENGLISH FOUNDATION · A0 → A2 → IELTS</div>'+
@@ -140,7 +140,7 @@ if(a==="home"){ui.page="home";render();scrollInto();}
 else if(a==="wordPacks"){ui.page="wordpacks";render();scrollInto();}
 else if(a==="classic"){ui.classic=true;window.GKFoundationCoach?.leave();render();scrollInto();}
 else if(a==="flow"){ui.classic=false;window.GKFoundationCoach?.leave();render();scrollInto();}
-else if(a==="continue"){const last=window.GKFoundationFlow?.getLastLessonId?.();const recent=last&&index[last]&&!window.GKFoundationFlow.getState(last).finished?index[last]:null;open((recent||data.lessons.find(l=>{const f=window.GKFoundationFlow?.getState(l.id);return f?.page>0&&!f.finished;})||data.lessons.find(l=>isDue(l.id))||data.lessons.find(l=>levelStatus(l.id)!=="mastered")||data.lessons[0]).id);}
+else if(a==="continue"){const last=window.GKFoundationFlow?.getLastLessonId?.();const recent=last&&index[last]&&!window.GKFoundationFlow.getState(last).finished?index[last]:null;open((recent||data.lessons.find(l=>{const f=window.GKFoundationFlow?.getState(l.id);return f?.page>0&&!f.finished;})||data.lessons.find(l=>isDue(l.id))||data.lessons.find(l=>!window.GKFoundationFlow?.getState(l.id)?.finished&&levelStatus(l.id)!=="mastered")||data.lessons[0]).id);}
 else if(a==="diagnostic"){ui.page="placement";ui.placementAnswers={};ui.placementResult=null;ui.diagnosticQuestions=[data.lessons[1],data.lessons[2],data.lessons[4],data.lessons[6],data.lessons[8],data.lessons[12],data.lessons[15],data.lessons[19]].map(l=>({prompt:l.quiz[0][0],options:shuffled(l.quiz[0].slice(1,4)),correct:l.quiz[0][1]}));render();scrollInto();}
 else if(a==="checkDiagnostic"){const n=ui.diagnosticQuestions.reduce((sum,q,i)=>sum+(ui.placementAnswers[i]===q.correct?1:0),0);ui.placementResult={correct:n,level:n<=3?"A0":n<=5?"A1":"A2"};render();}
 else if(a==="startLevel"){ui.page="home";ui.filter=ui.placementResult.level;render();scrollInto();}
