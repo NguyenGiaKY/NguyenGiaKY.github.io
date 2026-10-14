@@ -613,8 +613,8 @@ window.progress=updateHero;
 function phaseInfo(){
  const lrReady=['listening','reading'].every(s=>(fs.scores[s]||[]).slice(-3).length>=3&&(fs.scores[s]||[]).slice(-3).every(x=>x>=35));
  const wsReady=['writing','speaking'].every(s=>(fs.scores[s]||[]).slice(-3).length>=3&&(fs.scores[s]||[]).slice(-3).every(x=>x>=6.5));
- if(lrReady&&wsReady)return ['Exam Readiness','Bạn đã có dữ liệu ổn định ở vùng mục tiêu. Tập mock, sửa lỗi cuối và giữ phong độ.'];
- if(pctSkill('listening')>=60&&pctSkill('reading')>=60)return ['Band Target Consolidation','Tập trung full-test checkpoints, deep correction và ổn định L/R 8+, W/S 6.5+.'];
+ if(lrReady&&wsReady)return ['Reported checkpoint targets','Bạn đã nhập các điểm luyện tập trong vùng mục tiêu. Chúng chưa được xác minh từ đề thi mới và phản hồi giám khảo; hãy đối chiếu nguồn, bài thật và các kỹ năng còn yếu.'];
+ if(pctSkill('listening')>=60&&pctSkill('reading')>=60)return ['Training coverage growing','Đã có dữ liệu hoạt động nhiều hơn; hãy luyện bài mới, kiểm bằng chứng từ audio/text và sửa lỗi trước khi suy ra trình độ.'];
  if(pctSkill('listening')>=25||pctSkill('reading')>=25)return ['Skill Building','Tiếp tục xây từng dạng câu hỏi. Không cần chạy theo số ngày.'];
  return ['Foundation & Diagnosis','Xây nền và tìm chính xác lỗi đang làm mất điểm.'];
 }
