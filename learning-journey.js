@@ -22,7 +22,7 @@ function core(){
 }
 function ielts(){
  const s=window.GKIELTSProgress?.();
- return s?{done:s.known,total:s.total,answered:s.answered,pct:s.coverage,mastered:s.mastered,support:s.support||0}: {done:0,total:84,answered:0,pct:0,mastered:0,support:9};
+ return s?{done:s.known,total:s.total,answered:s.answered,pct:s.coverage,mastered:s.mastered,support:s.support||0}: {done:0,total:88,answered:0,pct:0,mastered:0,support:9};
 }
 function nav(view){const target=document.querySelector('.nav[data-view="'+view+'"]');if(target)target.click();}
 function block(num,title,desc,progress,explain,action,button,parts){
