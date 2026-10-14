@@ -98,3 +98,14 @@
 .fa-test-scene .fa-reading{margin-bottom:18px}
 .fa-main .fa-work{margin-top:28px;padding-top:20px;border-top:1px solid #e0e7f2}
 @media(max-width:600px){.fa-exit-panel{padding:15px}.fa-exit-buttons button{flex:1;min-width:120px}}
+
+/* Spaced recall and authentic audio practice links */
+.fa-unit-row{display:flex;flex-direction:column;gap:6px}
+.fa-unit-row>.fa-unit{width:100%;flex:1}
+.fa-unit-row>.fa-review-btn{align-self:stretch;border-color:#4264ad;color:#214b96;background:#f4f8ff}
+.fa-resource-panel{border:1px solid #dbe2ec;border-radius:15px;padding:19px;margin:20px 0;background:#fff}
+.fa-resource-panel h3{margin:0 0 7px;font-size:18px}
+.fa-resource-panel p{color:#526279;font-size:13px;line-height:1.65}
+.fa-resource-links{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+.fa-resource-links a{border:1px solid #ccdaed;border-radius:9px;color:#1d50a5;padding:10px 12px;font-weight:600;text-decoration:none;font-size:13px}
+.fa-resource-links a:hover,.fa-resource-links a:focus-visible{background:#eef5ff}
