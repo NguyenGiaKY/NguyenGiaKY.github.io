@@ -1,7 +1,7 @@
 # Stage 3 IELTS Academic — question types and task-by-task quality audit
 
 Last review: 15 October 2026. **Deployment is not equivalent to IELTS readiness.**
-Baseline: 81 IDs comprised 72 IELTS skill tasks (18 each Listening, Reading, Writing, Speaking) and 9 support/repair tasks. Current: 12 focused additions => **84 IELTS skill tasks + 9 support tasks = 93 activities**. The old 81 IDs and their progress are retained for backwards compatibility. This is a curated learning plan, not an official count of IELTS task types.
+Baseline: 81 IDs comprised 72 IELTS skill tasks (18 each Listening, Reading, Writing, Speaking) and 9 support/repair tasks. Current: 16 focused additions => **88 IELTS Academic skill tasks + 9 support tasks = 97 activities**. The old 81 IDs and their progress are retained for backwards compatibility. Stage3 detailed notes now save in five skill-specific synced shards to avoid one oversized record. This is a curated learning plan, not an official count of IELTS task types.
 
 ## Official format and boundary
 - IELTS Academic Listening: 4 parts, 40 questions, around 30 minutes; original practice should use real voices and accents, and official question conventions.
@@ -30,11 +30,11 @@ Writing format reference: https://ielts.org/take-a-test/test-types/ielts-academi
 ## What was built in this revision
 - Every existing and new task ID has a **different learner mission** with skill-specific criteria.
 - Each task has a **Practice & Evidence** view to record source ID, concrete evidence, a learner response and repair plan. **Check in this view only verifies fields are provided**. It does NOT verify IELTS correctness and MUST NOT be called an IELTS score.
-- 12 extra high-risk tasks have original **short microclinics** with two objective questions each: 3 Listening, 3 Reading, 4 Writing, 2 Speaking. Listening here is browser speech synthesis, clearly labelled NOT authentic test audio. First score is preserved on retries.
-- Writing has optional automated practice feedback. If a real graph/passage isn't supplied, grading an excerpt cannot confirm Task Achievement nor an IELTS band. Typed speaking notes never measure speaking.
-- The 40 Question Types references map to corresponding Core Skills and Stage 3 tasks, including 12 added links.
-- Only 84 IELTS skill tasks count in the Stage 3 learning-journey metric; 9 support tasks remain available separately.
-- Former repeated-quiz "mastered" shortcuts now signal reviewing *known* questions, not independently verified IELTS performance.
+- All **88 Academic IELTS skill tasks** now have a specific original **short microclinic** with two objective prerequisite questions (176 total). The new 16 tasks cover 3 Listening, 3 Reading, 8 Writing and 2 Speaking. This does not replace long authentic papers; synthetic Listening is explicitly identified as TTS. First attempts are retained after retries.
+- Academic Task 1 now has original accessible line/bar/pie/table charts, a process flow, a before/after map and mixed-unit data. The exact structured figures are provided to Writing Check. Text-only prompts without a source cannot establish Task Achievement or an official IELTS band.
+- The 40 Question Types references map to corresponding Core Skills and Stage 3 tasks, including 16 targeted additions (including the four chart-format tasks).
+- Only 88 IELTS Academic skill tasks count in the Stage 3 learning-journey metric; 9 support tasks remain available separately. Microclinic checks are listed separately from full-task question coverage.
+- Stage 2 and 3 Speaking now provide browser microphone recording (up to 40 seconds per clip), replay, optional authenticated audio-based Check and a second spoken follow-up. Raw audio is not stored in sync; this is **NOT** a 2-minute Part 2 or 11–14-minute interactive exam.
 
 ## Skill-type coverage gaps still blocking full acceptance
 | Area | Existing content and improvements | Still needs real validation |
@@ -145,9 +145,23 @@ These are **learning missions**. A written mission is not evidence it has been p
 | S7a | speaking | Part 2 unexpected follow-up | Record a full new Part 2 long turn, then respond to one unexpected follow-up in a separate clip. | New two-question microclinic |
 | S7b | speaking | Part 3 balanced evaluation | Discuss a new Part 3 issue, evaluate benefits and costs, then answer a counterargument naturally. | New two-question microclinic |
 
+| W8a | writing | Line graph · time-series trends | Write a full Academic Task 1 summary (150+ words) of an ORIGINAL line graph, identify overall changes, major rises/falls and meaningful comparisons. Do not invent reasons. | Dedicated structured visual + two-question microclinic |
+| W8b | writing | Bar chart · categorical comparisons | Write an Academic Task 1 report of an ORIGINAL grouped bar chart with correct categories, units, highest/lowest values and comparisons. | Dedicated structured visual + two-question microclinic |
+| W8c | writing | Pie chart · shares and proportions | Write an Academic Task 1 report of an ORIGINAL pie chart, accurately describing its total of 100%, largest and smallest sectors and combined shares. | Dedicated structured visual + two-question microclinic |
+| W8d | writing | Table · accurate comparisons | Summarise an ORIGINAL numerical table with clear overview and comparisons across years; preserve every unit, category and reported number. | Dedicated structured visual + two-question microclinic |
+
 ## Definition of done
-**Not done:** 93 task cards show up, 100% coverage bar, a list of strategies exists, two familiar MCQ items are repeated, or AI gives a self-estimated band.
+**Not done:** 97 task cards show up, 100% coverage bar, a list of strategies exists, two familiar MCQ items are repeated, or AI gives a self-estimated band.
 
 **Done for an IELTS task:** appropriate real task stimulus attempted, first answer checked against evidence/rubric, concrete repair completed, unfamiliar equivalent tested later and outcome recorded without inflation.
 
-**Done for Stage 3:** credible separate evidence for a broad range of official Listening, Academic Reading, Academic Writing and Speaking formats, plus repeated unseen assessments and real learner validation. Full IELTS readiness cannot be inferred from 84 task records alone.
+**Done for Stage 3:** credible separate evidence for a broad range of official Listening, Academic Reading, Academic Writing and Speaking formats, plus repeated unseen assessments and real learner validation. Full IELTS readiness cannot be inferred from 88 task records or 176 brief objective checks alone.
+
+
+## Latest verification and unresolved risks (15 October 2026)
+- **Static audit:** 88/88 Academic task IDs have individual microclinics and 97/97 total IDs have learning missions; 40/40 Question Types resolve to existing tasks.
+- **Interactive mock audit:** all 88 clinics open, transcript stays hidden before grading, chart displays render, audio check is sent as actual WAV bytes, and the speaking follow-up advances.
+- **Retention:** Stage 3 now demands a distinct later source ID, fresh response and evidence before accepting delayed review records. This verifies *the presence of a new attempted practice*, **not correctness**, which still needs objective answer checking or human evaluation.
+- **Feedback:** Core and IELTS typed Check shows rubric criteria, concrete errors, suggested revised wording and the next revision question when the authenticated service responds. The AI does not issue a genuine IELTS band.
+- **Data migration:** previous Stage3 notes are read from `gk_stage3_evidence_v1` and safely migrated into `gk_s3_<skill>_v1` keys only after all writes succeed. No progress should be destroyed by the upgrade.
+- **Unresolved acceptance gates:** a genuine library of natural multi-accent full IELTS recordings, long calibration passages with realistic score difficulty, reliable interactive full Speaking mock, human moderation of band-like judgements, repeated unseen samples for all modules, phone/Safari/microphone testing with real accounts, and confirmed end-to-end Vercel+Firebase service behaviour.
