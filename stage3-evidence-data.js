@@ -1,5 +1,5 @@
 /* 81 retained task IDs + 12 targeted Academic tasks; official recordings are linked, not reproduced. */
-window.GKStage3EvidenceData={
+window.GKStage3EvidenceData= {
   "version": 1,
   "extras": [
     {
@@ -109,6 +109,42 @@ window.GKStage3EvidenceData={
       "desc": "Explain two sides, qualify a view and handle a challenge.",
       "day": 51,
       "index": 5
+    },
+    {
+      "id": "W8a",
+      "skill": "writing",
+      "module": "W8",
+      "title": "Line graph · time-series trends",
+      "desc": "Summarise two changing series and identify key crossings and extrema.",
+      "day": 52,
+      "index": 4
+    },
+    {
+      "id": "W8b",
+      "skill": "writing",
+      "module": "W8",
+      "title": "Bar chart · categorical comparisons",
+      "desc": "Compare groups precisely, using shared units and relevant ranking.",
+      "day": 53,
+      "index": 4
+    },
+    {
+      "id": "W8c",
+      "skill": "writing",
+      "module": "W8",
+      "title": "Pie chart · shares and proportions",
+      "desc": "Describe largest and smallest shares and meaningful relative proportions.",
+      "day": 54,
+      "index": 4
+    },
+    {
+      "id": "W8d",
+      "skill": "writing",
+      "module": "W8",
+      "title": "Table · accurate comparisons",
+      "desc": "Read values across time/categories, select overview and key details.",
+      "day": 55,
+      "index": 4
     }
   ],
   "challenges": {
@@ -204,7 +240,11 @@ window.GKStage3EvidenceData={
     "W7c": "Interpret two related but differently scaled visual datasets and summarise main relationships without inventing causes.",
     "W7d": "Write Task 2 with TWO explicitly answered questions, supported argument and coherent conclusion.",
     "S7a": "Record a full new Part 2 long turn, then respond to one unexpected follow-up in a separate clip.",
-    "S7b": "Discuss a new Part 3 issue, evaluate benefits and costs, then answer a counterargument naturally."
+    "S7b": "Discuss a new Part 3 issue, evaluate benefits and costs, then answer a counterargument naturally.",
+    "W8a": "Write a full Academic Task 1 summary (150+ words) of an ORIGINAL line graph, identify overall changes, major rises/falls and meaningful comparisons. Do not invent reasons.",
+    "W8b": "Write an Academic Task 1 report of an ORIGINAL grouped bar chart with correct categories, units, highest/lowest values and comparisons.",
+    "W8c": "Write an Academic Task 1 report of an ORIGINAL pie chart, accurately describing its total of 100%, largest and smallest sectors and combined shares.",
+    "W8d": "Summarise an ORIGINAL numerical table with clear overview and comparisons across years; preserve every unit, category and reported number."
   },
   "unscoredSupport": [
     "G1a",
