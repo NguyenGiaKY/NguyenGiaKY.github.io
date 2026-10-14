@@ -34,7 +34,7 @@ function stopAll(){
  clipUrl="";clip=null;recorder=null;chunks=[];
 }
 function open(id){
- if(!unitMap[id])return;stopAll();current=id;status="";render();
+ if(!unitMap[id])return;window.GKFoundationExit?.leave();stopAll();current=id;status="";render();
 }
 function list(){
  stopAll();current="";status="";
@@ -45,7 +45,7 @@ function list(){
    return '<button type="button" class="fa-unit" data-fa-id="'+u.id+'"><small>'+u.level+' · '+(started?c.checked+' / 3 question sets checked':'Not started')+(due(r)?" · Review due":"")+'</small><strong>'+esc(u.title)+'</strong><span>'+esc(u.goal)+'</span><em>'+ (started?"Continue →":"Begin →")+'</em></button>';
   }).join("")+'</div></section>';
  }).join("");
- root.innerHTML='<div class="fa-shell"><div class="fa-top">'+b("exit","← Foundation home")+'<h1>Real-world English · A1 and A2</h1><p>Đây là phần thực hành mở rộng, không phải chứng nhận trình độ. Mỗi bài kiểm tra nghe, đọc, cấu trúc, viết và nói qua một bối cảnh khác nhau.</p></div>'+sections+'</div>';
+ root.innerHTML='<div class="fa-shell"><div class="fa-top">'+b("exit","← Foundation home")+'<h1>Real-world English · A1 and A2</h1><p>Đây là phần thực hành mở rộng, không phải chứng nhận trình độ. Mỗi bài kiểm tra nghe, đọc, cấu trúc, viết và nói qua một bối cảnh khác nhau.</p></div>'+(window.GKFoundationExit?.homePanel()||"")+sections+'</div>';
 }
 function setPage(n){
  if(!current)return;
@@ -101,6 +101,7 @@ function speakPanel(u,r){
  '<p class="fa-tip">If your browser does not support recording, practise out loud with a partner or record locally using your device. No speaking score is claimed without audio evidence.</p>')+'</div>';
 }
 function render(){
+ if(window.GKFoundationExit?.isActive())return window.GKFoundationExit.render();
  const u=unitMap[current];if(!u)return list();
  const r=row(current);r.page=Math.max(0,Math.min(steps.length-1,Number(r.page)||0));
  const currentStep=steps[r.page],type=currentStep[0],c=count(r);
@@ -271,5 +272,5 @@ root.addEventListener("input",event=>{
  if(key==="speakingNotes")r.speakingNotes=event.target.value;
  if(["writing","transfer","speakingNotes"].includes(key)){const now=new Date().toISOString();if(!r.firstPractised)r.firstPractised=now;r.lastPractised=now;save()}
 });
-window.GKFoundationApplied={open,render,list,homePanel,getRecord:row,units,steps};
+window.GKFoundationApplied={open,render,list,homePanel,getRecord:row,units,steps,makeWavBase64};
 })();
