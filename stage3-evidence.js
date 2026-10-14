@@ -108,7 +108,18 @@ function render(){
  (r.feedback.report.corrected_answer?'<details><summary>Suggested corrected version</summary><p>'+esc(r.feedback.report.corrected_answer)+'</p></details>':"")+
  (r.feedback.report.revision_question?'<p><b>Next new task:</b> '+esc(r.feedback.report.revision_question)+'</p>':"")+'</div>':r.feedback?'<p>Feedback cũ không áp dụng sau khi sửa bài.</p>':"")+'</section>';
  }
- const attempts=r.attempts||[];
+ const attempts=r.attempts||[],mini=window.GKStage3Micro?.getRecord?.(id),voice=kind==="speaking"?window.GKSpokenEvidence?.getRecord?.(id,"IELTS"):null;
+ const proof=[
+  [!!mini?.attempts?.length,"Technique questions attempted and checked"],
+  [attempts.length>0,"Own work, source, evidence and repair documented"],
+  [kind==="speaking"?!!voice?.attempts?.length:kind==="writing"?!!r.feedback?.report:kind==="listening"?false:kind==="reading"?false:!!r.feedback?.report,
+   kind==="speaking"?"Real speech audio checked":kind==="writing"?"Original writing received structured feedback":"Independent source answers verified against official evidence (not automatic)"],
+  [!!(r.reviewHistory||[]).length,"New delayed source and answer attempted"],
+  [false,"Independent outcome validated on new full IELTS-format tasks (not yet automated)"]
+ ];
+ h+='<section class="s3-panel s3-acceptance"><h3>Task evidence checklist — not a band</h3><ul>'+
+ proof.map(x=>'<li><span class="'+(x[0]?"s3-yes":"s3-no")+'">'+(x[0]?"✓":"○")+'</span> '+esc(x[1])+'</li>').join("")+
+ '</ul><p class="s3-tip">A short microclinic, recording or self-entered source does not independently establish mastery. The final requirement needs valid new-task outcomes and human or authoritative answer-key verification.</p></section>';
  h+='<section class="s3-panel"><h3>Review · Evidence over time</h3><p>'+attempts.length+' hồ sơ đã ghi; ngày ôn kế tiếp: '+esc(timeLabel(r.reviewAt))+'.</p>'+
  '<p>Check chỉ xác nhận có thông tin trong từng phần. Để kết luận học đúng, hãy đối chiếu nguồn chính thức hoặc được giáo viên đánh giá, rồi thử một đề khác sau vài ngày.</p>'+
  (r.reviewAt&&Date.now()>=r.reviewAt?
