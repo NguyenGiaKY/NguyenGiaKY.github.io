@@ -107,7 +107,7 @@ async function writing(){
  busy=true;message="Checking…";render();
  try{
   const token=await window.GKCloudSync.getIdToken();if(!token)throw Error("Sign in to use Check");
-  const payload={mode:"writing",level:"IELTS practice",goal:catalog.challenges[id],scenario:"Skill: "+t.skill+"; Task: "+t.title+"; Source supplied by learner: "+r.source,
+  const payload={mode:"writing",level:"IELTS",goal:catalog.challenges[id],scenario:"Skill: "+t.skill+"; Task: "+t.title+"; Source supplied by learner: "+r.source,
   task:catalog.challenges[id],checklist:rubrics(t.skill),meaningFocus:"Judge ONLY the submitted written excerpt. Do not invent facts about an unseen chart or unprovided source. This cannot establish an IELTS band.",
   answer,revisionOf:r.feedback?.answer||""};
   const url=location.hostname.endsWith(".vercel.app")?location.origin+"/api/foundation-grade":"https://nguyen-gia-ky-github-io-rvay.vercel.app/api/foundation-grade";
@@ -141,4 +141,5 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&current)close()});
 window.GKStage3Evidence={open,close,status,summary,homePanel,getRecord:row,extras:catalog.extras};
+window.flexRenderHome?.();
 })();
