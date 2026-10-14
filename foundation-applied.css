@@ -109,3 +109,16 @@
 .fa-resource-links{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
 .fa-resource-links a{border:1px solid #ccdaed;border-radius:9px;color:#1d50a5;padding:10px 12px;font-weight:600;text-decoration:none;font-size:13px}
 .fa-resource-links a:hover,.fa-resource-links a:focus-visible{background:#eef5ff}
+
+/* Grammar Reasoning Studio */
+.fa-grammar-intro{margin-top:18px}
+.fa-grammar-main .fa-situation{padding:17px;background:#f2f6fd}
+.fa-grammar-main .fa-example{margin:15px 0;padding:17px;border:1px solid #dce5f2;border-radius:13px}
+.fa-grammar-main .fa-example.good{background:#f1f9f3;border-color:#cbe5d3}
+.fa-grammar-main .fa-example.bad{background:#fff7f2;border-color:#edddc8}
+.fa-grammar-main .fa-example p[lang="en"]{font-weight:700;font-size:17px;line-height:1.6}
+.fa-grammar-main .fa-example small{font-size:11px;color:#51617c}
+.fa-grammar-main .fa-grammar-draft{display:block;width:100%;padding:16px;border:1px solid #bdcde2;border-radius:12px;font:inherit;margin:10px 0;line-height:1.65}
+.fa-grammar-main>.fa-btn{margin:12px 0}
+.fa-grammar-main .fa-transfer{font-size:16px;font-weight:650}
+.fa-grammar-main label{display:block}
