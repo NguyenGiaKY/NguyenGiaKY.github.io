@@ -31,3 +31,15 @@
 .s3-footer button{background:#fff;border:1px solid #b4c3d8;padding:10px 15px;border-radius:10px;font-weight:650;cursor:pointer}
 .flexTaskActions [data-evidence]{border-color:#849dcb;background:#eef4ff;color:#174883}
 @media(max-width:700px){.s3-overlay{padding:0}.s3-dialog{max-height:100vh;min-height:100vh;border-radius:0}.s3-header,.s3-content,.s3-footer{padding-left:15px;padding-right:15px}.s3-header h2{font-size:20px}.s3-panel{padding:14px}}
+
+.s3-micro{background:#fafcff}
+.s3-stimulus{background:#f3f7fb;border-left:3px solid #83a9cf;padding:17px;line-height:1.8;border-radius:4px;margin:13px 0;white-space:pre-wrap}
+.s3-mq{border:1px solid #d9e3f1;border-radius:10px;padding:11px 13px;margin:15px 0}
+.s3-mq legend{font-weight:700;padding:0 5px;line-height:1.5}
+.s3-choice{display:block;width:100%;padding:10px 12px;border:1px solid #c5d4e8;border-radius:9px;text-align:left;background:#fff;color:#243a5a;cursor:pointer;margin:7px 0}
+.s3-choice.selected{border-color:#3b68b2;background:#eaf2fc}
+.s3-choice.correct{border-color:#378956;background:#eef9ef}
+.s3-choice.wrong{border-color:#c56b6b;background:#fff0f0}
+.s3-choice:disabled{opacity:.86;cursor:default}
+.s3-explanation{padding:10px 12px;background:#f1f6fd;color:#294d7b;border-radius:9px;line-height:1.6}
+.s3-micro details{margin:14px 0;padding:10px 13px;border:1px solid #d6e2ee;border-radius:9px}
