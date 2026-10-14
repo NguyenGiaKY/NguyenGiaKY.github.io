@@ -1,7 +1,7 @@
 /* English Foundation: applied A1/A2. Evidence-first practice, never CEFR certification. */
 (function(){
 "use strict";
-const root=document.getElementById("foundationRoot"),units=window.GKFoundationAppliedData?.units||[];
+const root=document.getElementById("foundationRoot"),units=[...(window.GKFoundationAppliedData?.units||[]),...(window.GKFoundationAppliedExtraData?.units||[])];
 if(!root||!units.length)return;
 const KEY="gk_foundation_applied_v1",unitMap=Object.fromEntries(units.map(u=>[u.id,u]));
 const steps=[["understand","Understand"],["listening","Listen"],["reading","Read"],["language","Think & use"],["writing","Write & fix"],["speaking","Speak & respond"],["transfer","Transfer"]];
