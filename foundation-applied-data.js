@@ -123,12 +123,12 @@ window.GKFoundationAppliedData = {
         {
           "prompt": "Which question asks about a person's class?",
           "options": [
-            "Where do you study?",
+            "Which class are you in?",
             "How old is your bag?",
             "Is your homework green?"
           ],
           "correct": 0,
-          "why": "Where do you study? requests a place of study."
+          "why": "'Which class are you in?' requests the person's class directly."
         }
       ],
       "writing": {
@@ -991,7 +991,7 @@ window.GKFoundationAppliedData = {
         },
         {
           "speaker": "Student",
-          "text": "Thank you. Could you please confirm that by email?"
+          "text": "Friday at nine fifteen works for me, thank you. Could you please confirm that by email?"
         }
       ],
       "listening": [
