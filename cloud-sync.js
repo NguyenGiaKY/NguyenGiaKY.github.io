@@ -1,5 +1,5 @@
 /* Cross-device learning progress sync — Firebase Google Auth + owner-only Firestore.
- * Firebase config is intentionally absent until site owner supplies it.
+ * The public Firebase client config is loaded separately; actual sync requires functioning Google Auth and Firestore rules.
  * Never syncs API endpoints, dictionary caches, session secrets or browser preferences.
  * Keeps pre-existing learning data local until explicit first-time reconciliation.
  */
