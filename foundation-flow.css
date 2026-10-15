@@ -123,7 +123,7 @@
 #foundationRoot .gf-plan-feedback strong{font-size:13px}
 #foundationRoot .gf-plan-feedback p{font-size:12px;line-height:1.7;margin:6px 0 10px}
 #foundationRoot .gf-task-criteria{display:grid;gap:8px}
-#foundationRoot .gf-task-criteria>div{display:flex;align-items:center;gap:10px;border:1px solid #dae5ef;border-radius:10px;padding:11px 13px;background:#f6faff;color:#47627d;font-size:13px}
+#foundationRoot .gf-task-criteria>div:not(.gf-choices){display:flex;align-items:center;gap:10px;border:1px solid #dae5ef;border-radius:10px;padding:11px 13px;background:#f6faff;color:#47627d;font-size:13px}
 #foundationRoot .gf-task-criteria b{background:#e5eff9;color:#2c6298;min-width:24px;padding:3px 6px;text-align:center;border-radius:7px}
 #foundationRoot .gf-ai-status{font-size:12px;line-height:1.7;border-radius:9px;border:1px solid #e2e9f2;padding:10px 12px;background:#fafcff;color:#6b8098}
 #foundationRoot .gf-ai-status:has(+.gf-writing-feedback) {max-width:740px}
@@ -159,3 +159,129 @@
 #foundationRoot .gf-cast-grid label{display:flex;flex-direction:column;gap:5px;color:#40648a;font-size:12px;font-weight:750}
 #foundationRoot .gf-cast-grid select{min-height:40px;width:100%;font:inherit;font-size:12px;color:#294d76;background:white;border:1px solid #bfcfe0;border-radius:8px;padding:7px}
 @media(max-width:680px){#foundationRoot .gf-scene-turn{max-width:98%;padding:11px 13px}#foundationRoot .gf-cast-grid{grid-template-columns:1fr}#foundationRoot .gf-cast-grid .gf-btn{width:100%}}
+
+
+/* 2026-10-15: A0-01 final practice layout. Each task occupies its own full-width row.
+   The old .gf-task-criteria>div rule incorrectly overrode .gf-choices display:grid,
+   causing options to run horizontally and squeeze subsequent content. */
+#foundationRoot .gf-task-body,
+#foundationRoot .gf-pilot-checkpoint,
+#foundationRoot .gf-pilot-checkpoint *{box-sizing:border-box}
+#foundationRoot .gf-task-body{min-width:0;width:100%}
+#foundationRoot .gf-task-criteria>.gf-choices{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:10px;width:100%;min-width:0;align-items:stretch
+}
+#foundationRoot .gf-task-criteria>.gf-choices button{
+ display:flex;min-width:0;white-space:normal;overflow-wrap:anywhere
+}
+#foundationRoot .gf-pilot-checkpoint{
+ display:flex;flex-direction:column;align-items:stretch;gap:22px;
+ width:100%;min-width:0;max-width:740px;margin:0 auto
+}
+#foundationRoot .gf-pilot-checkpoint>.gf-activity-header{
+ width:100%;min-width:0
+}
+#foundationRoot .gf-pilot-questions{
+ display:flex;flex-direction:column;gap:16px;width:100%;min-width:0
+}
+#foundationRoot .gf-pilot-question{
+ display:flex;flex-direction:column;gap:14px;width:100%;min-width:0;
+ padding:20px;border:1px solid #d4e1f0;border-radius:15px;background:#fafcff
+}
+#foundationRoot .gf-pilot-question h3{
+ font-size:clamp(15px,1.6vw,18px);line-height:1.6;margin:0;
+ font-weight:800;color:#24496f;overflow-wrap:break-word
+}
+#foundationRoot .gf-pilot-options{
+ display:grid;grid-template-columns:minmax(0,1fr);gap:10px;width:100%;min-width:0
+}
+#foundationRoot .gf-pilot-options button{
+ display:flex;gap:14px;align-items:center;text-align:left;
+ width:100%;min-width:0;min-height:52px;padding:12px 14px;
+ border-radius:10px;border:1px solid #ceddec;background:white;
+ font:inherit;font-size:14px;line-height:1.55;color:#244969;
+ white-space:normal;overflow-wrap:break-word;cursor:pointer
+}
+#foundationRoot .gf-pilot-options button b{
+ display:grid;place-items:center;flex:0 0 30px;height:30px;
+ border-radius:8px;background:#edf3fc;color:#32619b
+}
+#foundationRoot .gf-pilot-options button span{min-width:0;flex:1}
+#foundationRoot .gf-pilot-options button.selected,
+#foundationRoot .gf-pilot-options button[aria-pressed="true"]:not(:disabled){
+ background:#e9f1ff;border-color:#5985cd
+}
+#foundationRoot .gf-pilot-options button.correct{background:#eff9f3;border-color:#73bb94}
+#foundationRoot .gf-pilot-options button.wrong{background:#fff3ef;border-color:#d9a092}
+#foundationRoot .gf-pilot-options button:disabled{opacity:1;cursor:default}
+#foundationRoot .gf-pilot-feedback{
+ border:1px solid #bcdacb;background:#eff9f4;border-radius:10px;
+ padding:12px 14px;color:#2c614a;font-size:13px;line-height:1.6
+}
+#foundationRoot .gf-pilot-feedback.needs-work{
+ background:#fff8ee;color:#845c2e;border-color:#e4ceb3
+}
+#foundationRoot .gf-pilot-feedback p{margin:5px 0 0}
+#foundationRoot .gf-pilot-check-row{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;
+ gap:12px;padding:2px 0;min-width:0
+}
+#foundationRoot .gf-pilot-check-row .gf-btn{min-width:135px}
+#foundationRoot .gf-pilot-pass{
+ font-size:13px;color:#236348;background:#eff9f3;
+ border:1px solid #c6e8d2;border-radius:9px;padding:12px 15px;
+ width:100%;margin:0;line-height:1.6
+}
+#foundationRoot .gf-pilot-writing{
+ display:flex;flex-direction:column;align-items:stretch;gap:13px;
+ border-top:1px solid #dfebf3;padding-top:22px;width:100%;min-width:0
+}
+#foundationRoot .gf-pilot-writing .gf-field{
+ display:block;width:100%;max-width:100%;min-width:0;min-height:150px;
+ resize:vertical;font-size:15px;line-height:1.7
+}
+#foundationRoot .gf-pilot-writing .gf-word-check{
+ display:flex;flex-direction:column;align-items:flex-start;gap:8px
+}
+#foundationRoot .gf-pilot-writing .gf-word-hint,
+#foundationRoot .gf-pilot-writing .gf-word-report{width:100%;min-width:0}
+#foundationRoot .gf-pilot-requirements{
+ background:#f3f7fd;border:1px solid #d4e2f0;border-radius:14px;
+ padding:19px 20px;min-width:0
+}
+#foundationRoot .gf-pilot-requirements h3{
+ font-size:17px;line-height:1.4;margin:0 0 12px;color:#284a73
+}
+#foundationRoot .gf-pilot-requirements ul{
+ list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:5px
+}
+#foundationRoot .gf-pilot-requirements li{
+ display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+ padding:9px 0;border-bottom:1px solid #e0e9f3;
+ font-size:13px;line-height:1.55;color:#3e5f80
+}
+#foundationRoot .gf-pilot-requirements li span.todo{font-weight:900;color:#957341}
+#foundationRoot .gf-pilot-requirements li span.done{font-weight:900;color:#227252}
+#foundationRoot .gf-pilot-requirements li .gf-btn{
+ margin-left:auto;font-size:12px;font-weight:800
+}
+#foundationRoot .gf-pilot-checkpoint>.gf-final{
+ width:100%;min-width:0;line-height:1.7
+}
+#foundationRoot .gf-pilot-checkpoint>.gf-btn.primary{
+ width:100%;max-width:320px;align-self:flex-start
+}
+#foundationRoot .gf-nav-done{
+ display:flex;align-items:center;justify-content:flex-end;
+ padding:7px 12px;color:#527092;font-size:12px;line-height:1.45;
+ text-align:right;max-width:340px
+}
+@media(max-width:740px){
+ #foundationRoot .gf-task-criteria>.gf-choices{grid-template-columns:minmax(0,1fr)}
+ #foundationRoot .gf-pilot-question{padding:14px}
+ #foundationRoot .gf-pilot-requirements{padding:14px}
+ #foundationRoot .gf-pilot-options button{padding:12px}
+ #foundationRoot .gf-pilot-checkpoint>.gf-btn.primary{max-width:100%}
+ #foundationRoot .gf-nav-done{font-size:11px;max-width:50%}
+}
