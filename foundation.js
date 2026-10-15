@@ -76,12 +76,22 @@ h+='<section class="fa-route"><h3>Học Foundation theo thứ tự nào để hi
  h+=(window.GKFoundationGrammar?window.GKFoundationGrammar.homePanel():"");
  h+=(window.GKFoundationApplied?window.GKFoundationApplied.homePanel():"");
  if(due.length){h+='<section class="f-due"><h3>↻ Đến lượt ôn lại</h3><div class="f-due-row">';due.slice(0,5).forEach(l=>h+='<button type="button" data-f-id="'+esc(l.id)+'" class="f-review-link">'+esc(l.title)+' <span>Ôn →</span></button>');h+='</div></section>';}
-h+='<div class="f-section-title"><div><h3>Lộ trình 4 chặng</h3><p>24 bài nhỏ, học từ dễ đến khó. Các bài khác vẫn có thể xem trước.</p></div></div>'+
-'<div class="f-levels"><button type="button" data-f-filter="all" class="'+(ui.filter==="all"?"on":"")+'" aria-pressed="'+(ui.filter==="all")+'">Tất cả<small>24 bài</small></button>';
-data.levels.forEach(g=>{const n=data.lessons.filter(l=>l.level===g.id).length;h+='<button type="button" data-f-filter="'+esc(g.id)+'" class="'+(ui.filter===g.id?"on":"")+'" aria-pressed="'+(ui.filter===g.id)+'"><span>'+esc(g.id)+'</span><strong>'+esc(g.title)+'</strong><small>'+esc(g.weeks)+' · '+n+' bài</small></button>';});
+h+='<div class="f-section-title"><div><h3>Lộ trình 4 chặng</h3><p>24 bài nhỏ, học từ dễ đến khó. Thanh tiến độ thể hiện quá trình làm bài; dấu xanh 100% chỉ xuất hiện sau khi lưu hoàn tất.</p></div></div>'+
+'<div class="f-levels"><button type="button" data-f-filter="all" class="'+(ui.filter==="all"?"on ":"")+(allLevel.finished?"f-level-complete":"")+'" aria-pressed="'+(ui.filter==="all")+'"><span>'+(allLevel.finished?"✓ ":"")+'Tất cả</span><strong>'+allLevel.complete+'/'+allLevel.total+' bài đã xong</strong><small>'+allLevel.percent+'% hoàn thành</small><span class="f-level-progress"><i style="width:'+allLevel.percent+'%"></i></span></button>';
+data.levels.forEach(g=>{
+ const p=levelProgress(g.id,progress);
+ h+='<button type="button" data-f-filter="'+esc(g.id)+'" class="'+(ui.filter===g.id?"on ":"")+(p.finished?"f-level-complete":"")+'" aria-pressed="'+(ui.filter===g.id)+'"><span>'+(p.finished?"✓ ":"")+esc(g.id)+'</span><strong>'+esc(g.title)+'</strong><small>'+esc(g.weeks)+' · '+p.complete+'/'+p.total+' bài xong · '+p.percent+'%</small><span class="f-level-progress" role="progressbar" aria-label="Tiến độ chặng '+esc(g.id)+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+p.percent+'"><i style="width:'+p.percent+'%"></i></span></button>';
+});
 h+='</div><div class="f-lesson-list">';
-filtered.forEach(l=>{const seq=data.lessons.indexOf(l)+1;h+='<button class="f-lesson-row" type="button" data-f-id="'+esc(l.id)+'"><span class="f-number">'+String(seq).padStart(2,"0")+'</span><span class="f-row-center"><small>'+esc(l.level)+' · '+esc(l.skill)+' · '+l.minutes+' phút</small><strong>'+esc(l.title)+'</strong><span>'+esc(l.goal)+'</span></span><span class="f-row-end">'+(isDue(l.id)?'<span class="f-tag due">Cần ôn</span>':tag(l.id))+'<b>→</b></span></button>';});
-h+='</div><div class="f-bridge"><div><h3>Sau Foundation là 81 IELTS Tasks</h3><p>Đây là chương trình khởi động, không phải chứng nhận đạt A2. Khi đã hiểu câu cơ bản, nghe được ý chính và tự diễn đạt, hãy chuyển dần sang các IELTS tasks phù hợp.</p></div>'+button("ielts","Mở Study Queue →","secondary")+'</div></div>';
+filtered.forEach(l=>{
+ const p=progress[l.id],seq=data.lessons.indexOf(l)+1;
+ h+='<button class="f-lesson-row '+(p.finished?"f-lesson-complete":p.started?"f-lesson-started":"")+'" type="button" data-f-id="'+esc(l.id)+'" aria-label="'+esc(l.title)+': '+(p.finished?"đã xong 100%":p.started?"đang học "+p.percent+"%":"chưa học")+'">'+
+ '<span class="f-number">'+(p.finished?"✓":String(seq).padStart(2,"0"))+'</span>'+
+ '<span class="f-row-center"><small>'+esc(l.level)+' · '+esc(l.skill)+' · '+l.minutes+' phút</small><strong>'+esc(l.title)+'</strong><span>'+esc(l.goal)+'</span>'+
+ '<span class="f-lesson-progress" role="progressbar" aria-label="Tiến độ bài '+esc(l.title)+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+p.percent+'"><i style="width:'+p.percent+'%"></i></span></span>'+
+ '<span class="f-row-end">'+tag(l.id,p)+(p.due?'<span class="f-tag due">↻ Đến hạn ôn</span>':"")+'<b>→</b></span></button>';
+});
+h+='</div><div class="f-bridge"><div><h3>Sau Foundation là IELTS Academic Tasks</h3><p>Đây là chương trình khởi động, không phải chứng nhận đạt A2. Khi đã hiểu câu cơ bản, nghe được ý chính và tự diễn đạt, hãy chuyển dần sang các IELTS tasks phù hợp.</p></div>'+button("ielts","Mở Study Queue →","secondary")+'</div></div>';
 root.innerHTML=h;
 }
 function open(id){if(!index[id])return;window.GKFoundationCoach?.leave();ui.page="lesson";ui.id=id;ui.classic=false;ui.tab="learn";ui.questions=generate(index[id]);ui.answers={};ui.graded=false;ui.score=0;ui.transcript=false;ui.model=false;render();scrollInto();}
