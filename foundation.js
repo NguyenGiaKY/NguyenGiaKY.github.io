@@ -8,7 +8,7 @@ const KEY="gk_foundation_v1";
 let stored={};
 try{stored=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
 const state={records:stored.records||{},drafts:stored.drafts||{}};
-const ui={page:"home",filter:"all",id:null,tab:"learn",questions:[],answers:{},graded:false,score:0,transcript:false,model:false,placementAnswers:{},placementResult:null,diagnosticQuestions:[]};
+const ui={page:"home",filter:"all",id:null,tab:"learn",questions:[],answers:{},graded:false,score:0,transcript:false,model:false,placementAnswers:{},placementResult:null,diagnosticQuestions:[],listScrollY:null};
 const index=Object.fromEntries(data.lessons.map(x=>[x.id,x]));
 function esc(x){return String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){notice("Không lưu được dữ liệu trên thiết bị này. Hãy kiểm tra chế độ riêng tư hoặc bộ nhớ trình duyệt.");}}
@@ -49,7 +49,18 @@ function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const k=Mat
 function generate(l){return shuffled(l.quiz.map(q=>({prompt:q[0],correct:q[1],options:shuffled(q.slice(1,4)),reason:q[4]})));}
 function notice(x){const n=root.querySelector("#foundationNotice");if(n){n.hidden=false;n.textContent=x;}}
 function scrollInto(){root.scrollIntoView({block:"start",behavior:"smooth"});}
-function render(){if((ui.page!=="lesson"||!["apply","thinking"].includes(ui.tab))&&window.GKFoundationCoach)window.GKFoundationCoach.leave();if(ui.page==="home")home();else if(ui.page==="lesson"){if(!ui.classic&&window.GKFoundationFlow)window.GKFoundationFlow.render(index[ui.id]);else lesson();}else if(ui.page==="wordpacks")root.innerHTML='<div id="foundationWordPacks">'+(window.GKFoundationThinking?window.GKFoundationThinking.packPage():"Vocabulary packs unavailable")+'</div>';else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else if(ui.page==="applied"&&window.GKFoundationApplied)window.GKFoundationApplied.render();else if(ui.page==="grammar"&&window.GKFoundationGrammar)window.GKFoundationGrammar.render();else diagnostic();}
+function captureListPosition(){
+ const y=Number(window.scrollY??document.documentElement?.scrollTop??0);
+ ui.listScrollY=Number.isFinite(y)?Math.max(0,y):0;
+}
+function restoreListPosition(){
+ if(ui.listScrollY===null){scrollInto();return;}
+ const y=ui.listScrollY;
+ const apply=()=>{try{window.scrollTo({top:y,left:0,behavior:"auto"});}catch(e){try{window.scrollTo(0,y)}catch(_) {}}};
+ if(typeof window.requestAnimationFrame==="function")window.requestAnimationFrame(apply);
+ else setTimeout(apply,0);
+}
+function render(){if((ui.page!=="lesson"||!["apply","thinking"].includes(ui.tab))&&window.GKFoundationCoach)window.GKFoundationCoach.leave();if(ui.page==="home")home();else if(ui.page==="lesson"){if(!ui.classic&&window.GKFoundationFlow)window.GKFoundationFlow.open(index[ui.id]);else lesson();}else if(ui.page==="wordpacks")root.innerHTML='<div id="foundationWordPacks">'+(window.GKFoundationThinking?window.GKFoundationThinking.packPage():"Vocabulary packs unavailable")+'</div>';else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else if(ui.page==="applied"&&window.GKFoundationApplied)window.GKFoundationApplied.render();else if(ui.page==="grammar"&&window.GKFoundationGrammar)window.GKFoundationGrammar.render();else diagnostic();}
 function home(){
 const progress=Object.fromEntries(data.lessons.map(l=>[l.id,lessonProgress(l.id)]));
 const started=data.lessons.filter(l=>progress[l.id].started).length;
@@ -94,7 +105,7 @@ filtered.forEach(l=>{
 h+='</div><div class="f-bridge"><div><h3>Sau Foundation là IELTS Academic Tasks</h3><p>Đây là chương trình khởi động, không phải chứng nhận đạt A2. Khi đã hiểu câu cơ bản, nghe được ý chính và tự diễn đạt, hãy chuyển dần sang các IELTS tasks phù hợp.</p></div>'+button("ielts","Mở Study Queue →","secondary")+'</div></div>';
 root.innerHTML=h;
 }
-function open(id){if(!index[id])return;window.GKFoundationCoach?.leave();ui.page="lesson";ui.id=id;ui.classic=false;ui.tab="learn";ui.questions=generate(index[id]);ui.answers={};ui.graded=false;ui.score=0;ui.transcript=false;ui.model=false;render();scrollInto();}
+function open(id){if(!index[id])return;if(ui.page==="home")captureListPosition();window.GKFoundationCoach?.leave();ui.page="lesson";ui.id=id;ui.classic=false;ui.tab="learn";ui.questions=generate(index[id]);ui.answers={};ui.graded=false;ui.score=0;ui.transcript=false;ui.model=false;render();scrollInto();}
 function step(n,title,subtitle){return '<div class="f-step"><span>'+n+'</span><div><h3>'+title+'</h3><p>'+subtitle+'</p></div></div>';}
 function lesson(){
 const l=index[ui.id],p=passDates(l.id);
@@ -218,7 +229,7 @@ root.addEventListener("change",function(e){
 if(e.target&&e.target.id==="foundationSelfCheck"){if(!state.records[ui.id])state.records[ui.id]={attempts:[],selfChecked:false};state.records[ui.id].selfChecked=e.target.checked;save();}
 });
 window.GKFoundationOpenLesson=open;
-window.GKFoundationOpenHome=function(){ui.page="home";ui.classic=false;render();scrollInto();};
+window.GKFoundationOpenHome=function(){ui.page="home";ui.classic=false;render();restoreListPosition();};
 document.querySelectorAll('.nav[data-view="foundation"]').forEach(b=>b.addEventListener("click",()=>{if(ui.page==="home")render();}));
 render();
 })();
