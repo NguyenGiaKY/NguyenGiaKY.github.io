@@ -530,7 +530,7 @@ root.addEventListener("click",ev=>{
   const p=t.pairs[0],opts=(l.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];
   if(r.meaning!==m.correct||opts[r.para]!==p.equivalent||r.draft.trim().length<8||r.transfer.trim().length<8)return;
  }
- r.finished=true;r.completed.summary=true;save();showingCompletion=true;render(l);return;
+ r.finished=true;r.completed.summary=true;save();showingCompletion=true;render(l);try{root.scrollIntoView({block:"start",behavior:"smooth"})}catch(err){}return;
 }
 });
 root.addEventListener("input",ev=>{
