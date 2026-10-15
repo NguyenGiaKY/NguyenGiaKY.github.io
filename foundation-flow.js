@@ -179,37 +179,69 @@ const a001Checks=[
  ]
 ];
 function a001Checkpoint(r){
+ // Keep every saved response/checkpoint. Change only how this final activity is presented.
  const c=r.checkpoint||(r.checkpoint={variant:0,answers:[null,null],checked:false,passed:false,attempts:0});
- const qs=a001Checks[c.variant||0],a=Array.isArray(c.answers)?c.answers:[null,null];
- let h=header("Independent practice: a new school situation","Answer two new meaning questions. This checks understanding in these examples, not an A1/A2 level or your pronunciation.");
- qs.forEach((q,i)=>{
-  h+='<div class="gf-task-criteria"><p><strong>'+(i+1)+'. '+esc(q.question)+'</strong></p><div class="gf-choices">';
-  q.answers.forEach((opt,j)=>{
-   const cls=c.checked?(j===q.correct?"correct":a[i]===j?"wrong":""):"";
-   h+='<button type="button" data-gf-action="pilot-answer" data-gf-question="'+i+'" data-gf-option="'+j+'" class="'+cls+'" '+(c.checked?"disabled":"")+' aria-pressed="'+(a[i]===j)+'><b>'+String.fromCharCode(65+j)+'</b>'+esc(opt)+'</button>';
-  });
-  h+='</div>';
-  if(c.checked)h+='<p class="gf-feedback"><b>'+(a[i]===q.correct?"Correct.":"Review needed.")+'</b> '+esc(q.why)+(a[i]===q.correct?"":' '+esc(q.fix))+'</p>';
-  h+='</div>';
- });
- if(!c.checked)h+=b("pilot-check","Check","primary",a.some(v=>v===null));
- else if(!c.passed)h+=b("pilot-retry","Review and try a different situation","outline");
- else h+='<p class="gf-feedback">2/2 meaning questions correct. This is recognition practice, not a language proficiency certificate.</p>';
- h+=header("Write your own introduction","A new student asks who you are and what item you are carrying. Write two short sentences. Change the name and object from the model.")+
- field("transfer",r.transfer,"I'm ... . This is my ... .")+
- freeCheckPanel(r,"transfer","Check looks at your TWO sentences and the new situation. Audio pronunciation is not assessed here.");
- if(r.legacyFinished&&!c.passed)h+='<p class="gf-feedback">Earlier answers are preserved. The revised lesson still requires its independent checkpoint before being marked finished.</p>';
-  const reply=String(r.transfer||"").trim();
+ const qs=a001Checks[c.variant||0],answers=Array.isArray(c.answers)?c.answers:[null,null];
+ const answered=answers.filter(x=>Number.isInteger(x)).length;
+ const m=missions["a0-01"];
+ const meaningOk=r.meaning===m.correct,firstDraft=String(r.draft||"").trim();
+ const draftOk=firstDraft.length>=8,reply=String(r.transfer||"").trim();
+ const transferOk=reply.length>=15;
  const record=r.wordFeedback?.__transfer__;
  const verified=record?.answer?.trim()===reply&&record?.report?.task_status==="met";
- const ready=!!c.passed&&r.meaning===missions["a0-01"].correct&&String(r.draft||"").trim().length>=8&&reply.length>=15;
- h+='<div class="gf-final"><b>'+(ready?"Practice attempted — not automatically mastered":"Finish the evidence tasks")+'</b><p>'+
- (ready?"You answered the contextual choices and wrote an independent response. "+(verified?"Your current response also met the automated rubric.":"The open response is not yet verified; review and correct it when possible.")+" Spoken ability is not certified.":
- "Answer both questions correctly, complete the earlier meaning task, and write the lesson response plus two independent sentences. Clicking through pages alone is not enough.")+'</p></div>';
- if(ready)h+=b("finish","Save practice & return","primary");
+ const ready=!!c.passed&&meaningOk&&draftOk&&transferOk;
+ let h='<div class="gf-pilot-checkpoint">'+
+ header("Independent practice · New school situation","Two short questions. Choose the answer that fits each situation, then write two sentences of your own.")+
+ '<div class="gf-pilot-questions">';
+ qs.forEach((q,i)=>{
+  h+='<section class="gf-pilot-question" aria-label="Question '+(i+1)+'">'+
+   '<h3>'+(i+1)+'. '+esc(q.question)+'</h3><div class="gf-pilot-options">';
+  q.answers.forEach((opt,j)=>{
+   const cls=c.checked?(j===q.correct?"correct":answers[i]===j?"wrong":""):answers[i]===j?"selected":"";
+   h+='<button type="button" class="'+cls+'" data-gf-action="pilot-answer" data-gf-question="'+i+'" data-gf-option="'+j+'" '+(c.checked?"disabled":"")+
+   ' aria-pressed="'+(answers[i]===j)+'"><b>'+String.fromCharCode(65+j)+'</b><span>'+esc(opt)+'</span></button>';
+  });
+  h+='</div>';
+  if(c.checked)h+='<div class="gf-pilot-feedback '+(answers[i]===q.correct?"correct":"needs-work")+'" role="status"><strong>'+
+   (answers[i]===q.correct?"Correct":"Review this answer")+'</strong><p>'+esc(q.why)+(answers[i]===q.correct?"":" "+esc(q.fix))+'</p></div>';
+  h+='</section>';
+ });
+ h+='</div><div class="gf-pilot-check-row">';
+ if(!c.checked){
+  h+='<p class="gf-tip">'+answered+'/2 questions answered. Choose one option per question before Check.</p>'+
+  b("pilot-check","Check","primary",answered!==2);
+ }else if(!c.passed){
+  h+='<p class="gf-tip">Check the explanation above. The next attempt uses different examples.</p>'+
+  b("pilot-retry","Try two new questions","outline");
+ }else{
+  h+='<p class="gf-pilot-pass">✓ 2/2 correct. This checks only these two examples, not your overall English level.</p>';
+ }
+ h+='</div>'+
+ '<section class="gf-pilot-writing">'+
+ header("Your turn · Two new sentences","Imagine meeting a new student. Write your name, then identify an object you are carrying. Use your own name and a different object.")+
+ '<label class="gf-label" for="gfPilotTransfer">Your answer (two English sentences)</label>'+
+ '<textarea id="gfPilotTransfer" data-gf-field="transfer" rows="5" class="gf-field" maxlength="360" placeholder="I am ... . This is my ... .">'+esc(r.transfer||"")+'</textarea>'+
+ '<p class="gf-tip">For example, identify your own item; do not copy the pencil example. Press Check below for personalised feedback.</p>'+
+ freeCheckPanel(r,"transfer","Checks your two sentences. Recording and pronunciation are not assessed here.")+
+ '</section>';
+ if(r.legacyFinished&&!c.passed)h+='<p class="gf-feedback">Your previous work is saved. This updated activity adds a separate practice checkpoint; the old answers have not been deleted.</p>';
+ const checks=[
+  {label:"Earlier meaning question",ok:meaningOk,action:"pilot-go-meaning"},
+  {label:"Earlier writing response",ok:draftOk,action:"pilot-go-write"},
+  {label:"Two new questions answered correctly",ok:!!c.passed,action:""},
+  {label:"Two original sentences written",ok:transferOk,action:""}
+ ];
+ h+='<section class="gf-pilot-requirements"><h3>Before saving this lesson</h3><ul>'+
+ checks.map(x=>'<li><span class="'+(x.ok?"done":"todo")+'">'+(x.ok?"✓":"○")+'</span><span>'+esc(x.label)+'</span>'+
+ (!x.ok&&x.action?'<button class="gf-btn text" type="button" data-gf-action="'+x.action+'">Go to task →</button>':"")+'</li>').join("")+
+ '</ul><p class="gf-tip">The final AI Check is useful feedback, but you can save your practice without paying for AI. It does not certify speaking or CEFR level.</p></section>'+
+ '<div class="gf-final"><b>'+(ready?"Practice ready to save":"Complete the remaining items above")+'</b><p>'+
+ (ready?"Your responses are saved. "+(verified?"Your two new sentences were also checked against the task.":"Personalised Check has not verified these sentences yet.")+" This is lesson practice, not an A1 or A2 certificate.":
+ "Only missing requirements are shown above. You can return to an earlier task without losing what you wrote.")+'</p></div>'+
+ (ready?b("finish","Save practice & return","primary"):"")+
+ '</div>';
  return h;
 }
-
 function content(lesson,r){
  const m=missions[lesson.id],t=thoughts[lesson.id],type=activeSteps(current)[r.page][0];if(!m||!t)return "<p>Lesson content unavailable. Refresh this page.</p>";
  if(type==="scene"){
@@ -308,7 +340,8 @@ function render(lesson){
  const l=typeof lesson==="string"?lessonById[lesson]:lesson;if(!l)return;
  current=l.id;lastLessonId=current;const r=state(current);r.page=Math.max(0,Math.min(activeSteps(current).length-1,Number(r.page)||0));
  const phase=activeSteps(current)[r.page][1],percent=Math.round((r.page+1)/activeSteps(current).length*100);
- const coachStatus=window.GKFoundationCoach?.getRecord?.(l.id)||{};
+ const lastActivity=r.page===activeSteps(current).length-1;
+  const coachStatus=window.GKFoundationCoach?.getRecord?.(l.id)||{};
  const checksDone=Object.keys(r.verified||{}).length+Object.values(r.wordFeedback||{}).filter(v=>v&&v.report).length+Number(!!coachStatus.writing?.report)+Number(!!coachStatus.speaking?.report);
  const parts=activePhases(current).map((p,i)=>'<button type="button" data-gf-phase="'+i+'" class="'+(i===phase?"selected":"")+'">'+String(i+1).padStart(2,"0")+' · '+esc(p)+'</button>').join("");
  root.innerHTML='<div class="gf-shell"><header class="gf-top">'+b("exit","← Foundation lessons","text")+'<div class="gf-title"><small>'+esc(l.level)+' · '+esc(l.skill)+'</small><h1>'+esc(l.title)+'</h1></div>'+
@@ -318,7 +351,7 @@ function render(lesson){
  '<section class="gf-focus"><div class="gf-small"><span>ACTIVITY '+String(r.page+1).padStart(2,"0")+'</span><span>'+esc(activePhases(current)[phase])+'</span></div>'+
  '<h2 tabindex="-1" class="gf-screen-heading">'+esc(activeSteps(current)[r.page][2])+'</h2><div class="gf-task-body">'+content(l,r)+'</div>'+
  (message?'<p class="gf-notice" role="status">'+esc(message)+'</p>':"")+'</section>'+
- '<footer class="gf-footer"><div class="gf-nav">'+b("previous","← Previous","outline",r.page===0)+b("next","Next →","primary",r.page===activeSteps(current).length-1)+'</div><div class="gf-footnote"><span>'+Object.keys(r.completed).length+' activities attempted · '+checksDone+' checks recorded · Next is not mastery</span>'+b("exit","Save & Exit","text")+'</div></footer></div>';
+ '<footer class="gf-footer"><div class="gf-nav">'+b("previous","← Previous","outline",r.page===0)+(lastActivity?'<span class="gf-nav-done">Final activity · Save practice &amp; return when ready</span>':b("next","Next →","primary"))+'</div><div class="gf-footnote"><span>'+Object.keys(r.completed).length+' activities attempted · '+checksDone+' checks recorded · Next is not mastery</span>'+b("exit","Save & Exit","text")+'</div></footer></div>';
  save();
 }
 function compactWordReport(data){
@@ -433,6 +466,8 @@ root.addEventListener("click",ev=>{
   if(c.passed)r.completed.checkpoint=true;
   save();render(l);return;
  }
+ if(act==="pilot-go-meaning"&&current==="a0-01"){move(activeSteps(current).findIndex(step=>step[0]==="meaning"));return}
+ if(act==="pilot-go-write"&&current==="a0-01"){move(activeSteps(current).findIndex(step=>step[0]==="write"));return}
  if(act==="pilot-retry"&&current==="a0-01"&&type==="summary"){
   const c=r.checkpoint;
   if(!c||!c.checked||c.passed)return;
