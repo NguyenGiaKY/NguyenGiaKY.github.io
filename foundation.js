@@ -19,7 +19,31 @@ function passDates(id){const distinct=new Set((entry(id).attempts||[]).filter(x=
 function levelStatus(id){const e=entry(id),p=passDates(id);return p.length>=2&&e.selfChecked?"mastered":p.length&&e.selfChecked?"review":"new";}
 function dueDate(id){const p=passDates(id);return p.length?daysAfter(p[p.length-1],[1,3,7,14][Math.min(p.length-1,3)]):null;}
 function isDue(id){const d=dueDate(id);return d&&d<=today();}
-function tag(id){const l=levelStatus(id),finished=window.GKFoundationFlow?.getState(id)?.finished;return l==="mastered"?'<span class="f-tag good">✓ Đã ôn quiz ≥2 ngày</span>':l==="review"?'<span class="f-tag ongoing">↻ Đang ôn</span>':finished?'<span class="f-tag ongoing">Đã thực hành · cần kiểm tra thêm</span>':'<span class="f-tag">Chưa học</span>';}
+// A green 100% badge means the lesson was explicitly finished and saved.
+// Quiz repeats and reaching the last page are not sufficient to certify completion.
+function lessonProgress(id){
+ let row={};try{row=window.GKFoundationFlow?.getState?.(id)||{}}catch(e){}
+ const steps=window.GKFoundationFlow?.screenCountFor?.(id),total=Array.isArray(steps)?steps.length:Math.max(1,Number(window.GKFoundationFlow?.screenCount)||15);
+ const done=Array.isArray(steps)?steps.filter(([name])=>row.completed?.[name]===true).length:Object.values(row.completed||{}).filter(Boolean).length;
+ const old=entry(id),quiz=(old.attempts||[]).length>0,hasDraft=!!String(row.draft||state.drafts[id]||"").trim();
+ const started=!!(row.finished||row.legacyFinished||Number(row.page)>0||done||hasDraft||String(row.transfer||"").trim()||quiz||old.selfChecked);
+ const finished=row.finished===true;
+ const viewed=started?Math.max(0,(Number(row.page)||0)+1):0;
+ const percent=finished?100:started?Math.min(99,Math.max(1,Math.round(Math.max(done,viewed,hasDraft?1:0,quiz?1:0)/total*100))):0;
+ return {finished,started,percent,total,done,legacyFinished:!!row.legacyFinished,due:!!isDue(id)};
+}
+function tag(id,p=lessonProgress(id)){
+ if(p.finished)return '<span class="f-tag good">✓ Đã xong · 100%</span>';
+ if(p.legacyFinished)return '<span class="f-tag f-needs-check">Còn checkpoint · '+p.percent+'%</span>';
+ if(p.started)return '<span class="f-tag ongoing">Đang học · '+p.percent+'%</span>';
+ return '<span class="f-tag">Chưa học</span>';
+}
+function levelProgress(level,progress){
+ const ls=level==="all"?data.lessons:data.lessons.filter(l=>l.level===level);
+ const complete=ls.filter(l=>progress[l.id]?.finished).length;
+ const percent=ls.length?Math.round(100*complete/ls.length):0;
+ return {complete,total:ls.length,percent,finished:ls.length>0&&ls.length===complete};
+}
 function button(action,label,style){return '<button type="button" data-f-action="'+esc(action)+'" class="f-btn '+(style||"")+'">'+label+'</button>';}
 function shuffled(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const k=Math.floor(Math.random()*(i+1));[b[i],b[k]]=[b[k],b[i]];}return b;}
 function generate(l){return shuffled(l.quiz.map(q=>({prompt:q[0],correct:q[1],options:shuffled(q.slice(1,4)),reason:q[4]})));}
@@ -27,18 +51,19 @@ function notice(x){const n=root.querySelector("#foundationNotice");if(n){n.hidde
 function scrollInto(){root.scrollIntoView({block:"start",behavior:"smooth"});}
 function render(){if((ui.page!=="lesson"||!["apply","thinking"].includes(ui.tab))&&window.GKFoundationCoach)window.GKFoundationCoach.leave();if(ui.page==="home")home();else if(ui.page==="lesson"){if(!ui.classic&&window.GKFoundationFlow)window.GKFoundationFlow.render(index[ui.id]);else lesson();}else if(ui.page==="wordpacks")root.innerHTML='<div id="foundationWordPacks">'+(window.GKFoundationThinking?window.GKFoundationThinking.packPage():"Vocabulary packs unavailable")+'</div>';else if(ui.page==="syntax"&&window.GKSentenceLab)window.GKSentenceLab.render(root);else if(ui.page==="relations"&&window.GKRelationsLab)window.GKRelationsLab.render(root);else if(ui.page==="applied"&&window.GKFoundationApplied)window.GKFoundationApplied.render();else if(ui.page==="grammar"&&window.GKFoundationGrammar)window.GKFoundationGrammar.render();else diagnostic();}
 function home(){
-const started=data.lessons.filter(l=>(entry(l.id).attempts||[]).length||state.drafts[l.id]||window.GKFoundationFlow?.getState(l.id)?.page>0).length;
-const mastered=data.lessons.filter(l=>levelStatus(l.id)==="mastered").length;
+const progress=Object.fromEntries(data.lessons.map(l=>[l.id,lessonProgress(l.id)]));
+const started=data.lessons.filter(l=>progress[l.id].started).length;
+const finished=data.lessons.filter(l=>progress[l.id].finished).length;
 const due=data.lessons.filter(l=>isDue(l.id));
-const next=data.lessons.find(l=>!window.GKFoundationFlow?.getState(l.id)?.finished&&levelStatus(l.id)!=="mastered")||data.lessons[0];
-const pct=Math.round(started/data.lessons.length*100);
+const pct=Math.round(finished/data.lessons.length*100);
+const allLevel=levelProgress("all",progress);
 const filtered=data.lessons.filter(l=>ui.filter==="all"||ui.filter===l.level);
 let h='<div class="f-wrap"><div class="f-cover"><div><div class="f-kicker">ENGLISH FOUNDATION · A0 → A2 → IELTS</div>'+
 '<h2>English that makes sense</h2><p>Understand the message. Discover word relationships, paraphrase ideas and learn to express yourself in natural English.</p>'+
 '<div class="f-actions">'+button("continue","Học bài tiếp theo →","primary")+button("diagnostic","Kiểm tra điểm bắt đầu","secondary")+'</div></div>'+
-'<div class="f-cover-progress"><div class="f-circle" style="--value:'+pct+'%"><strong>'+pct+'%</strong><small>Đã thực hành</small></div><span>Không đánh dấu Mastered chỉ vì bấm hoàn thành.</span></div></div>'+
+'<div class="f-cover-progress"><div class="f-circle '+(allLevel.finished?"f-circle-complete":"")+'" style="--value:'+pct+'%"><strong>'+pct+'%</strong><small>Hoàn tất bài học</small></div><span>'+finished+'/'+data.lessons.length+' bài đã hoàn tất và lưu. Đây là tiến độ bài học, không phải trình độ CEFR.</span></div></div>'+
 '<div id="foundationNotice" hidden role="status"></div>'+
-'<div class="f-statbar"><div><small>Đã làm bài</small><strong>'+started+' / '+data.lessons.length+'</strong></div><div><small>Ôn quiz ≥2 ngày (chưa chứng minh thành thạo)</small><strong>'+mastered+'</strong></div><div><small>Cần ôn</small><strong>'+due.length+'</strong></div></div>'+
+'<div class="f-statbar"><div><small>Đã bắt đầu</small><strong>'+started+' / '+data.lessons.length+'</strong></div><div><small>✓ Hoàn thành bài học</small><strong>'+finished+' / '+data.lessons.length+'</strong></div><div><small>Đến lượt ôn riêng</small><strong>'+due.length+'</strong></div></div>'+
 (window.GKFoundationThinking?window.GKFoundationThinking.homePanel():'')+'<details class="f-deep-dives"><summary><b>Extra interactive explainers</b><span>Sentence Thinking · Word Relationships ↓</span></summary><div class="f-guide"><b>Observe → Explain → Paraphrase → Use → Review</b><p>Understand the idea, identify word roles, transform a sentence, and use it in speaking/writing.</p></div>'+(window.GKFoundationVisual?window.GKFoundationVisual.preview():'')+
 '<section class="f-syntax-intro"><div class="f-syntax-symbol">Aa</div><div><span class="f-syntax-label">HỌC NGỮ PHÁP BẰNG TƯ DUY</span><h3>Giải mã câu: danh từ, tính từ, động từ, trạng từ & to be</h3><p>12 bài chuyên sâu: chạm vào từng từ để biết nó làm nhiệm vụ gì, vì sao đứng đó, tự sắp xếp câu và giải thích lỗi sai. Nên học song song từ bài A0.</p></div>'+button("syntax","Học tư duy cấu trúc câu →","primary")+'</section>'+
 '<section class="f-syntax-intro"><div class="f-syntax-symbol">↗</div><div><span class="f-syntax-label">BẢN ĐỒ 4 LOẠI TỪ · TƯ DUY TRỰC QUAN</span><h3>Danh từ – Động từ – Tính từ – Trạng từ kết nối như thế nào?</h3><p>Khám phá 10 quan hệ qua 20 câu đối chiếu. Bấm một từ để thấy nó bổ nghĩa cho từ nào, tự xây câu và lý giải cách dùng — không học mẹo vị trí cứng nhắc.</p></div>'+button("relations","Mở bản đồ quan hệ →","primary")+'</section></details>';
