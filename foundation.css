@@ -161,3 +161,133 @@
 #foundationRoot .f-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:880px){#foundationRoot .f-syntax-intro{grid-template-columns:50px 1fr}#foundationRoot .f-syntax-intro .f-btn{grid-column:2;justify-self:start;white-space:normal}}
 @media(max-width:650px){#foundationRoot .f-syntax-intro{grid-template-columns:1fr;gap:10px;padding:17px}#foundationRoot .f-syntax-symbol{height:43px;width:43px;font-size:17px}#foundationRoot .f-syntax-intro .f-btn{grid-column:1;width:100%}#foundationRoot .f-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Foundation completion status, 2026-10-15.
+   Only saved lesson.flow.finished yields the green 100% state.
+   Quiz reviews remain independent and never erase a completion badge. */
+#foundationRoot .f-levels>button{
+  min-width:0;
+}
+#foundationRoot .f-levels>button.f-level-complete,
+#foundationRoot .f-levels>button.f-level-complete.on{
+  background:#f0fbf4;
+  border-color:#89cda6;
+  box-shadow:inset 0 0 0 1px #b0dfc3;
+}
+#foundationRoot .f-levels>button.f-level-complete>span:first-child,
+#foundationRoot .f-levels>button.f-level-complete>strong{
+  color:#15683d;
+}
+#foundationRoot .f-level-progress{
+  display:block;
+  width:100%;
+  height:7px;
+  flex:none;
+  overflow:hidden;
+  background:#e6edf7;
+  border-radius:999px;
+  margin-top:6px;
+}
+#foundationRoot .f-level-progress i,
+#foundationRoot .f-lesson-progress i{
+  display:block;
+  height:100%;
+  max-width:100%;
+  background:#4d74cf;
+  border-radius:inherit;
+  transition:width .2s ease;
+}
+#foundationRoot .f-level-complete .f-level-progress i,
+#foundationRoot .f-lesson-complete .f-lesson-progress i{
+  background:#23965a;
+}
+#foundationRoot .f-lesson-row.f-lesson-complete,
+#foundationRoot .f-lesson-row.f-lesson-complete:hover{
+  background:#f0faf3;
+  border-color:#91cfa8;
+}
+#foundationRoot .f-lesson-row.f-lesson-complete .f-number{
+  background:#dcf2e5;
+  color:#176b40;
+  font-size:23px;
+}
+#foundationRoot .f-lesson-row.f-lesson-complete .f-row-center>strong{
+  color:#155d38;
+}
+#foundationRoot .f-lesson-row.f-lesson-started:not(.f-lesson-complete){
+  border-color:#ccdbf1;
+}
+#foundationRoot .f-lesson-progress{
+  display:block;
+  height:8px;
+  width:100%;
+  max-width:450px;
+  min-width:0;
+  flex:none;
+  background:#e8eef7;
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:8px;
+}
+#foundationRoot .f-row-end{
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+#foundationRoot .f-row-end .f-tag{
+  line-height:1.35;
+}
+#foundationRoot .f-tag.f-needs-check{
+  color:#8b5a14;
+  background:#fff8e9;
+  border-color:#e9d2a5;
+}
+#foundationRoot .f-circle.f-circle-complete{
+  background:radial-gradient(closest-side,#f0fbf4 88%,transparent 90%),
+    conic-gradient(#23965a var(--value),#d6eede 0);
+}
+#foundationRoot .f-circle.f-circle-complete strong{
+  color:#176b40;
+}
+@media(max-width:700px){
+  #foundationRoot .f-lesson-row{
+    display:grid;
+    grid-template-columns:35px minmax(0,1fr);
+    align-items:center;
+    gap:9px 12px;
+  }
+  #foundationRoot .f-lesson-row .f-number{
+    grid-column:1;
+    grid-row:1;
+  }
+  #foundationRoot .f-lesson-row .f-row-center{
+    grid-column:2;
+    grid-row:1;
+    min-width:0;
+  }
+  #foundationRoot .f-lesson-row .f-row-end{
+    grid-column:2;
+    grid-row:2;
+    flex-direction:row;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+    align-items:center;
+    gap:6px;
+  }
+  #foundationRoot .f-lesson-progress{
+    margin-top:7px;
+  }
+  #foundationRoot .f-levels>button{
+    padding:12px;
+    min-height:115px;
+  }
+  #foundationRoot .f-row-end .f-tag{
+    max-width:100%;
+    white-space:normal;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #foundationRoot .f-level-progress i,
+  #foundationRoot .f-lesson-progress i{transition:none}
+}
