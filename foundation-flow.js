@@ -29,7 +29,7 @@ const activePhases=id=>id==="a0-01"?phasesA001:phases;
 const phases=["Explore & Listen","Think & Paraphrase","Speak & Write","Check & Fix","Deep Dive"];
 let loaded={};try{loaded=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(err){}
 const rows=loaded.lessons||{};let lastLessonId=loaded.lastLessonId||"";
-let current="",message="",checkingWord=false;
+let current="",message="",checkingWord=false,showingCompletion=false;
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function state(id){
  if(!rows[id])rows[id]={page:0,completed:{},meaning:null,para:null,word:0,wordSentences:{},draft:"",rewrite:"",outline:"",detective:"",revision:"",explanation:"",transfer:"",finished:false};
@@ -338,7 +338,9 @@ function content(lesson,r){
 }
 function render(lesson){
  const l=typeof lesson==="string"?lessonById[lesson]:lesson;if(!l)return;
- current=l.id;lastLessonId=current;const r=state(current);r.page=Math.max(0,Math.min(activeSteps(current).length-1,Number(r.page)||0));
+ current=l.id;lastLessonId=current;const r=state(current);
+ if(showingCompletion&&r.finished){renderCompletion(l);save();return;}
+ r.page=Math.max(0,Math.min(activeSteps(current).length-1,Number(r.page)||0));
  const phase=activeSteps(current)[r.page][1],percent=Math.round((r.page+1)/activeSteps(current).length*100);
  const lastActivity=r.page===activeSteps(current).length-1;
   const coachStatus=window.GKFoundationCoach?.getRecord?.(l.id)||{};
@@ -428,6 +430,24 @@ async function checkWord(){
  }catch(error){message="Sentence checking failed: "+String(error?.message||"Network error");}
  finally{checkingWord=false;if(current===id&&activeSteps(id)[state(id).page][0]==="vocab")render(lesson);}
 }
+function nextIncomplete(id){
+ const at=lessons.findIndex(item=>item.id===id);
+ const candidates=lessons.slice(Math.max(0,at+1)).concat(lessons.slice(0,Math.max(0,at)));
+ return candidates.find(item=>!state(item.id).finished)||null;
+}
+function renderCompletion(lesson){
+ const next=nextIncomplete(lesson.id);
+ const finished=lessons.filter(item=>state(item.id).finished).length;
+ root.innerHTML='<div class="gf-shell gf-completion-shell">'+
+ '<header class="gf-top">'+b("exit","← Danh sách bài","text")+'<div class="gf-title"><small>ENGLISH FOUNDATION · '+esc(lesson.level)+'</small><h1>Hoàn thành bài học</h1></div></header>'+
+ '<section class="gf-completion-card"><div class="gf-completion-mark" aria-hidden="true">✓</div>'+
+ '<p class="gf-completion-eyebrow">BÀI HỌC ĐÃ LƯU</p><h2>'+esc(lesson.title)+'</h2>'+
+ '<p class="gf-completion-description">Bạn đã hoàn thành các bước bắt buộc của bài này. Tiến độ đã được lưu; bạn không cần quay lại đầu danh sách để tìm bài tiếp theo.</p>'+
+ '<div class="gf-completion-count"><span>Tiến độ Foundation</span><strong>'+finished+' / '+lessons.length+' bài hoàn thành</strong><div class="gf-progress" role="progressbar" aria-label="Bài Foundation đã hoàn thành" aria-valuemin="0" aria-valuemax="'+lessons.length+'" aria-valuenow="'+finished+'"><span style="width:'+Math.round(finished/lessons.length*100)+'%"></span></div></div>'+
+ (next?'<div class="gf-next-card"><span class="gf-completion-eyebrow">BÀI TIẾP THEO · '+esc(next.level)+' · '+esc(next.skill)+'</span><h3>'+esc(next.title)+'</h3><p>'+esc(next.goal)+'</p>'+b("next-lesson","Học bài tiếp theo →","primary")+'</div>':'<div class="gf-next-card gf-all-done"><h3>Đã hoàn thành tất cả bài Foundation</h3><p>Bạn có thể xem lại tiến độ từng chặng hoặc chuyển sang phần luyện tập tiếp theo.</p></div>')+
+ '<div class="gf-completion-actions">'+b("exit","Về danh sách bài (giữ vị trí)","outline")+'</div></section></div>';
+}
+function open(lesson){showingCompletion=false;render(lesson);}
 function move(to){
  if(!current)return;const r=state(current),index=Math.min(activeSteps(current).length-1,Math.max(0,to));if(index===r.page)return;
  if(["speak","write"].includes(activeSteps(current)[r.page][0]))window.GKFoundationCoach?.leave();
@@ -474,8 +494,9 @@ root.addEventListener("click",ev=>{
   c.variant=((c.variant||0)+1)%a001Checks.length;c.checked=false;c.answers=[null,null];
   save();render(l);return;
  }
+ if(act==="next-lesson"){const next=nextIncomplete(current);if(next){showingCompletion=false;message="";render(next);try{root.scrollIntoView({block:"start",behavior:"smooth"})}catch(err){}}return}
  if(act==="next"){move(r.page+1);return}if(act==="previous"){move(r.page-1);return}
- if(act==="exit"){window.GKYVoice?.stopConversation?.();window.GKFoundationCoach?.leave();window.GKFoundationOpenHome?.();return}
+ if(act==="exit"){showingCompletion=false;window.GKYVoice?.stopConversation?.();window.GKFoundationCoach?.leave();window.GKFoundationOpenHome?.();return}
  if(act==="preview-female"||act==="preview-male"){window.GKYVoice?.previewCharacter?.(act==="preview-female"?"F":"M");return;}
  if(act==="hear-scene"){
  const turns=voiceScenes[current]||[{speaker:window.GKYVoice?.inferSpeaker(m.dialog,"Narrator")||"Narrator",text:m.dialog}];
@@ -509,7 +530,7 @@ root.addEventListener("click",ev=>{
   const p=t.pairs[0],opts=(l.id.length%2)?[p.equivalent,p.wrong]:[p.wrong,p.equivalent];
   if(r.meaning!==m.correct||opts[r.para]!==p.equivalent||r.draft.trim().length<8||r.transfer.trim().length<8)return;
  }
- r.finished=true;r.completed.summary=true;save();window.GKFoundationOpenHome?.();return;
+ r.finished=true;r.completed.summary=true;save();showingCompletion=true;render(l);return;
 }
 });
 root.addEventListener("input",ev=>{
@@ -529,5 +550,5 @@ window.GKYVoice?.onVoices?.(()=>{
  const lists=root.querySelectorAll?.("select[data-gf-character]")||[];
  for(const sel of lists){const existing=sel.value;sel.innerHTML=window.GKYVoice.castOptions(sel.dataset.gfCharacter);if([...sel.options].some(x=>x.value===existing))sel.value=existing;}
 });
-window.GKFoundationFlow={render,open:render,getState:state,getLastLessonId:()=>lastLessonId,goTo:move,persist:save,checkFreeResponse,freeCheckPanel,screenCount:steps.length,screenCountFor:activeSteps};
+window.GKFoundationFlow={render,open,getState:state,getLastLessonId:()=>lastLessonId,goTo:move,persist:save,checkFreeResponse,freeCheckPanel,screenCount:steps.length,screenCountFor:activeSteps};
 })();
